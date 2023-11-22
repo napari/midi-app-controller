@@ -1,0 +1,10 @@
+name: midi-app-controller
+contributions:
+  commands:
+    - id: midi-app-controller.example.toggle_viewer_scale_bar
+      title: Toggle viewer scale bar
+      python_name: midi_app_controller.example:toggle_viewer_scale_bar
+  widgets:
+    - command: midi-app-controller.example.toggle_viewer_scale_bar
+      display_name: Toggle viewer scale bar
+      autogenerate: true
