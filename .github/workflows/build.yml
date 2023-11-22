@@ -1,6 +1,10 @@
 name: Test build
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   test_build:
@@ -18,4 +22,6 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Build
-      run: python -m pip install -e .
+      run: |
+        python -m pip install -e .
+        npe2 validate midi-app-controller
