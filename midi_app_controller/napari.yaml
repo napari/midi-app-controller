@@ -4,7 +4,13 @@ contributions:
     - id: midi-app-controller.example.toggle_viewer_scale_bar
       title: Toggle viewer scale bar
       python_name: midi_app_controller.example:toggle_viewer_scale_bar
+    - id: midi-app-controller.example.activate_controller
+      title: Activate MIDI controller
+      python_name: midi_app_controller.example:activate_controller
   widgets:
     - command: midi-app-controller.example.toggle_viewer_scale_bar
       display_name: Toggle viewer scale bar
+      autogenerate: true
+    - command: midi-app-controller.example.activate_controller
+      display_name: Activate MIDI controller
       autogenerate: true
