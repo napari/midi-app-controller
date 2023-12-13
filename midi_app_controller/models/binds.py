@@ -21,8 +21,7 @@ class ButtonBind(BaseModel):
 
 
 class KnobBind(BaseModel):
-    """
-    Information about actions bound to a knob.
+    """Information about actions bound to a knob.
 
     Attributes
     ----------
@@ -40,8 +39,7 @@ class KnobBind(BaseModel):
 
 
 class Binds(YamlBaseModel):
-    """
-    User's binds for specific app and controller.
+    """User's binds for specific app and controller.
 
     Attributes
     ----------

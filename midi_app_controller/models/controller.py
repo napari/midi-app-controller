@@ -23,8 +23,7 @@ class ControllerElement(BaseModel):
 
 
 class Controller(YamlBaseModel):
-    """
-    A controller's schema.
+    """A controller's schema.
 
     Attributes
     ----------
