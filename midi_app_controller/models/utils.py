@@ -40,7 +40,7 @@ class YamlBaseModel(BaseModel):
 
 def find_duplicate(values: List[Any]) -> Optional[Any]:
     """
-    Checks if there is any duplicates and returns the first one.
+    Checks if there are any duplicates in the list and returns the first one.
 
     Parameters
     ----------
