@@ -5,8 +5,7 @@ from .utils import YamlBaseModel, find_duplicate
 
 
 class ControllerElement(BaseModel):
-    """
-    Any element of a controller.
+    """Any element of a controller.
 
     Attributes
     ----------
@@ -23,8 +22,7 @@ class ControllerElement(BaseModel):
 
 
 class Controller(YamlBaseModel):
-    """
-    A controller's schema.
+    """A controller's schema.
 
     Attributes
     ----------
@@ -42,9 +40,9 @@ class Controller(YamlBaseModel):
     knob_value_max : int
         The maximum value sent by the controller when a knob is rotated.
         Should be in the range [0, 127].
-    buttons : list[ControllerElement]
+    buttons : List[ControllerElement]
         List of available buttons on the controller.
-    knobs : list[ControllerElement]
+    knobs : List[ControllerElement]
         List of available knobs on the controller.
     """
 
@@ -60,7 +58,7 @@ class Controller(YamlBaseModel):
     @classmethod
     def check_duplicate_ids(cls, values):
         """Ensures that every element has different id."""
-        all_ids = list(map(lambda x: x.id, values.get("buttons") + values.get("knobs")))
+        all_ids = [elem.id for elem in values.get("buttons") + values.get("knobs")]
 
         duplicate = find_duplicate(all_ids)
         if duplicate is not None:
@@ -74,7 +72,7 @@ class Controller(YamlBaseModel):
         cls, v: List[ControllerElement]
     ) -> List[ControllerElement]:
         """Ensures that no two elements of same kind have the same name."""
-        names = list(map(lambda x: x.name, v))
+        names = [elem.name for elem in v]
 
         duplicate = find_duplicate(names)
         if duplicate is not None:
