@@ -8,8 +8,7 @@ import yaml
 class YamlBaseModel(BaseModel):
     @classmethod
     def load_from(cls, path: Path):
-        """
-        Creates a model initialized with data from a YAML file.
+        """Creates a model initialized with data from a YAML file.
 
         Parameters
         ----------
@@ -26,8 +25,7 @@ class YamlBaseModel(BaseModel):
             return cls(**data)
 
     def save_to(self, path: Path):
-        """
-        Saves the model's data to a YAML file.
+        """Saves the model's data to a YAML file.
 
         Parameters
         ----------
@@ -39,8 +37,7 @@ class YamlBaseModel(BaseModel):
 
 
 def find_duplicate(values: List[Any]) -> Optional[Any]:
-    """
-    Checks if there are any duplicates in the list and returns the first one.
+    """Checks if there are any duplicates in the list and returns the first one.
 
     Parameters
     ----------
