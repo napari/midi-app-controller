@@ -1,0 +1,4 @@
+ignore:
+  - "**/_tests/*.py"
+comment:
+  require_changes: true
