@@ -1,11 +1,12 @@
 from app_model.types import Action
 from typing import Dict, List, Set, Optional
 from pydantic import BaseModel, Field
+from pydantic.dataclasses import dataclass
 
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
-from bound_controller import BoundController, KnobActions, ButtonActions
-from actions_handler import ActionsHandler
+from .bound_controller import BoundController, KnobActions, ButtonActions
+from .actions_handler import ActionsHandler
 
 from rtmidi import MidiIn, MidiOut
 import rtmidi
@@ -19,9 +20,8 @@ class ControllerConstants(BaseModel):
     default_channel: int = Field(default=0x10, const=True)
     A_button_layer_id: int = Field(default=0x8, const=True)
     B_button_layer_id: int = Field(default=0x32, const=True)
-    A_knob_layer_id: int = Field(default=0x0, const=True)
-    B_knob_layer_id: int = Field(default=0x10, const=True)
-
+    A_knob_layer_id: int = Field(default=-0x8, const=True)
+    B_knob_layer_id: int = Field(default=0x2, const=True)
 
 class ConnectedController(BaseModel):
     """A controller connected to the physical device capable of 
@@ -32,11 +32,15 @@ class ConnectedController(BaseModel):
     bound_controller : BoundController
     """
 
-    action_handler : ActionsHandler
+    actions_handler : ActionsHandler
     midi_in : rtmidi.MidiIn
-    midi_in : rtmidi.MidiOut
-    button_ids : Set[int]
-    knob_ids : Set[int]
+    midi_out : rtmidi.MidiOut
+    button_ids : List[int]
+    knob_ids : List[int]
+    constants : ControllerConstants
+
+    class Config:
+        arbitrary_types_allowed = True
 
     @classmethod
     def create(
@@ -59,7 +63,10 @@ class ConnectedController(BaseModel):
         """
         
         bound_controller = actions_handler.bound_controller
-        ControllerConstants()
+        button_ids = set(bound_controller.buttons.keys())
+        knob_ids = set(bound_controller.knobs.keys())
+        midi_in = None
+        midi_out = None
 
         try:
             # Create an instance of MidiIn and MidiOut
@@ -75,7 +82,7 @@ class ConnectedController(BaseModel):
                 if port in available_ports_out]
             
             controller_port = ""
-            port_index 
+            port_index = -1
 
             if available_ports:
                 for i, port in enumerate(available_ports):
@@ -100,14 +107,24 @@ class ConnectedController(BaseModel):
         except rtmidi.InvalidUseError as err:
             print(f"Invalid Use Error: {err}")
 
-        return cls(
+        instance = cls(
             actions_handler = actions_handler,
             midi_out = midi_out,
             midi_in = midi_in,
-            button_ids = bound_controller.buttons.keys,
-            knob_ids = bound_controller.knobs.keys,
-            
+            button_ids = button_ids,
+            knob_ids = knob_ids,
+            constants = ControllerConstants(),
         )
+
+        instance.set_midi_in_callback()
+
+        return instance
+
+    def __del__(self):
+        self.midi_in.close_port()
+        self.midi_in.delete()
+        self.midi_out.close_port()
+        self.midi_out.delete()
 
     def create_callback_to_self(self):
         def midi_callback(message, time_stamp):
@@ -161,25 +178,25 @@ class ConnectedController(BaseModel):
 
     def turn_on_knob_backlight(self, id):
         postion = self.turn_knob_id_to_position(id)
-        data = [ControllerConstants.knob_value_change_command, postion, 27]
+        data = [self.constants.knob_value_change_command, postion, 27]
         self.send_midi_message(data)
 
-    def turn_on_button(self, id):
+    def turn_on_button_led(self, id):
         postion = self.turn_button_id_to_position(id)
-        data = [ControllerConstants.button_engaged_command, postion, 1]
+        data = [self.constants.button_engaged_command, postion, 1]
         self.send_midi_message(data)
 
-    def turn_off_button(self, id):
+    def turn_off_button_led(self, id):
         postion = self.turn_button_id_to_position(id)
-        data = [ControllerConstants.button_disengaged_command, postion, 0]
+        data = [self.constants.button_disengaged_command, postion, 0]
         self.send_midi_message(data)
         
 
     def turn_knob_id_to_position(self, id) -> int:
-        if id >= ControllerConstants.B_knob_layer_id:
-            id = id - ControllerConstants.B_knob_layer_id
-        elif id >= ControllerConstants.A_knob_layer_id:
-            id = id - ControllerConstants.A_knob_layer_id
+        if id >= self.constants.B_knob_layer_id:
+            id = id - self.constants.B_knob_layer_id
+        elif id >= self.constants.A_knob_layer_id:
+            id = id - self.constants.A_knob_layer_id
         else:
             raise ValueError(
                     f"knob '{id}' cannot be found"
@@ -188,10 +205,10 @@ class ConnectedController(BaseModel):
         return id
     
     def turn_button_id_to_position(self, id) -> int:
-        if id >= ControllerConstants.B_button_layer_id:
-            id = id - ControllerConstants.B_button_layer_id
-        elif id >= ControllerConstants.A_button_layer_id:
-            id = id - ControllerConstants.A_button_layer_id
+        if id >= self.constants.B_button_layer_id:
+            id = id - self.constants.B_button_layer_id
+        elif id >= self.constants.A_button_layer_id:
+            id = id - self.constants.A_button_layer_id
         else:
             raise ValueError(
                     f"button '{id}' cannot be found"
@@ -201,13 +218,12 @@ class ConnectedController(BaseModel):
             
     def handle_midi_message(self, command, channel, data):
         id = data[0]
-        velocity = data[1]
 
         if id in self.knob_ids:
             self.handle_knob_message(command, channel, data)
-        elif id in self.knob_ids and command == ControllerConstants.button_engaged_command:
+        elif id in self.knob_ids and command == self.constants.button_engaged_command:
             self.handle_button_engagement(command, channel, data)
-        elif id in self.knob_ids and command == ControllerConstants.button_disengaged_command:
+        elif id in self.knob_ids and command == self.constants.button_disengaged_command:
             self.handle_button_disengagement(command, channel, data)
         else:
             raise ValueError(
