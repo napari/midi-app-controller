@@ -1,0 +1,10 @@
+button_engaged_command = 0x90
+button_disengaged_command = 0x80
+knob_value_change_command = 0xB0
+control_change_command = 0xB0
+control_channel = 0x0
+default_channel = 0x10
+A_button_layer_id = 0x8
+B_button_layer_id = 0x32
+A_knob_layer_id = -0x8
+B_knob_layer_id = 0x2
