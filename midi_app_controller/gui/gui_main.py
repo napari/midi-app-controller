@@ -2,11 +2,11 @@ import sys
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QMenu, QAction, QMainWindow, QFileDialog, QPushButton, QDialog, QDialogButtonBox
 from PyQt5.QtGui import QPixmap
 import yaml
+from gui_template import View1
 
 class OpeningScreen(QMainWindow):
     def __init__(self):
         super().__init__()
-
         self.initUI()
 
     def initUI(self):
@@ -56,18 +56,8 @@ class OpeningScreen(QMainWindow):
         self.setGeometry(0, 0, 300, 150)
 
     def showXTouchMini(self):
-        layout = QVBoxLayout()
-
-        image_label = QLabel(self)
-        pixmap = QPixmap('./x_touch_mini.png')
-        image_label.setPixmap(pixmap)
-        image_label.setGeometry(10, 10, pixmap.width(), pixmap.height())
-
-        layout.addWidget(image_label)
-
-        x_touch_mini_widget = QWidget(self)
-        x_touch_mini_widget.setLayout(layout)
-        self.setCentralWidget(x_touch_mini_widget)
+        self.view1 = View1()
+        self.view1.show()
 
     def showOtherController(self):
         print("Other controller view")
