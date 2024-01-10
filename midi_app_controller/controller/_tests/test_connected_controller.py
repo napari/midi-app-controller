@@ -103,10 +103,10 @@ def test_create(actions_handler, controller_data):
         time.sleep(0.5)
         controller.turn_off_button_led(9)
     except IOError:
-        exit()
+        return
     
     try:
-        time.sleep(3)
+        time.sleep(5)
     except KeyboardInterrupt:
         pass
     finally:
