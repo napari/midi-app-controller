@@ -1,10 +1,10 @@
 import time
-from unittest.mock import Mock, call
+from unittest.mock import Mock
 
 import pytest
 from app_model.types import Action
 
-from midi_app_controller.controller.connected_controller import ConnectedController, midi_callback
+from midi_app_controller.controller.connected_controller import ConnectedController
 from midi_app_controller.actions.bound_controller import BoundController
 from midi_app_controller.actions.actions_handler import ActionsHandler
 from midi_app_controller.models.binds import Binds
@@ -23,9 +23,10 @@ def controller_data() -> Controller:
         "knobs": [{"id": 1, "name": "Knob1"}, {"id": 2, "name": "Knob2"}],
     }
 
-    controller=Controller(**controller_data)
+    controller = Controller(**controller_data)
 
     return controller
+
 
 @pytest.fixture
 def actions_handler() -> ActionsHandler:
@@ -82,20 +83,15 @@ def actions_handler() -> ActionsHandler:
         actions=actions,
     )
 
-    return ActionsHandler(
-        bound_controller=bound_controller,
-        app=Mock()
-    )
-
+    return ActionsHandler(bound_controller=bound_controller, app=Mock())
 
 
 def test_create(actions_handler, controller_data):
     try:
-        controller = \
-            ConnectedController.create(
-                actions_handler=actions_handler,
-                controller=controller_data,
-            )
+        controller = ConnectedController.create(
+            actions_handler=actions_handler,
+            controller=controller_data,
+        )
         controller.flash_button(16)
         controller.flash_knob(3)
         controller.change_knob_value(2, 1)

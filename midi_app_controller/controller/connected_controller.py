@@ -4,12 +4,19 @@ from pydantic import BaseModel
 from midi_app_controller.models.controller import Controller
 from ..actions.actions_handler import ActionsHandler
 
-from rtmidi import MidiIn, MidiOut
 import rtmidi
-import sys
-from .controller_constants import button_engaged_command, button_disengaged_command, knob_value_change_command, \
-            button_value_change_on_command, button_value_change_off_command, control_change_command, \
-            knob_position_shift, button_position_shift, knob_blinking_value, button_blinking_value
+from .controller_constants import (
+    button_engaged_command,
+    button_disengaged_command,
+    knob_value_change_command,
+    button_value_change_on_command,
+    button_value_change_off_command,
+    control_change_command,
+    knob_position_shift,
+    button_position_shift,
+    knob_blinking_value,
+    button_blinking_value,
+)
 
 
 def midi_callback(message, cls):
@@ -25,21 +32,18 @@ def midi_callback(message, cls):
 
     # Process MIDI message here
     status_byte = message[0][0]
-    command = (status_byte & 0xF0)
-    channel = (status_byte & 0x0F)
+    command = status_byte & 0xF0
+    channel = status_byte & 0x0F
     data_bytes = message[0][1:]
 
     # Leave uncommented for debug purpouses
     # print(f"Command: {command}, Channel: {channel}, Data: {data_bytes}", file=sys.stderr)
 
-    cls.handle_midi_message(
-        command=command,
-        channel=channel,
-        data=data_bytes
-    )
+    cls.handle_midi_message(command=command, channel=channel, data=data_bytes)
+
 
 class ConnectedController(BaseModel):
-    """A controller connected to the physical device capable of 
+    """A controller connected to the physical device capable of
     sending and receiving signals.
 
     Attributes
@@ -59,19 +63,19 @@ class ConnectedController(BaseModel):
         A list containing all valid knob ids on a handled controller.
     """
 
-    controller : Controller
-    actions_handler : ActionsHandler
-    midi_in : rtmidi.MidiIn
-    midi_out : rtmidi.MidiOut
-    button_ids : List[int]
-    knob_ids : List[int]
+    controller: Controller
+    actions_handler: ActionsHandler
+    midi_in: rtmidi.MidiIn
+    midi_out: rtmidi.MidiOut
+    button_ids: List[int]
+    knob_ids: List[int]
 
     class Config:
         arbitrary_types_allowed = True
 
     @classmethod
     def create(
-        cls, *, actions_handler : ActionsHandler, controller : Controller
+        cls, *, actions_handler: ActionsHandler, controller: Controller
     ) -> "ConnectedController":
         """Creates an instance of `ConnectedController`.
 
@@ -108,9 +112,9 @@ class ConnectedController(BaseModel):
             available_ports_in = midi_in.get_ports()
             available_ports_out = midi_out.get_ports()
 
-            available_ports = [port \
-                for port in available_ports_in \
-                if port in available_ports_out]
+            available_ports = [
+                port for port in available_ports_in if port in available_ports_out
+            ]
 
             controller_port = ""
             port_index = -1
@@ -125,7 +129,7 @@ class ConnectedController(BaseModel):
             if controller_port == "":
                 raise IOError("No correct MIDI ports available.")
 
-            #Creating MidiIn and MidiOut instances
+            # Creating MidiIn and MidiOut instances
             midi_in.open_port(port_index)
             midi_out.open_port(port_index)
 
@@ -139,15 +143,15 @@ class ConnectedController(BaseModel):
             print(f"Invalid Use Error: {err}")
 
         instance = cls(
-            controller = controller,
-            actions_handler = actions_handler,
-            midi_out = midi_out,
-            midi_in = midi_in,
-            button_ids = button_ids,
-            knob_ids = knob_ids,
+            controller=controller,
+            actions_handler=actions_handler,
+            midi_out=midi_out,
+            midi_in=midi_in,
+            button_ids=button_ids,
+            knob_ids=knob_ids,
         )
 
-        #Set callback for getting data from controller
+        # Set callback for getting data from controller
         instance.midi_in.set_callback(midi_callback, data=instance)
 
         return instance
@@ -186,7 +190,7 @@ class ConnectedController(BaseModel):
         data : List[int]
             Standard MIDI message.
         """
-        pass #TODO: for now we're not handling button disengagement
+        pass  # TODO: for now we're not handling button disengagement
 
     def handle_knob_message(self, data):
         """Runs the action bound to the knob turn, specified in
@@ -203,7 +207,7 @@ class ConnectedController(BaseModel):
 
         self.action_handler.handle_knob_action(
             knob_id=id,
-            old_value=0, #TODO: we're not keeping old value anywhere for now
+            old_value=0,  # TODO: we're not keeping old value anywhere for now
             new_value=velocity,
         )
 
@@ -230,10 +234,11 @@ class ConnectedController(BaseModel):
         position : int
             Position of the knob.
         """
-        data = \
-            [   control_change_command,
-                position + knob_position_shift,
-                knob_blinking_value ]
+        data = [
+            control_change_command,
+            position + knob_position_shift,
+            knob_blinking_value,
+        ]
 
         self.send_midi_message(data)
 
@@ -245,10 +250,11 @@ class ConnectedController(BaseModel):
         position : int
             Position of the button.
         """
-        data = \
-            [   button_engaged_command,
-                position + button_position_shift,
-                button_blinking_value ]
+        data = [
+            button_engaged_command,
+            position + button_position_shift,
+            button_blinking_value,
+        ]
 
         self.send_midi_message(data)
 
@@ -275,10 +281,7 @@ class ConnectedController(BaseModel):
         id : int
             Button id.
         """
-        data = \
-            [   button_value_change_on_command,
-                id,
-                self.controller.button_value_on ]
+        data = [button_value_change_on_command, id, self.controller.button_value_on]
 
         self.send_midi_message(data)
 
@@ -291,10 +294,7 @@ class ConnectedController(BaseModel):
         id : int
             Button id.
         """
-        data = \
-            [   button_value_change_off_command,
-                id,
-                self.controller.button_value_off ]
+        data = [button_value_change_off_command, id, self.controller.button_value_off]
 
         self.send_midi_message(data)
 
@@ -319,6 +319,4 @@ class ConnectedController(BaseModel):
         elif id in self.knob_ids and command == button_disengaged_command:
             self.handle_button_disengagement(command, channel, data)
         else:
-            raise ValueError(
-                    f"action '{id}' cannot be found"
-                )
+            raise ValueError(f"action '{id}' cannot be found")
