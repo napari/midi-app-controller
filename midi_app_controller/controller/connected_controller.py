@@ -7,7 +7,10 @@ from ..actions.actions_handler import ActionsHandler
 from rtmidi import MidiIn, MidiOut
 import rtmidi
 import sys
-from .controller_constants import *
+from .controller_constants import button_engaged_command, button_disengaged_command, knob_value_change_command, \
+            button_value_change_on_command, button_value_change_off_command, control_change_command, \
+            knob_position_shift, button_position_shift, knob_blinking_value, button_blinking_value
+
 
 def midi_callback(message, cls):
     """Callback function for MIDI input, specified by rtmidi package.
@@ -168,7 +171,6 @@ class ConnectedController(BaseModel):
             Standard MIDI message.
         """
         id = data[0]
-        velocity = data[1]
 
         self.action_handler.handle_button_action(
             button_id=id,
