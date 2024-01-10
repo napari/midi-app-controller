@@ -50,7 +50,6 @@ class BoundController(BaseModel):
         All actions for a knob with given id.
     """
 
-    name: str = Field(min_length=1)
     knob_value_min: int = Field(ge=0, le=127)
     knob_value_max: int = Field(ge=0, le=127)
     buttons: Dict[int, ButtonActions]
@@ -135,7 +134,6 @@ class BoundController(BaseModel):
             raise ValueError("one of bound knob ids is not on the controller")
 
         return cls(
-            name=controller.name,
             knob_value_min=controller.knob_value_min,
             knob_value_max=controller.knob_value_max,
             buttons=bound_buttons,
