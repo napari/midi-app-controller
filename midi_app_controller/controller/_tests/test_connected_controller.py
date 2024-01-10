@@ -24,7 +24,7 @@ def controller_data() -> Controller:
     }
 
     controller=Controller(**controller_data)
-    
+
     return controller
 
 @pytest.fixture
@@ -104,11 +104,10 @@ def test_create(actions_handler, controller_data):
         controller.turn_off_button_led(9)
     except IOError:
         return
-    
+
     try:
         time.sleep(5)
     except KeyboardInterrupt:
         pass
     finally:
         del controller
-

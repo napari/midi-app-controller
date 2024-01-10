@@ -14,7 +14,7 @@ from .controller_constants import button_engaged_command, button_disengaged_comm
 
 def midi_callback(message, cls):
     """Callback function for MIDI input, specified by rtmidi package.
-    
+
     Parameters
         ----------
         message : List[int]
@@ -31,7 +31,7 @@ def midi_callback(message, cls):
 
     # Leave uncommented for debug purpouses
     # print(f"Command: {command}, Channel: {channel}, Data: {data_bytes}", file=sys.stderr)
-    
+
     cls.handle_midi_message(
         command=command,
         channel=channel,
@@ -93,7 +93,7 @@ class ConnectedController(BaseModel):
         IOError
             If there is no correct MIDI device connected.
         """
-        
+
         button_ids = [element.id for element in controller.buttons]
         knob_ids = [element.id for element in controller.knobs]
         midi_in = None
@@ -111,7 +111,7 @@ class ConnectedController(BaseModel):
             available_ports = [port \
                 for port in available_ports_in \
                 if port in available_ports_out]
-            
+
             controller_port = ""
             port_index = -1
 
@@ -121,10 +121,10 @@ class ConnectedController(BaseModel):
                     if name == controller.name:
                         controller_port = port
                         port_index = i
-            
+
             if controller_port == "":
                 raise IOError("No correct MIDI ports available.")
-            
+
             #Creating MidiIn and MidiOut instances
             midi_in.open_port(port_index)
             midi_out.open_port(port_index)
@@ -159,7 +159,7 @@ class ConnectedController(BaseModel):
         self.midi_in.close_port()
         self.midi_in.delete()
         self.midi_out.close_port()
-        self.midi_out.delete()        
+        self.midi_out.delete()
 
     def handle_button_engagement(self, data):
         """Runs the action bound to the button, specified in
@@ -234,7 +234,7 @@ class ConnectedController(BaseModel):
             [   control_change_command,
                 position + knob_position_shift,
                 knob_blinking_value ]
-        
+
         self.send_midi_message(data)
 
     def flash_button(self, position):
@@ -249,7 +249,7 @@ class ConnectedController(BaseModel):
             [   button_engaged_command,
                 position + button_position_shift,
                 button_blinking_value ]
-        
+
         self.send_midi_message(data)
 
     def change_knob_value(self, id, new_value):
@@ -279,7 +279,7 @@ class ConnectedController(BaseModel):
             [   button_value_change_on_command,
                 id,
                 self.controller.button_value_on ]
-        
+
         self.send_midi_message(data)
 
     def turn_off_button_led(self, id):
@@ -295,9 +295,9 @@ class ConnectedController(BaseModel):
             [   button_value_change_off_command,
                 id,
                 self.controller.button_value_off ]
-        
+
         self.send_midi_message(data)
-            
+
     def handle_midi_message(self, command, channel, data):
         """Handles the incoming MIDI message. The message is interpreted
         is follows: [command*16+channel, data[0], data[1]], where the
