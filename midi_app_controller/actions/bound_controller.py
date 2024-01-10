@@ -1,3 +1,6 @@
+from pathlib import Path
+
+import yaml
 from app_model.types import Action
 from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
@@ -29,8 +32,8 @@ class KnobActions(BaseModel):
         Action to be executed when the knob's value decreases.
     """
 
-    action_increase: Action
-    action_decrease: Action
+    action_increase: Optional[Action] = None
+    action_decrease: Optional[Action] = None
 
 
 class BoundController(BaseModel):
@@ -163,3 +166,33 @@ class BoundController(BaseModel):
         knob = self.knobs.get(knob_id)
         if knob is not None:
             return knob.action_decrease
+
+    @classmethod
+    def load_from(cls, path: Path) -> "BoundController":
+        """Creates an instance of `BoundController` from a YAML file.
+
+        Parameters
+        ----------
+        path : Path
+            YAML file path.
+
+        Returns
+        -------
+        BoundController
+            An instance of BoundController initialized with data from the YAML file.
+        """
+        with open(path, 'r') as file:
+            data = yaml.safe_load(file)
+            return cls(**data)
+
+    def save_to(self, path: Path):
+        """Saves the BoundController data to a YAML file.
+
+        Parameters
+        ----------
+        path : Path
+            YAML file path.
+        """
+        with open(path, 'w') as file:
+            yaml.safe_dump(self.dict(), file)
+
