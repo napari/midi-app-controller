@@ -90,22 +90,23 @@ def actions_handler() -> ActionsHandler:
 
 
 def test_create(actions_handler, controller_data):
-    controller = \
-        ConnectedController.create(
-            actions_handler=actions_handler,
-            controller=controller_data,
-        )
-    
-    controller.flash_button(16)
-    controller.flash_knob(3)
-    controller.change_knob_value(2, 1)
-    controller.turn_on_button_led(9)
-    time.sleep(0.5)
-    controller.turn_off_button_led(9)
-
     try:
-        while True:
-            time.sleep(1)
+        controller = \
+            ConnectedController.create(
+                actions_handler=actions_handler,
+                controller=controller_data,
+            )
+        controller.flash_button(16)
+        controller.flash_knob(3)
+        controller.change_knob_value(2, 1)
+        controller.turn_on_button_led(9)
+        time.sleep(0.5)
+        controller.turn_off_button_led(9)
+    except IOError:
+        exit()
+    
+    try:
+        time.sleep(3)
     except KeyboardInterrupt:
         pass
     finally:

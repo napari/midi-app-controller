@@ -9,8 +9,16 @@ import rtmidi
 import sys
 from .controller_constants import *
 
-def midi_callback(message, data):
-    """Callback function for MIDI input, specified by rtmidi package."""
+def midi_callback(message, cls):
+    """Callback function for MIDI input, specified by rtmidi package.
+    
+    Parameters
+        ----------
+        message : List[int]
+            Standard MIDI message.
+        cls : ConnectedController
+            ConnedctedController class instance.
+    """
 
     # Process MIDI message here
     status_byte = message[0][0]
@@ -21,7 +29,7 @@ def midi_callback(message, data):
     # Leave uncommented for debug purpouses
     # print(f"Command: {command}, Channel: {channel}, Data: {data_bytes}", file=sys.stderr)
     
-    data.handle_midi_message(
+    cls.handle_midi_message(
         command=command,
         channel=channel,
         data=data_bytes
