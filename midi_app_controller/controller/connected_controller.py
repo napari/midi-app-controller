@@ -1,36 +1,54 @@
-from app_model.types import Action
-from typing import Dict, List, Set, Optional
-from pydantic import BaseModel, Field
-from pydantic.dataclasses import dataclass
+from typing import List
+from pydantic import BaseModel
 
-from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
-from ..actions.bound_controller import BoundController, KnobActions, ButtonActions
 from ..actions.actions_handler import ActionsHandler
 
 from rtmidi import MidiIn, MidiOut
 import rtmidi
+import sys
 from .controller_constants import *
 
-def midi_callback(message, time_stamp, data):
+def midi_callback(message, data):
+    """Callback function for MIDI input, specified by rtmidi package."""
+
     # Process MIDI message here
     status_byte = message[0][0]
     command = (status_byte & 0xF0)
     channel = (status_byte & 0x0F)
     data_bytes = message[0][1:]
 
-    data.dupa()
-    print(f"Command: {command}, Channel: {channel}, Data: {data_bytes}")
+    # Leave uncommented for debug purpouses
+    # print(f"Command: {command}, Channel: {channel}, Data: {data_bytes}", file=sys.stderr)
+    
+    data.handle_midi_message(
+        command=command,
+        channel=channel,
+        data=data_bytes
+    )
 
 class ConnectedController(BaseModel):
     """A controller connected to the physical device capable of 
-    sending and receiving signals
+    sending and receiving signals.
 
     Attributes
     ----------
-    bound_controller : BoundController
+    controller : Controller
+        Data about the controller, the create method will try to connect to.
+    actions_handler : ActionsHandler
+        Actions handler class, responsible for executing actions, specific
+        to a button press or a knob turn.
+    midi_in : rtmidi.MidiIn
+        Midi input client interface from python-rtmidi package.
+    midi_out: rtmidi.MidiOut
+        Midi output client interface from python-rtmidi package.
+    button_ids : List[int]
+        A list containing all valid button ids on a handled controller.
+    knob_ids : List[int]
+        A list containing all valid knob ids on a handled controller.
     """
 
+    controller : Controller
     actions_handler : ActionsHandler
     midi_in : rtmidi.MidiIn
     midi_out : rtmidi.MidiOut
@@ -42,13 +60,18 @@ class ConnectedController(BaseModel):
 
     @classmethod
     def create(
-        cls, *, actions_handler : ActionsHandler
+        cls, *, actions_handler : ActionsHandler, controller : Controller
     ) -> "ConnectedController":
         """Creates an instance of `ConnectedController`.
 
         Parameters
         ----------
-    
+        actions_handler : ActionsHandler
+            Provides methods capable of executing actions in the app.
+        controller : Controller
+            Information about the controller, the create method will
+            try to connect to.
+
         Returns
         -------
         ConnectedController
@@ -56,13 +79,12 @@ class ConnectedController(BaseModel):
 
         Raises
         ------
-        ValueError
-            If the provided arguments are invalid together.
+        IOError
+            If there is no correct MIDI device connected.
         """
         
-        bound_controller = actions_handler.bound_controller
-        button_ids = set(bound_controller.buttons.keys())
-        knob_ids = set(bound_controller.knobs.keys())
+        button_ids = [element.id for element in controller.buttons]
+        knob_ids = [element.id for element in controller.knobs]
         midi_in = None
         midi_out = None
 
@@ -85,14 +107,13 @@ class ConnectedController(BaseModel):
             if available_ports:
                 for i, port in enumerate(available_ports):
                     name = port.split(":")[0]
-                    if name == bound_controller.name:
+                    if name == controller.name:
                         controller_port = port
                         port_index = i
             
             if controller_port == "":
                 raise IOError("No correct MIDI ports available.")
             
-            print(f"port index {i}")
             #Creating MidiIn and MidiOut instances
             midi_in.open_port(port_index)
             midi_out.open_port(port_index)
@@ -107,6 +128,7 @@ class ConnectedController(BaseModel):
             print(f"Invalid Use Error: {err}")
 
         instance = cls(
+            controller = controller,
             actions_handler = actions_handler,
             midi_out = midi_out,
             midi_in = midi_in,
@@ -114,41 +136,29 @@ class ConnectedController(BaseModel):
             knob_ids = knob_ids,
         )
 
+        #Set callback for getting data from controller
+        instance.midi_in.set_callback(midi_callback, data=instance)
+
         return instance
 
     def __del__(self):
+        """Responsible for closing in/out ports, and safely deleting
+        python-rtmidi classes.
+        """
         self.midi_in.close_port()
         self.midi_in.delete()
         self.midi_out.close_port()
-        self.midi_out.delete()
+        self.midi_out.delete()        
 
-    # def create_callback_to_self(self):
-    #     def midi_callback(message, time_stamp):
-    #         # Process MIDI message here
-    #         status_byte = message[0][0]
-    #         command = (status_byte & 0xF0)
-    #         channel = (status_byte & 0x0F)
-    #         data_bytes = message[0][1:]
-    
-    #         self.handle_midi_message(
-    #             command=command,
-    #             channel=channel,
-    #             data=data_bytes
-    #         )
+    def handle_button_engagement(self, data):
+        """Runs the action bound to the button, specified in
+        action_handler.
 
-    #         print(f"Command: {command}, Channel: {channel}, Data: {data_bytes}")
-    #         print(self.name)
-
-    #     return midi_callback
-
-    def dupa(self):
-        print("dupa")
-
-    def set_midi_in_callback(self, function):
-        function([[0xBB, 1, 100], 1], 1, self)
-        self.midi_in.set_callback(function, data=self)
-
-    def handle_button_engagement(self, command, channel, data):
+        Parameters
+        ----------
+        data : List[int]
+            Standard MIDI message.
+        """
         id = data[0]
         velocity = data[1]
 
@@ -156,10 +166,28 @@ class ConnectedController(BaseModel):
             button_id=id,
         )
 
-    def handle_button_disengagement(self, command, channel, data):
+    def handle_button_disengagement(self, data):
+        """Runs the action bound to the button release, specified in
+        action_handler.
+
+
+        Parameters
+        ----------
+        data : List[int]
+            Standard MIDI message.
+        """
         pass #TODO: for now we're not handling button disengagement
 
-    def handle_knob_message(self, command, channel, data):
+    def handle_knob_message(self, data):
+        """Runs the action bound to the knob turn, specified in
+        action_handler.
+
+
+        Parameters
+        ----------
+        data : List[int]
+            Standard MIDI message.
+        """
         id = data[0]
         velocity = data[1]
 
@@ -170,54 +198,110 @@ class ConnectedController(BaseModel):
         )
 
     def send_midi_message(self, data):
+        """Sends the specified MIDI message, using python-rtmidi
+        MidiIn class.
+
+        Parameters
+        ----------
+        data : List[int]
+            Standard MIDI message.
+        """
         try:
             self.midi_out.send_message(data)
         except ValueError as err:
             print(f"Value Error: {err}")
 
-    def turn_on_knob_backlight(self, id):
-        postion = self.turn_knob_id_to_position(id)
-        data = [knob_value_change_command, postion, 27]
+    def flash_knob(self, position):
+        """Flashed the LEDs corresponding to a knob on a
+        MIDI controller.
+
+        Parameters
+        ----------
+        position : int
+            Position of the knob.
+        """
+        data = \
+            [   control_change_command,
+                position + knob_position_shift,
+                knob_blinking_value ]
+        
+        self.send_midi_message(data)
+
+    def flash_button(self, position):
+        """Flashed the button LED on a MIDI controller.
+
+        Parameters
+        ----------
+        position : int
+            Position of the button.
+        """
+        data = \
+            [   button_engaged_command,
+                position + button_position_shift,
+                button_blinking_value ]
+        
+        self.send_midi_message(data)
+
+    def change_knob_value(self, id, new_value):
+        """Sends the MIDI message, responsible for changing
+        a value assigned to a knob.
+
+        Parameters
+        ----------
+        id : int
+            Knob id.
+        new_value : int
+            Value to set the knob to.
+        """
+        data = [knob_value_change_command, id, new_value]
         self.send_midi_message(data)
 
     def turn_on_button_led(self, id):
-        postion = self.turn_button_id_to_position(id)
-        data = [button_engaged_command, postion, 1]
+        """Sends the MIDI message, responsible for changing
+        the button LED to 'on' state.
+
+        Parameters
+        ----------
+        id : int
+            Button id.
+        """
+        data = \
+            [   button_value_change_on_command,
+                id,
+                self.controller.button_value_on ]
+        
         self.send_midi_message(data)
 
     def turn_off_button_led(self, id):
-        postion = self.turn_button_id_to_position(id)
-        data = [button_disengaged_command, postion, 0]
-        self.send_midi_message(data)
-        
+        """Sends the MIDI message, responsible for changing
+        the button LED to 'off' state.
 
-    def turn_knob_id_to_position(self, id) -> int:
-        if id >= B_knob_layer_id:
-            id = id - B_knob_layer_id
-        elif id >= A_knob_layer_id:
-            id = id - A_knob_layer_id
-        else:
-            raise ValueError(
-                    f"knob '{id}' cannot be found"
-                )
+        Parameters
+        ----------
+        id : int
+            Button id.
+        """
+        data = \
+            [   button_value_change_off_command,
+                id,
+                self.controller.button_value_off ]
         
-        return id
-    
-    def turn_button_id_to_position(self, id) -> int:
-        if id >= B_button_layer_id:
-            id = id - B_button_layer_id
-        elif id >= A_button_layer_id:
-            id = id - A_button_layer_id
-        else:
-            raise ValueError(
-                    f"button '{id}' cannot be found"
-                )
-        
-        return id
+        self.send_midi_message(data)
             
     def handle_midi_message(self, command, channel, data):
-        id = data[0]
+        """Handles the incoming MIDI message. The message is interpreted
+        is follows: [command*16+channel, data[0], data[1]], where the
+        three numbers are unsigned ints.
 
+        Parameters
+        ----------
+        command : int
+            Command id.
+        channel : int
+            Channel the MIDI message came from.
+        data : List[int]
+            Remaining part of the MIDI message.
+        """
         if id in self.knob_ids:
             self.handle_knob_message(command, channel, data)
         elif id in self.knob_ids and command == button_engaged_command:

@@ -12,6 +12,22 @@ from midi_app_controller.models.controller import Controller
 
 
 @pytest.fixture
+def controller_data() -> Controller:
+    controller_data = {
+        "name": "X-TOUCH MINI",
+        "button_value_off": 0,
+        "button_value_on": 127,
+        "knob_value_min": 0,
+        "knob_value_max": 127,
+        "buttons": [{"id": 8, "name": "Button1"}, {"id": 9, "name": "Button2"}],
+        "knobs": [{"id": 1, "name": "Knob1"}, {"id": 2, "name": "Knob2"}],
+    }
+
+    controller=Controller(**controller_data)
+    
+    return controller
+
+@pytest.fixture
 def actions_handler() -> ActionsHandler:
     binds_data = {
         "name": "TestBinds",
@@ -72,17 +88,20 @@ def actions_handler() -> ActionsHandler:
     )
 
 
-def test_create(actions_handler):
+
+def test_create(actions_handler, controller_data):
     controller = \
         ConnectedController.create(
             actions_handler=actions_handler,
+            controller=controller_data,
         )
     
-    controller.set_midi_in_callback(midi_callback)
-    
-    controller.turn_on_knob_backlight(1)
-    controller.turn_on_button_led(8)
-    controller.send_midi_message([0xBA, 1, 100])
+    controller.flash_button(16)
+    controller.flash_knob(3)
+    controller.change_knob_value(2, 1)
+    controller.turn_on_button_led(9)
+    time.sleep(0.5)
+    controller.turn_off_button_led(9)
 
     try:
         while True:
