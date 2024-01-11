@@ -5,12 +5,14 @@ import yaml
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QMainWindow, QAction, QHBoxLayout, \
     QDial, QComboBox, QFormLayout, QMenuBar
 from midi_app_controller.actions.bound_controller import BoundController, ButtonActions, KnobActions
+from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 
 
 class MIDIControllerView(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setupUI()
+        self.loadSettings()
 
     def ui_action_to_model_action(self, action_name: str):
         """
@@ -23,6 +25,8 @@ class MIDIControllerView(QMainWindow):
 
         Returns
         -------
+        Action
+            An instance of Action with the given name.
         """
 
         if action_name == 'None':
@@ -32,9 +36,6 @@ class MIDIControllerView(QMainWindow):
     def setupUI(self):
         """
         Sets up the UI.
-
-        Returns
-        -------
         """
 
         self.createCentralWidget()
@@ -45,9 +46,6 @@ class MIDIControllerView(QMainWindow):
     def createCentralWidget(self):
         """
         Creates the central widget.
-
-        Returns
-        -------
         """
 
         self.central_widget = QWidget()
@@ -58,9 +56,6 @@ class MIDIControllerView(QMainWindow):
     def createMenuBar(self):
         """
         Creates the menu bar.
-
-        Returns
-        -------
         """
 
         menubar = self.menuBar()
@@ -79,9 +74,6 @@ class MIDIControllerView(QMainWindow):
             Title of the action.
         method: callable
             Method to be called when the action is triggered.
-
-        Returns
-        -------
         """
 
         action = QAction(title, self)
@@ -91,29 +83,33 @@ class MIDIControllerView(QMainWindow):
     def layoutControls(self):
         """
         Lays out the controls.
-
-        Returns
-        -------
         """
 
         self.dials, self.buttons = [], []
         self.control_to_action, self.control_to_combo_box = {}, {}
 
-        self.main_layout.addLayout(self.createDialsLayout())
+        self.main_layout.addLayout(self.createDialsLayout(17, 24))
         self.main_layout.addLayout(self.createButtonsLayout(1, 8))
         self.main_layout.addLayout(self.createButtonsLayout(9, 16))
         self.createActionAssignmentForm()
 
-    def createDialsLayout(self):
+    def createDialsLayout(self, start: int, end: int):
         """
         Creates the layout for the dials.
 
+        Parameters
+        ----------
+        start: int
+        end: int
+
         Returns
         -------
+        QHBoxLayout
+            An instance of QHBoxLayout containing the dials.
         """
 
         layout = QHBoxLayout()
-        for i in range(8):
+        for i in range(start, end + 1):
             layout.addWidget(self.createDial(i))
         return layout
 
@@ -128,6 +124,8 @@ class MIDIControllerView(QMainWindow):
 
         Returns
         -------
+        QDial
+            An instance of QDial with the given index.
         """
 
         dial = QDial()
@@ -150,6 +148,8 @@ class MIDIControllerView(QMainWindow):
 
         Returns
         -------
+        QHBoxLayout
+            An instance of QHBoxLayout containing the buttons.
         """
 
         layout = QHBoxLayout()
@@ -167,6 +167,8 @@ class MIDIControllerView(QMainWindow):
             Index of the button.
         Returns
         -------
+        QPushButton
+            An instance of QPushButton with the given index.
         """
 
         button = QPushButton(f"Button {index}")
@@ -178,9 +180,6 @@ class MIDIControllerView(QMainWindow):
     def createActionAssignmentForm(self):
         """
         Creates the form for assigning actions to controls.
-
-        Returns
-        -------
         """
 
         layout = QFormLayout()
@@ -207,6 +206,7 @@ class MIDIControllerView(QMainWindow):
 
         Returns
         -------
+            Action assignment tuple or a list of action assignment tuples.
         """
 
         if isinstance(control, QDial):
@@ -226,6 +226,8 @@ class MIDIControllerView(QMainWindow):
             Type of the action (increase or decrease).
         Returns
         -------
+        label, combo
+            A label and the combo box.
         """
 
         label = QLabel(f'{dial.objectName()} {action_type}:')
@@ -242,6 +244,8 @@ class MIDIControllerView(QMainWindow):
 
         Returns
         -------
+        label, combo
+            A label and the combo box.
         """
 
         label = QLabel(f'{button.objectName()}:')
@@ -260,6 +264,8 @@ class MIDIControllerView(QMainWindow):
             Type of the action (increase or decrease).
         Returns
         -------
+        QComboBox
+            An instance of QComboBox containing the actions.
         """
 
         combo = QComboBox()
@@ -282,9 +288,6 @@ class MIDIControllerView(QMainWindow):
             Combo box containing the action.
         action_type:
             Type of the action (increase or decrease).
-
-        Returns
-        -------
         """
 
         selected_action = combo_box.currentText()
@@ -304,9 +307,6 @@ class MIDIControllerView(QMainWindow):
         ----------
         control:
             Control to update the style of.
-
-        Returns
-        -------
         """
 
         control_key = control.objectName()
@@ -347,9 +347,9 @@ class MIDIControllerView(QMainWindow):
     def saveSettings(self):
         """
         Saves the settings to a file.
-        Returns
-        -------
         """
+
+        button_binds = []
 
         bound_buttons = {}
         for button_id, action_name in self.control_to_action.items():
@@ -358,6 +358,8 @@ class MIDIControllerView(QMainWindow):
                 if model_action is not None:
                     button_id_num = int(button_id.split('_')[1])
                     bound_buttons[button_id_num] = ButtonActions(action_press=model_action)
+                    button_bind = ButtonBind(button_id=button_id_num, action_id=model_action.id)
+                    button_binds.append(button_bind)
 
         bound_knobs = {}
         for knob_key, action_name in self.control_to_action.items():
@@ -373,35 +375,32 @@ class MIDIControllerView(QMainWindow):
                     elif action_type == 'decrease':
                         bound_knobs[knob_id].action_decrease = model_action
 
-        bound_knobs = {k: v for k, v in bound_knobs.items() if
-                       v.action_increase is not None or v.action_decrease is not None}
+        knob_binds = [
+            KnobBind(knob_id=k, action_id_increase=v.action_increase.id if v.action_increase else None,
+                     action_id_decrease=v.action_decrease.id if v.action_decrease else None)
+            for k, v in bound_knobs.items()]
 
-        self.bound_controller = BoundController(
-            knob_value_min=0,
-            knob_value_max=127,
-            buttons=bound_buttons,
-            knobs=bound_knobs
-        )
-        self.bound_controller.save_to(Path('settings.yaml'))
+        self.binds = Binds(name='Default', description='Default binds', app_name='Default', controller_name='Default',
+                           button_binds=button_binds, knob_binds=knob_binds)
+        self.binds.save_to(Path('settings.yaml'))
 
     def loadSettings(self):
         """
         Loads the settings from a file.
-
-        Returns
-        -------
         """
 
         try:
-            self.bound_controller = BoundController.load_from(Path('settings.yaml'))
+            self.binds = Binds.load_from(Path('settings.yaml'))
 
-            for button_id, actions in self.bound_controller.buttons.items():
-                action_press = actions.action_press.id if actions.action_press is not None else 'None'
-                self.control_to_combo_box[f'Button_{button_id}'].setCurrentText(action_press)
+            for button_bind in self.binds.button_binds:
+                action = button_bind.action_id
+                button_id = button_bind.button_id
+                self.control_to_combo_box[f'Button_{button_id}'].setCurrentText(action)
 
-            for knob_id, actions in self.bound_controller.knobs.items():
-                action_increase = actions.action_increase.id if actions.action_increase is not None else 'None'
-                action_decrease = actions.action_decrease.id if actions.action_decrease is not None else 'None'
+            for knob_bind in self.binds.knob_binds:
+                action_increase = knob_bind.action_id_increase if knob_bind.action_id_increase else 'None'
+                action_decrease = knob_bind.action_id_decrease if knob_bind.action_id_decrease else 'None'
+                knob_id = knob_bind.knob_id
                 self.control_to_combo_box[f'Dial_{knob_id}_increase'].setCurrentText(action_increase)
                 self.control_to_combo_box[f'Dial_{knob_id}_decrease'].setCurrentText(action_decrease)
 
@@ -413,11 +412,15 @@ class MIDIControllerView(QMainWindow):
 
 
 def main():
-    app = QApplication(sys.argv)
     view = MIDIControllerView()
     view.show()
-    sys.exit(app.exec_())
 
-
-if __name__ == '__main__':
-    main()
+# def main():
+#     app = QApplication(sys.argv)
+#     view = MIDIControllerView()
+#     view.show()
+#     sys.exit(app.exec_())
+#
+#
+# if __name__ == '__main__':
+#     main()
