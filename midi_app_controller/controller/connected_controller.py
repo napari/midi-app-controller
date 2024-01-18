@@ -1,22 +1,13 @@
-from typing import List
+from typing import List, Dict
 from pydantic import BaseModel
 
 from midi_app_controller.models.controller import Controller
 from ..actions.actions_handler import ActionsHandler
 
 import rtmidi
-from .controller_constants import (
-    button_engaged_command,
-    button_disengaged_command,
-    knob_value_change_command,
-    button_value_change_on_command,
-    button_value_change_off_command,
-    control_change_command,
-    knob_position_shift,
-    button_position_shift,
-    knob_blinking_value,
-    button_blinking_value,
-)
+import time
+
+from .controller_constants import ControllerConstants
 
 
 def midi_callback(message, cls):
@@ -68,7 +59,9 @@ class ConnectedController(BaseModel):
     midi_in: rtmidi.MidiIn
     midi_out: rtmidi.MidiOut
     button_ids: List[int]
+    button_engagement: Dict[int, int]
     knob_ids: List[int]
+    knob_engagement: Dict[int, int]
 
     class Config:
         arbitrary_types_allowed = True
@@ -148,8 +141,13 @@ class ConnectedController(BaseModel):
             midi_out=midi_out,
             midi_in=midi_in,
             button_ids=button_ids,
+            button_engagement={},
             knob_ids=knob_ids,
+            knob_engagement={},
         )
+
+        instance.init_buttons()
+        instance.init_knobs()
 
         # Set callback for getting data from controller
         instance.midi_in.set_callback(midi_callback, data=instance)
@@ -164,6 +162,27 @@ class ConnectedController(BaseModel):
         self.midi_in.delete()
         self.midi_out.close_port()
         self.midi_out.delete()
+
+    def init_buttons(self):
+        """Initializes the buttons on the controller, setting them
+        to the 'off' value. Adds button entries to 'button_engagement'
+        dictionary.
+        """
+        for id in self.button_ids:
+            self.turn_off_button_led(id)
+            self.button_engagement[id] = \
+                self.controller.button_value_off
+
+    def init_knobs(self):
+        """Initializes the knobs on the controller, setting them
+        to the minimal value. Adds knob entries to 'knob_engagement'
+        dictionary.
+        """
+        for id in self.knob_ids:
+            self.change_knob_value(id, self.controller.knob_value_min)
+            self.knob_engagement[id] = \
+                self.controller.knob_value_min
+
 
     def handle_button_engagement(self, data):
         """Runs the action bound to the button, specified in
@@ -204,10 +223,17 @@ class ConnectedController(BaseModel):
         """
         id = data[0]
         velocity = data[1]
+        prev_velocity = self.knob_engagement[id]
+
+        if(velocity == self.controller.knob_value_min):
+            prev_velocity = self.controller.knob_value_min + 1
+
+        if(velocity == self.controller.knob_value_max):
+            prev_velocity = self.controller.knob_value_max - 1
 
         self.action_handler.handle_knob_action(
             knob_id=id,
-            old_value=0,  # TODO: we're not keeping old value anywhere for now
+            old_value=prev_velocity,
             new_value=velocity,
         )
 
@@ -225,7 +251,7 @@ class ConnectedController(BaseModel):
         except ValueError as err:
             print(f"Value Error: {err}")
 
-    def flash_knob(self, position):
+    def flash_knob(self, id):
         """Flashed the LEDs corresponding to a knob on a
         MIDI controller.
 
@@ -234,15 +260,13 @@ class ConnectedController(BaseModel):
         position : int
             Position of the knob.
         """
-        data = [
-            control_change_command,
-            position + knob_position_shift,
-            knob_blinking_value,
-        ]
+        for _ in range(3):
+            self.change_knob_value(id, self.controller.knob_value_min)
+            time.sleep(0.3)
+            self.change_knob_value(id, self.controller.knob_value_max)
+            time.sleep(0.3)
 
-        self.send_midi_message(data)
-
-    def flash_button(self, position):
+    def flash_button(self, id):
         """Flashed the button LED on a MIDI controller.
 
         Parameters
@@ -250,13 +274,12 @@ class ConnectedController(BaseModel):
         position : int
             Position of the button.
         """
-        data = [
-            button_engaged_command,
-            position + button_position_shift,
-            button_blinking_value,
-        ]
+        for _ in range(3):
+            self.turn_on_button_led(id)
+            time.sleep(0.3)
+            self.turn_off_button_led(id)
+            time.sleep(0.3)
 
-        self.send_midi_message(data)
 
     def change_knob_value(self, id, new_value):
         """Sends the MIDI message, responsible for changing
@@ -269,7 +292,10 @@ class ConnectedController(BaseModel):
         new_value : int
             Value to set the knob to.
         """
-        data = [knob_value_change_command, id, new_value]
+        data = [ControllerConstants.knob_value_change_command,
+                id,
+                new_value]
+        
         self.send_midi_message(data)
 
     def turn_on_button_led(self, id):
@@ -281,7 +307,9 @@ class ConnectedController(BaseModel):
         id : int
             Button id.
         """
-        data = [button_value_change_on_command, id, self.controller.button_value_on]
+        data = [ControllerConstants.button_value_change_on_command,
+                id,
+                self.controller.button_value_on]
 
         self.send_midi_message(data)
 
@@ -294,7 +322,9 @@ class ConnectedController(BaseModel):
         id : int
             Button id.
         """
-        data = [button_value_change_off_command, id, self.controller.button_value_off]
+        data = [ControllerConstants.button_value_change_off_command,
+                id,
+                self.controller.button_value_off]
 
         self.send_midi_message(data)
 
@@ -314,9 +344,14 @@ class ConnectedController(BaseModel):
         """
         if id in self.knob_ids:
             self.handle_knob_message(command, channel, data)
-        elif id in self.knob_ids and command == button_engaged_command:
+
+        elif id in self.knob_ids and command == \
+                    ControllerConstants.button_engaged_command:
             self.handle_button_engagement(command, channel, data)
-        elif id in self.knob_ids and command == button_disengaged_command:
+
+        elif id in self.knob_ids and command == \
+                    ControllerConstants.button_disengaged_command:
             self.handle_button_disengagement(command, channel, data)
+
         else:
             raise ValueError(f"action '{id}' cannot be found")
