@@ -1,7 +1,8 @@
+import os
 from pathlib import Path
+from typing import Any, List, Optional
 
 from pydantic import BaseModel
-from typing import Any, List, Optional
 import yaml
 
 
@@ -23,6 +24,29 @@ class YamlBaseModel(BaseModel):
         with open(path) as f:
             data = yaml.safe_load(f)
             return cls(**data)
+
+    @classmethod
+    def load_all_from(cls, directory: Path):
+        """Creates models initialized with data from all YAML files in directory.
+
+        Parameters
+        ----------
+        directory : Path
+            YAML files directory.
+
+        Returns
+        -------
+        List[cls, Path]
+            List of created models with paths to corresponding YAML files.
+        """
+        return [
+            (
+                cls.load_from(os.path.join(directory, filename)),
+                os.path.join(directory, filename),
+            )
+            for filename in os.listdir(directory)
+            if filename.lower().endswith((".yaml", ".yml"))
+        ]
 
     def save_to(self, path: Path):
         """Saves the model's data to a YAML file.
