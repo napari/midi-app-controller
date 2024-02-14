@@ -2,7 +2,7 @@ import os
 
 
 class Config:
-    """ "Class that stores configuration."""
+    """Class that stores configuration."""
 
     # TODO Find better locations for config files.
     BINDS_DIRECTORY = os.path.abspath(
