@@ -121,26 +121,26 @@ def test_get_available_midi_out(mock_midi_in_out, state_manager, ports):
 
 
 @pytest.mark.parametrize("name", ["abc", "", "x" * 100])
-def test_select_midi_in(state_manager, name):
+def test_select_midi_in(mock_midi_in_out, state_manager, name):
     state_manager.select_midi_in(name)
 
     assert state_manager.selected_midi_in == name
 
 
 @pytest.mark.parametrize("name", ["abc", "", "x" * 100])
-def test_select_midi_out(state_manager, name):
+def test_select_midi_out(mock_midi_in_out, state_manager, name):
     state_manager.select_midi_out(name)
 
     assert state_manager.selected_midi_out == name
 
 
-def test_get_selected_binds_path(state_manager):
+def test_get_selected_binds_path(mock_midi_in_out, state_manager):
     state_manager.selected_binds = SelectedItem("name", "path")
 
     assert state_manager.get_selected_binds_path() == "path"
 
 
-def test_get_selected_controller_path(state_manager):
+def test_get_selected_controller_path(mock_midi_in_out, state_manager):
     state_manager.selected_controller = SelectedItem("name", "path")
 
     assert state_manager.get_selected_controller_path() == "path"
