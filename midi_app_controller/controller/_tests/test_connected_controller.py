@@ -92,9 +92,14 @@ def test_create(actions_handler, controller_data):
             actions_handler=actions_handler,
             controller=controller_data,
         )
-        controller.flash_button(16)
-        controller.flash_knob(3)
-        controller.change_knob_value(2, 1)
+        controller.flash_button(8)
+        time.sleep(0.5)
+        controller.flash_knob(1)
+        time.sleep(0.5)
+        controller.change_knob_value(0, 0)
+        time.sleep(0.5)
+        controller.change_knob_value(0, 127)
+        time.sleep(0.5)
         controller.turn_on_button_led(9)
         time.sleep(0.5)
         controller.turn_off_button_led(9)
@@ -102,7 +107,8 @@ def test_create(actions_handler, controller_data):
         return
 
     try:
-        time.sleep(5)
+        while True:
+            time.sleep(1)
     except KeyboardInterrupt:
         pass
     finally:
