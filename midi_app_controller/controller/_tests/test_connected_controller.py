@@ -88,7 +88,7 @@ def actions_handler() -> ActionsHandler:
 
 def test_create(actions_handler, controller_data):
     try:
-        controller = ConnectedController.create(
+        controller = ConnectedController(
             actions_handler=actions_handler,
             controller=controller_data,
         )

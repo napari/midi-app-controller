@@ -1,8 +1,7 @@
 import time
-from typing import List, Dict
+from typing import List
 
 import rtmidi
-from pydantic import BaseModel
 
 from midi_app_controller.models.controller import Controller
 from ..actions.actions_handler import ActionsHandler
@@ -12,7 +11,7 @@ from .controller_constants import ControllerConstants
 # import sys
 
 
-def midi_callback(message, cls):
+def midi_callback(message: List[int], cls: "ConnectedController") -> None:
     """Callback function for MIDI input, specified by rtmidi package.
 
     Parameters
@@ -35,7 +34,7 @@ def midi_callback(message, cls):
     cls.handle_midi_message(command=command, channel=channel, data=data_bytes)
 
 
-class ConnectedController(BaseModel):
+class ConnectedController:
     """A controller connected to the physical device capable of
     sending and receiving signals.
 
@@ -60,23 +59,25 @@ class ConnectedController(BaseModel):
         A dictionary that keeps the value of every knob.
     """
 
-    controller: Controller
-    actions_handler: ActionsHandler
-    midi_in: rtmidi.MidiIn
-    midi_out: rtmidi.MidiOut
-    button_ids: List[int]
-    button_engagement: Dict[int, int]
-    knob_ids: List[int]
-    knob_engagement: Dict[int, int]
+    # controller: Controller
+    # actions_handler: ActionsHandler
+    # midi_in: rtmidi.MidiIn
+    # midi_out: rtmidi.MidiOut
+    # button_ids: List[int]
+    # button_engagement: Dict[int, int]
+    # knob_ids: List[int]
+    # knob_engagement: Dict[int, int]
 
-    class Config:
-        arbitrary_types_allowed = True
+    # class Config:
+    #     arbitrary_types_allowed = True
 
-    @classmethod
-    def create(
-        cls, *, actions_handler: ActionsHandler, controller: Controller
-    ) -> "ConnectedController":
-        """Creates an instance of `ConnectedController`.
+    def __init__(
+        self,
+        *,
+        actions_handler: ActionsHandler,
+        controller: Controller,
+    ) -> None:
+        """Initializes `ConnectedController`.
 
         Parameters
         ----------
@@ -85,11 +86,6 @@ class ConnectedController(BaseModel):
         controller : Controller
             Information about the controller, the create method will
             try to connect to.
-
-        Returns
-        -------
-        ConnectedController
-            A created model.
 
         Raises
         ------
@@ -141,26 +137,22 @@ class ConnectedController(BaseModel):
         except rtmidi.InvalidUseError as err:
             print(f"Invalid Use Error: {err}")
 
-        instance = cls(
-            controller=controller,
-            actions_handler=actions_handler,
-            midi_out=midi_out,
-            midi_in=midi_in,
-            button_ids=button_ids,
-            button_engagement={},
-            knob_ids=knob_ids,
-            knob_engagement={},
-        )
+        self.controller = controller
+        self.actions_handler = actions_handler
+        self.midi_out = midi_out
+        self.midi_in = midi_in
+        self.button_ids = button_ids
+        self.button_engagement = {}
+        self.knob_ids = knob_ids
+        self.knob_engagement = {}
 
-        instance.init_buttons()
-        instance.init_knobs()
+        self.init_buttons()
+        self.init_knobs()
 
         # Set callback for getting data from controller
-        instance.midi_in.set_callback(midi_callback, data=instance)
+        self.midi_in.set_callback(midi_callback, data=self)
 
-        return instance
-
-    def __del__(self):
+    def __del__(self) -> None:
         """Responsible for closing in/out ports, and safely deleting
         python-rtmidi classes.
         """
@@ -169,7 +161,7 @@ class ConnectedController(BaseModel):
         self.midi_out.close_port()
         self.midi_out.delete()
 
-    def init_buttons(self):
+    def init_buttons(self) -> None:
         """Initializes the buttons on the controller, setting them
         to the 'off' value.
 
@@ -179,7 +171,7 @@ class ConnectedController(BaseModel):
             self.turn_off_button_led(id)
             self.button_engagement[id] = self.controller.button_value_off
 
-    def init_knobs(self):
+    def init_knobs(self) -> None:
         """Initializes the knobs on the controller, setting them
         to the minimal value. Adds knob entries to 'knob_engagement'
         dictionary.
@@ -188,7 +180,7 @@ class ConnectedController(BaseModel):
             self.change_knob_value(id, self.controller.knob_value_min)
             self.knob_engagement[id] = self.controller.knob_value_min
 
-    def handle_button_engagement(self, data):
+    def handle_button_engagement(self, data) -> None:
         """Runs the action bound to the button, specified in
         action_handler.
 
@@ -203,10 +195,9 @@ class ConnectedController(BaseModel):
             button_id=id,
         )
 
-    def handle_button_disengagement(self, data):
+    def handle_button_disengagement(self, data: List[int]) -> None:
         """Runs the action bound to the button release, specified in
         action_handler.
-
 
         Parameters
         ----------
@@ -215,10 +206,9 @@ class ConnectedController(BaseModel):
         """
         pass  # TODO: for now we're not handling button disengagement
 
-    def handle_knob_message(self, data):
+    def handle_knob_message(self, data: List[int]) -> None:
         """Runs the action bound to the knob turn, specified in
         action_handler.
-
 
         Parameters
         ----------
@@ -241,9 +231,8 @@ class ConnectedController(BaseModel):
             new_value=velocity,
         )
 
-    def send_midi_message(self, data):
-        """Sends the specified MIDI message, using python-rtmidi
-        MidiIn class.
+    def send_midi_message(self, data: List[int]) -> None:
+        """Sends the specified MIDI message.
 
         Parameters
         ----------
@@ -255,14 +244,14 @@ class ConnectedController(BaseModel):
         except ValueError as err:
             print(f"Value Error: {err}")
 
-    def flash_knob(self, id):
-        """Flashed the LEDs corresponding to a knob on a
+    def flash_knob(self, id: int) -> None:
+        """Flashes the LEDs corresponding to a knob on a
         MIDI controller.
 
         Parameters
         ----------
-        position : int
-            Position of the knob.
+        id : int
+            Id of the knob.
         """
         sleep_seconds = 0.3
 
@@ -272,13 +261,13 @@ class ConnectedController(BaseModel):
             self.change_knob_value(id, self.controller.knob_value_max)
             time.sleep(sleep_seconds)
 
-    def flash_button(self, id):
-        """Flashed the button LED on a MIDI controller.
+    def flash_button(self, id: int) -> None:
+        """Flashes the button LED on a MIDI controller.
 
         Parameters
         ----------
-        position : int
-            Position of the button.
+        id : int
+            Id of the button.
         """
         for _ in range(3):
             self.turn_on_button_led(id)
@@ -286,7 +275,20 @@ class ConnectedController(BaseModel):
             self.turn_off_button_led(id)
             time.sleep(0.3)
 
-    def change_knob_value(self, id, new_value):
+    def build_message(
+        self,
+        command: int,
+        channel: int,
+        data: List[int],
+    ) -> List[int]:
+        """Builds the MIDI message, that is later sent to
+        the controller.
+        """
+
+        status_byte = command ^ (channel - 1)
+        return [status_byte, data[0], data[1]]
+
+    def change_knob_value(self, id: int, new_value: int) -> None:
         """Sends the MIDI message, responsible for changing
         a value assigned to a knob.
 
@@ -297,11 +299,18 @@ class ConnectedController(BaseModel):
         new_value : int
             Value to set the knob to.
         """
-        data = [ControllerConstants.KNOB_VALUE_CHANGE_COMMAND, id, new_value]
+        # For now we, only use single channel
+        channel = 11
+
+        data = self.build_message(
+            ControllerConstants.CONTROL_CHANGE_COMMAND,
+            channel,
+            [id, new_value],
+        )
 
         self.send_midi_message(data)
 
-    def turn_on_button_led(self, id):
+    def turn_on_button_led(self, id: int) -> None:
         """Sends the MIDI message, responsible for changing
         the button LED to 'on' state.
 
@@ -310,15 +319,18 @@ class ConnectedController(BaseModel):
         id : int
             Button id.
         """
-        data = [
-            ControllerConstants.BUTTON_VALUE_CHANGE_ON_COMMAND,
-            id,
-            self.controller.button_value_on,
-        ]
+        # For now we, only use single channel
+        channel = 11
+
+        data = self.build_message(
+            ControllerConstants.BUTTON_ENGAGED_COMMAND,
+            channel,
+            [id, self.controller.button_value_on],
+        )
 
         self.send_midi_message(data)
 
-    def turn_off_button_led(self, id):
+    def turn_off_button_led(self, id: int) -> None:
         """Sends the MIDI message, responsible for changing
         the button LED to 'off' state.
 
@@ -327,15 +339,18 @@ class ConnectedController(BaseModel):
         id : int
             Button id.
         """
-        data = [
-            ControllerConstants.BUTTON_VALUE_CHANGE_OFF_COMMAND,
-            id,
-            self.controller.button_value_off,
-        ]
+        # For now we, only use single channel
+        channel = 11
+
+        data = self.build_message(
+            ControllerConstants.BUTTON_DISENGAGED_COMMAND,
+            channel,
+            [id, self.controller.button_value_off],
+        )
 
         self.send_midi_message(data)
 
-    def handle_midi_message(self, command, channel, data):
+    def handle_midi_message(self, command: int, channel: int, data: List[int]) -> None:
         """Handles the incoming MIDI message.
 
         The message is interpreted as follows:
@@ -351,20 +366,22 @@ class ConnectedController(BaseModel):
         data : List[int]
             Remaining part of the MIDI message.
         """
+        id = data[0]
+
         if id in self.knob_ids:
-            self.handle_knob_message(command, channel, data)
+            self.handle_knob_message(data)
 
         elif (
             id in self.button_ids
             and command == ControllerConstants.BUTTON_ENGAGED_COMMAND
         ):
-            self.handle_button_engagement(command, channel, data)
+            self.handle_button_engagement(data)
 
         elif (
             id in self.button_ids
             and command == ControllerConstants.BUTTON_DISENGAGED_COMMAND
         ):
-            self.handle_button_disengagement(command, channel, data)
+            self.handle_button_disengagement(data)
 
         else:
             raise ValueError(f"action '{id}' cannot be found")
