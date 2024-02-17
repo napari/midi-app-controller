@@ -10,6 +10,8 @@ from midi_app_controller.gui.binds_editor import BindsEditor
 
 
 class MidiStatus(QWidget):
+    """Widget that allows to select currently used controller, binds, etc."""
+
     def __init__(self):
         super().__init__()
 
