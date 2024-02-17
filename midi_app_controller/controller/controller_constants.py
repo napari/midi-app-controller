@@ -1,7 +1,7 @@
 class ControllerConstants:
-    button_engaged_command = 0x90
-    button_disengaged_command = 0x80
-    control_change_command = 0xB0
-    button_value_change_on_command = 0x9A
-    button_value_change_off_command = 0x8A
-    knob_value_change_command = 0xBA
+    BUTTON_ENGAGED_COMMAND = 0x90
+    BUTTON_DISENGAGED_COMMAND = 0x80
+    CONTROL_CHANGE_COMMAND = 0xB0
+    BUTTON_VALUE_CHANGE_ON_COMMAND = 0x9A
+    BUTTON_VALUE_CHANGE_OFF_COMMAND = 0x8A
+    KNOB_VALUE_CHANGE_COMMAND = 0xBA

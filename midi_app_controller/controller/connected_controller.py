@@ -1,7 +1,7 @@
-import rtmidi
 import time
-
 from typing import List, Dict
+
+import rtmidi
 from pydantic import BaseModel
 
 from midi_app_controller.models.controller import Controller
@@ -16,11 +16,11 @@ def midi_callback(message, cls):
     """Callback function for MIDI input, specified by rtmidi package.
 
     Parameters
-        ----------
-        message : List[int]
-            Standard MIDI message.
-        cls : ConnectedController
-            ConnedctedController class instance.
+    ----------
+    message : List[int]
+        Standard MIDI message.
+    cls : ConnectedController
+        ConnectedController class instance.
     """
 
     # Process MIDI message here
@@ -52,8 +52,12 @@ class ConnectedController(BaseModel):
         Midi output client interface from python-rtmidi package.
     button_ids : List[int]
         A list containing all valid button ids on a handled controller.
+    button_engagement: Dict[int, int]
+        A dictionary that keeps the state of every button.
     knob_ids : List[int]
         A list containing all valid knob ids on a handled controller.
+    knob_engagement: Dict[int, int]
+        A dictionary that keeps the value of every knob.
     """
 
     controller: Controller
@@ -167,8 +171,9 @@ class ConnectedController(BaseModel):
 
     def init_buttons(self):
         """Initializes the buttons on the controller, setting them
-        to the 'off' value. Adds button entries to 'button_engagement'
-        dictionary.
+        to the 'off' value.
+
+        Adds button entries to `button_engagement` dictionary.
         """
         for id in self.button_ids:
             self.turn_off_button_led(id)
@@ -292,7 +297,7 @@ class ConnectedController(BaseModel):
         new_value : int
             Value to set the knob to.
         """
-        data = [ControllerConstants.knob_value_change_command, id, new_value]
+        data = [ControllerConstants.KNOB_VALUE_CHANGE_COMMAND, id, new_value]
 
         self.send_midi_message(data)
 
@@ -306,7 +311,7 @@ class ConnectedController(BaseModel):
             Button id.
         """
         data = [
-            ControllerConstants.button_value_change_on_command,
+            ControllerConstants.BUTTON_VALUE_CHANGE_ON_COMMAND,
             id,
             self.controller.button_value_on,
         ]
@@ -323,7 +328,7 @@ class ConnectedController(BaseModel):
             Button id.
         """
         data = [
-            ControllerConstants.button_value_change_off_command,
+            ControllerConstants.BUTTON_VALUE_CHANGE_OFF_COMMAND,
             id,
             self.controller.button_value_off,
         ]
@@ -331,9 +336,11 @@ class ConnectedController(BaseModel):
         self.send_midi_message(data)
 
     def handle_midi_message(self, command, channel, data):
-        """Handles the incoming MIDI message. The message is interpreted
-        is follows: [command*16+channel, data[0], data[1]], where the
-        three numbers are unsigned ints.
+        """Handles the incoming MIDI message.
+
+        The message is interpreted as follows:
+        [command*16+channel, data[0], data[1]],
+        where the three numbers are unsigned ints.
 
         Parameters
         ----------
@@ -348,14 +355,14 @@ class ConnectedController(BaseModel):
             self.handle_knob_message(command, channel, data)
 
         elif (
-            id in self.knob_ids
-            and command == ControllerConstants.button_engaged_command
+            id in self.button_ids
+            and command == ControllerConstants.BUTTON_ENGAGED_COMMAND
         ):
             self.handle_button_engagement(command, channel, data)
 
         elif (
-            id in self.knob_ids
-            and command == ControllerConstants.button_disengaged_command
+            id in self.button_ids
+            and command == ControllerConstants.BUTTON_DISENGAGED_COMMAND
         ):
             self.handle_button_disengagement(command, channel, data)
 
