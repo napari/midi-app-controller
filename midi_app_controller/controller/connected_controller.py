@@ -59,18 +59,6 @@ class ConnectedController:
         A dictionary that keeps the value of every knob.
     """
 
-    # controller: Controller
-    # actions_handler: ActionsHandler
-    # midi_in: rtmidi.MidiIn
-    # midi_out: rtmidi.MidiOut
-    # button_ids: List[int]
-    # button_engagement: Dict[int, int]
-    # knob_ids: List[int]
-    # knob_engagement: Dict[int, int]
-
-    # class Config:
-    #     arbitrary_types_allowed = True
-
     def __init__(
         self,
         *,
