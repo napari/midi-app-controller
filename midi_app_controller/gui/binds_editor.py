@@ -263,7 +263,7 @@ class BindsEditor(QDialog):
         Button that allows to switch binds view to buttons.
     knobs_widget : KnobBinds
         Widget with binds editor for knobs.
-    buttonss_widget : KnobBinds
+    buttons_widget : ButtonBinds
         Widget with binds editor for buttons.
     """
 

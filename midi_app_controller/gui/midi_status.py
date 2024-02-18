@@ -38,14 +38,14 @@ class MidiStatus(QWidget):
             binds.button_binds = button_binds
             binds.save_to(binds_path)
 
-        sample_actions = ["Action1", "incr", "decr", "other"] + [
-            f"a{x}" for x in range(100)
-        ]
+        from napari._app_model import get_app
+
+        actions = list(map(lambda x: x[0], list(get_app().commands)))
 
         editor_dialog = BindsEditor(
             controller,
             binds,
-            sample_actions,
+            actions,
             save,
         )
         editor_dialog.exec_()
