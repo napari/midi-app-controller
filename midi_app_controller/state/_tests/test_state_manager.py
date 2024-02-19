@@ -71,10 +71,9 @@ def controller() -> Controller:
 
 @pytest.fixture
 def state_manager(actions) -> StateManager:
-    app_name = "TestApp"
     actions = actions
     app = Application.get_or_create("app123")
-    return StateManager(app_name, actions, app)
+    return StateManager(actions, app)
 
 
 @pytest.fixture

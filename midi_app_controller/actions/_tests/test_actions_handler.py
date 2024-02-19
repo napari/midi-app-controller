@@ -1,4 +1,7 @@
-from unittest.mock import Mock, call
+from unittest.mock import Mock, call, patch
+
+# ruff: noqa: E402
+patch("superqt.utils.ensure_main_thread", lambda x: x).start()
 
 import pytest
 from app_model.types import Action
