@@ -46,7 +46,7 @@ class ButtonBinds(QWidget):
         buttons : List[ControllerElement]
             List of all available buttons.
         button_binds : List[ButtonBind]
-            List of currentl binds.
+            List of current binds.
         actions : List[str]
             List of all actions available to bind.
         """

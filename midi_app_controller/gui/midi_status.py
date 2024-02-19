@@ -1,4 +1,5 @@
 import os
+import sys
 import pathlib
 from typing import List
 
@@ -51,10 +52,12 @@ class MidiStatus(QWidget):
         editor_dialog.exec_()
 
 
-if __name__ == "__main__":
-    import sys
-
-    app = QApplication([sys.argv])
+def main():
+    app = QApplication(sys.argv)
     view = MidiStatus()
     view.show()
     sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()
