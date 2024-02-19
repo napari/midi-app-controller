@@ -134,18 +134,6 @@ def test_select_midi_out(mock_midi_in_out, state_manager, name):
     assert state_manager.selected_midi_out == name
 
 
-def test_get_selected_binds_path(mock_midi_in_out, state_manager):
-    state_manager.selected_binds = SelectedItem("name", "path")
-
-    assert state_manager.get_selected_binds_path() == "path"
-
-
-def test_get_selected_controller_path(mock_midi_in_out, state_manager):
-    state_manager.selected_controller = SelectedItem("name", "path")
-
-    assert state_manager.get_selected_controller_path() == "path"
-
-
 def test_stop_handling(mock_midi_in_out, state_manager):
     mock_midi_in, mock_midi_out = mock_midi_in_out
 

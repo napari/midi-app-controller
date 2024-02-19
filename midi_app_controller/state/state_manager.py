@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from pathlib import Path
 
 import rtmidi
@@ -44,10 +44,10 @@ class StateManager:
         Name of currently selected MIDI input.
     selected_midi_out : Optional[str]
         Name of currently selected MIDI output.
+    actions : List[Action]
+        List of app_model actions that are available in the app.
     _app_name : str
         Name of the app we want to handle. Used to filter binds files.
-    _actions : List[Action]
-        List of app_model actions that are available in the app.
     _app : Application
         Used to execute actions.
     _connected_controller : ConnectedController
@@ -58,13 +58,13 @@ class StateManager:
         MIDI output client interface.
     """
 
-    def __init__(self, app_name: str, actions: List[Action], app: Application):
+    def __init__(self, actions: List[Action], app: Application):
         self.selected_controller = None
         self.selected_binds = None
         self.selected_midi_in = None
         self.selected_midi_out = None
-        self._app_name = app_name
-        self._actions = actions
+        self.actions = actions
+        self._app_name = app.name
         self._app = app
         self._connected_controller = None
         self._midi_in = rtmidi.MidiIn()
@@ -77,21 +77,21 @@ class StateManager:
     def get_available_binds(self) -> List[str]:
         """Returns names of all binds sets suitable for current controller and app."""
         # TODO Extract the loading logic to a separate file that will handle storage.
+        if self.selected_controller is None:
+            return []
         all_binds = Binds.load_all_from(Config.BINDS_DIRECTORY)
-        names = [
+        return [
             b.name
             for b, _ in all_binds
             if b.app_name == self._app_name
             and b.controller_name == self.selected_controller.name
         ]
-        return names
 
     def get_available_controllers(self) -> List[str]:
         """Returns names of all controller schemas."""
         # TODO Extract the loading logic to a separate file that will handle storage.
         controllers = Controller.load_all_from(Config.CONTROLLERS_DIRECTORY)
-        names = [c.name for c, _ in controllers]
-        return names
+        return [c.name for c, _ in controllers]
 
     def get_available_midi_in(self) -> List[str]:
         """Returns names of all MIDI input ports."""
@@ -141,21 +141,12 @@ class StateManager:
         """
         self.selected_midi_out = name
 
-    def get_selected_binds_path(self) -> Optional[Path]:
-        """Returns path to configuration file of currently selected binds."""
-        if self.selected_binds is not None:
-            return self.selected_binds.path
-
-    def get_selected_controller_path(self) -> Optional[Path]:
-        """Returns path to configuration file of currently selected controller."""
-        if self.selected_controller is not None:
-            return self.selected_controller.path
-
     def stop_handling(self) -> None:
         """Stops handling any MIDI signals."""
         self._midi_in.cancel_callback()
-        # TODO Stop threads started by controller (there are not any yet but probably will be).
         self._connected_controller = None
+
+        # TODO This sometimes does NOT work - it freezes for some reason.
         self._midi_in.close_port()
         self._midi_out.close_port()
 
@@ -167,6 +158,7 @@ class StateManager:
         """
         self.stop_handling()
 
+        # Check if all required field are not None.
         if self.selected_controller is None:
             raise Exception("No controller was selected.")
         if self.selected_binds is None:
@@ -176,24 +168,32 @@ class StateManager:
         if self.selected_midi_out is None:
             raise Exception("No midi out port was selected.")
 
+        # Find MIDI port numbers corresponding to selected names.
         midi_in_port = self._midi_in.get_ports().index(self.selected_midi_in)
         midi_out_port = self._midi_out.get_ports().index(self.selected_midi_out)
 
-        binds = Binds.load_from(self.get_selected_binds_path())
-        controller = Controller.load_from(self.get_selected_controller_path())
+        # Load binds and controller from disk.
+        binds = Binds.load_from(self.selected_binds.path)
+        controller = Controller.load_from(self.selected_controller.path)
 
+        # Validate the data.
         bound_controller = BoundController.create(
             binds=binds,
             controller=controller,
-            actions=self._actions,
+            actions=self.actions,
         )
         actions_handler = ActionsHandler(
             bound_controller=bound_controller, app=self._app
         )
 
+        # Open ports.
         self._midi_in.open_port(midi_in_port)
         self._midi_out.open_port(midi_out_port)
 
+        # Start handling MIDI messages.
         self._connected_controller = ConnectedController(
-            actions_handler, controller, self._midi_in, self._midi_out
+            actions_handler=actions_handler,
+            controller=controller,
+            midi_in=self._midi_in,
+            midi_out=self._midi_out,
         )
