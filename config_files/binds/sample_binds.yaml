@@ -1,9 +1,10 @@
+name: TestBinds
+controller_name: TestController
+description: Test description
 app_name: napari
 button_binds:
 - action_id: napari:window:view:toggle_viewer_axes
   button_id: 0
-controller_name: TestController
-description: Test description
 knob_binds:
 - action_id_decrease: napari:layer:toggle_visibility
   action_id_increase: napari:layer:toggle_visibility
@@ -11,4 +12,3 @@ knob_binds:
 - action_id_decrease: napari:layer:duplicate
   action_id_increase: napari:layer:duplicate
   knob_id: 3
-name: TestBinds
