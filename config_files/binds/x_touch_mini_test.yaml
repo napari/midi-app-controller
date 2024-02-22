@@ -2,8 +2,10 @@ app_name: napari
 button_binds:
 - action_id: napari:window:view:toggle_viewer_axes
   button_id: 8
-controller_name: TestController
-description: Test description
+- action_id: napari:layer:toggle_visibility
+  button_id: 9
+controller_name: X_TOUCH_MINI
+description: xtouchmini_test
 knob_binds:
 - action_id_decrease: napari:layer:toggle_visibility
   action_id_increase: napari:layer:toggle_visibility
@@ -11,4 +13,4 @@ knob_binds:
 - action_id_decrease: napari:layer:duplicate
   action_id_increase: napari:layer:duplicate
   knob_id: 2
-name: TestBinds
+name: XTM_binds

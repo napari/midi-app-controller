@@ -57,12 +57,17 @@ class Controller(YamlBaseModel):
     @root_validator
     @classmethod
     def check_duplicate_ids(cls, values):
-        """Ensures that every element has different id."""
-        all_ids = [elem.id for elem in values.get("buttons") + values.get("knobs")]
+        """Ensures that every button and knob has a different id."""
+        button_ids = [elem.id for elem in values.get("buttons")]
+        knob_ids = [elem.id for elem in values.get("knobs")]
 
-        duplicate = find_duplicate(all_ids)
+        duplicate = find_duplicate(button_ids)
         if duplicate is not None:
-            raise ValueError(f"id={duplicate} was used for multiple elements")
+            raise ValueError(f"id={duplicate} was used for multiple buttons")
+
+        duplicate = find_duplicate(knob_ids)
+        if duplicate is not None:
+            raise ValueError(f"id={duplicate} was used for multiple knobs")
 
         return values
 

@@ -294,7 +294,10 @@ class ConnectedController:
         """
         id = data[0]
 
-        if id in self.knob_ids:
+        if (
+            id in self.knob_ids
+            and command == ControllerConstants.CONTROL_CHANGE_COMMAND
+        ):
             self.handle_knob_message(data)
         elif (
             id in self.button_ids
