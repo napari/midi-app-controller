@@ -33,8 +33,8 @@ class KnobBind(BaseModel):
     """
 
     knob_id: int = Field(ge=0, le=127)
-    action_id_increase: str
-    action_id_decrease: str
+    action_id_increase: Optional[str]
+    action_id_decrease: Optional[str]
 
 
 class Binds(YamlBaseModel):
