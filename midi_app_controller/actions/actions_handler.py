@@ -1,5 +1,7 @@
-from app_model import Application
 from typing import Optional
+
+from app_model import Application
+from superqt.utils import ensure_main_thread
 
 from .bound_controller import BoundController
 
@@ -33,12 +35,14 @@ class ActionsHandler:
         """Returns knob's value from the action associated with the knob."""
         raise NotImplementedError  # TODO
 
+    @ensure_main_thread
     def handle_button_action(self, button_id: int) -> None:
         """Executes an action associated with the button if it exists."""
         action = self.bound_controller.get_button_press_action(button_id)
         if action is not None:
             self.app.commands.execute_command(action.id)
 
+    @ensure_main_thread
     def handle_knob_action(
         self,
         *,
