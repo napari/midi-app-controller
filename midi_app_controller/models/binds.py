@@ -43,7 +43,7 @@ class Binds(YamlBaseModel):
     Attributes
     ----------
     name : str
-        The name of the binds set. Cannot be empty.
+        The name of the binds set. Cannot be empty. Must be unique among all binds sets.
     description : Optional[str]
         Additional information that the user may provide.
     app_name : str

@@ -27,7 +27,7 @@ class Controller(YamlBaseModel):
     Attributes
     ----------
     name : str
-        The name of the controller. Cannot be empty.
+        The name of the controller. Cannot be empty. Must be unique among all schemas.
     button_value_off : int
         The number sent by the controller when a button is in 'off' state.
         Should be in the range [0, 127].
