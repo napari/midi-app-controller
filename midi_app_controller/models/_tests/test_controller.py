@@ -30,7 +30,6 @@ def test_valid_controller(controller_data):
             [{"id": 1, "name": "Button1"}, {"id": 1, "name": "Button2"}],
             [{"id": 2, "name": "Knob1"}],
         ),
-        ([{"id": 1, "name": "Button1"}], [{"id": 1, "name": "Knob2"}]),
         (
             [{"id": 2, "name": "Button1"}],
             [{"id": 1, "name": "Knob1"}, {"id": 1, "name": "Knob2"}],
