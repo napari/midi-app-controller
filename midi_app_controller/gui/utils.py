@@ -29,11 +29,43 @@ class DynamicQComboBox(QComboBox):
         super().__init__(parent)
 
         self.get_items = get_items
-
         self.textActivated.connect(select_item)
         self.setCurrentText(current_item)
 
     def showPopup(self):
+        # Refresh items.
         self.clear()
         self.addItems(self.get_items())
+
         super().showPopup()
+
+
+class SearchableQComboBox(QComboBox):
+    """QComboBox that allows to search available items."""
+
+    def __init__(
+        self,
+        items: List[str],
+        default_item: Optional[str] = None,
+        parent: QWidget = None,
+    ):
+        """Creates SearchableQComboBox widget.
+
+        Parameters
+        ---------
+        items : List[str]
+            List of available items.
+        default_item : Optional[str]
+            Optional default item used to initialize the widget.
+        parent : QWidget
+            Parent widget.
+        """
+        super().__init__(parent)
+
+        # Make searchable.
+        self.setEditable(True)
+        self.setInsertPolicy(QComboBox.NoInsert)
+
+        # Add items.
+        self.addItems(items)
+        self.setCurrentText(default_item)

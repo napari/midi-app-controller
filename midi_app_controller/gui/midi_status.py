@@ -131,8 +131,8 @@ class MidiStatus(QWidget):
         self.setLayout(layout)
 
     def _horizontal_layout(self, label: str, widget: QWidget) -> QHBoxLayout:
-        """Creates horizontal layout consisting of label on the left half and
-        a widget on the right half."""
+        """Creates horizontal layout consisting of the `label` on the left half\
+        and the `widget` on the right half."""
         layout = QHBoxLayout()
         layout.addWidget(QLabel(label))
         layout.addWidget(widget)

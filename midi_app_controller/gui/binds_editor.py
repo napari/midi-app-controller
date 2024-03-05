@@ -11,9 +11,9 @@ from qtpy.QtWidgets import (
     QRadioButton,
     QDialog,
     QScrollArea,
-    QComboBox,
 )
 
+from midi_app_controller.gui.utils import SearchableQComboBox
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller, ControllerElement
 
@@ -26,9 +26,8 @@ class ButtonBinds(QWidget):
     actions : List[str]
         List of all actions available to bind and an empty string (used when
         no action is bound).
-    button_menus : Tuple[int, QComboBox]
-        List of all pairs (button id, QComboBox used to set action). Each
-        QComboBox text is the currently selected action.
+    button_menus : Tuple[int, SearchableQComboBox]
+        List of all pairs (button id, SearchableQComboBox used to set action).
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's button by its id.
     """
@@ -93,13 +92,8 @@ class ButtonBinds(QWidget):
         else:
             action = None
 
-        # QComboBox for action selection.
-        action_combo = QComboBox(self)
-        action_combo.addItems(self.actions)
-        action_combo.setEditable(True)
-        action_combo.setInsertPolicy(QComboBox.NoInsert)
-        action_combo.setCurrentText(action)
-
+        # SearchableQComboBox for action selection.
+        action_combo = SearchableQComboBox(self.actions, action, self)
         self.button_combos.append((button_id, action_combo))
 
         layout = QHBoxLayout()
@@ -126,10 +120,9 @@ class KnobBinds(QWidget):
     actions : List[str]
         List of all actions available to bind and an empty string (used when
         no action is bound).
-    knob_combos : Tuple[int, QComboBox, QComboBox]
-        List of all triples (knob id, QComboBox used to set increase action,
-        QComboBox used to set decrease action). Each QComboBox text is
-        the currently selected action.
+    knob_combos : Tuple[int, SearchableQComboBox, SearchableQComboBox]
+        List of all triples (knob id, SearchableQComboBox used to set increase action,
+        SearchableQComboBox used to set decrease action).
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's knob by its id.
     """
@@ -197,19 +190,9 @@ class KnobBinds(QWidget):
             action_increase = None
             action_decrease = None
 
-        # QComboBox for action selection.
-        increase_action_combo = QComboBox(self)
-        increase_action_combo.addItems(self.actions)
-        increase_action_combo.setEditable(True)
-        increase_action_combo.setInsertPolicy(QComboBox.NoInsert)
-        increase_action_combo.setCurrentText(action_increase)
-
-        decrease_action_combo = QComboBox(self)
-        decrease_action_combo.addItems(self.actions)
-        decrease_action_combo.setEditable(True)
-        decrease_action_combo.setInsertPolicy(QComboBox.NoInsert)
-        decrease_action_combo.setCurrentText(action_decrease)
-
+        # SearchableQComboBox for action selection.
+        increase_action_combo = SearchableQComboBox(self.actions, action_increase, self)
+        decrease_action_combo = SearchableQComboBox(self.actions, action_decrease, self)
         self.knob_combos.append((knob_id, increase_action_combo, decrease_action_combo))
 
         # Layout.
