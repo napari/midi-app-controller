@@ -1,5 +1,5 @@
 import sys
-from typing import Callable, List
+from typing import List
 
 from napari._app_model import get_app
 from napari._app_model.actions._help_actions import HELP_ACTIONS
@@ -10,7 +10,6 @@ from qtpy.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QPushButton,
-    QMenu,
     QLabel,
     QHBoxLayout,
 )
@@ -18,6 +17,7 @@ from qtpy.QtWidgets import (
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller
 from midi_app_controller.gui.binds_editor import BindsEditor
+from midi_app_controller.gui.utils import DynamicQComboBox
 from midi_app_controller.state.state_manager import StateManager
 
 # TODO I didn't find any better way to get all available actions.
@@ -30,16 +30,16 @@ class MidiStatus(QWidget):
 
     Attributes
     ----------
-    current_binds : QPushButton
+    current_binds : DynamicQComboBox
         Button that allows to select binds using its menu. Its text
         is set to currently selected binds.
-    current_controller : QPushButton
+    current_controller : DynamicQComboBox
         Button that allows to select controller using its menu. Its text
         is set to currently selected controller.
-    current_midi_in : QPushButton
+    current_midi_in : DynamicQComboBox
         Button that allows to select MIDI input port using its menu. Its
         text is set to currently selected port.
-    current_midi_in : QPushButton
+    current_midi_in : DynamicQComboBox
         Button that allows to select MIDI output port using its menu. Its
         text is set to currently selected port.
     status : QLabel
@@ -56,53 +56,36 @@ class MidiStatus(QWidget):
 
         # Binds selection.
         selected_binds = state_manager.selected_binds
-        self.current_binds = QPushButton(
-            selected_binds.name if selected_binds is not None else None
-        )
-        self.current_binds.setMenu(
-            self._create_dynamic_menu(
-                self.current_binds,
-                state_manager.get_available_binds,
-                state_manager.select_binds,
-            )
+        self.current_binds = DynamicQComboBox(
+            selected_binds.name if selected_binds is not None else None,
+            state_manager.get_available_binds,
+            state_manager.select_binds,
         )
 
         # Controller selection.
-        selected_controller = state_manager.selected_controller
-        self.current_controller = QPushButton(
-            selected_controller.name if selected_controller is not None else None
-        )
-
         def select_controller(name: str) -> None:
             state_manager.select_controller(name)
             state_manager.selected_binds = None
-            self.current_binds.setText(None)
+            self.current_binds.setCurrentText(None)
 
-        self.current_controller.setMenu(
-            self._create_dynamic_menu(
-                self.current_controller,
-                state_manager.get_available_controllers,
-                select_controller,
-            )
+        selected_controller = state_manager.selected_controller
+        self.current_controller = DynamicQComboBox(
+            selected_controller.name if selected_controller is not None else None,
+            state_manager.get_available_controllers,
+            select_controller,
         )
 
         # MIDI input and output selection.
-        self.current_midi_in = QPushButton(state_manager.selected_midi_in)
-        self.current_midi_in.setMenu(
-            self._create_dynamic_menu(
-                self.current_midi_in,
-                state_manager.get_available_midi_in,
-                state_manager.select_midi_in,
-            )
+        self.current_midi_in = DynamicQComboBox(
+            state_manager.selected_midi_in,
+            state_manager.get_available_midi_in,
+            state_manager.select_midi_in,
         )
 
-        self.current_midi_out = QPushButton(state_manager.selected_midi_out)
-        self.current_midi_out.setMenu(
-            self._create_dynamic_menu(
-                self.current_midi_out,
-                state_manager.get_available_midi_out,
-                state_manager.select_midi_out,
-            )
+        self.current_midi_out = DynamicQComboBox(
+            state_manager.selected_midi_out,
+            state_manager.get_available_midi_out,
+            state_manager.select_midi_out,
         )
 
         # Status.
@@ -134,15 +117,11 @@ class MidiStatus(QWidget):
         # Layout.
         layout = QVBoxLayout()
         layout.addLayout(
-            self._create_label_button_layout("Controller:", self.current_controller)
+            self._horizontal_layout("Controller:", self.current_controller)
         )
-        layout.addLayout(self._create_label_button_layout("Binds:", self.current_binds))
-        layout.addLayout(
-            self._create_label_button_layout("MIDI input:", self.current_midi_in)
-        )
-        layout.addLayout(
-            self._create_label_button_layout("MIDI output:", self.current_midi_out)
-        )
+        layout.addLayout(self._horizontal_layout("Binds:", self.current_binds))
+        layout.addLayout(self._horizontal_layout("MIDI input:", self.current_midi_in))
+        layout.addLayout(self._horizontal_layout("MIDI output:", self.current_midi_out))
         layout.addLayout(status_layout)
         layout.addWidget(self.edit_binds_button)
         layout.addWidget(self.start_handling_button)
@@ -151,45 +130,12 @@ class MidiStatus(QWidget):
 
         self.setLayout(layout)
 
-    def _create_dynamic_menu(
-        self,
-        button: QPushButton,
-        get_entries: Callable[[], List[str]],
-        select_entry: Callable[[str], None],
-    ) -> QMenu:
-        """Creates a scrollable menu that will display entries from `get_entries()`
-        each time it's opened.
-
-        When an entry is selected:
-        - the text of `button` is set to the entry,
-        - `select_entry` is invoked with the entry as argument.
-        """
-        menu = QMenu(self)
-        menu.setStyleSheet("QMenu { menu-scrollable: 1; }")
-
-        def add_actions():
-            """Clears the menu and adds entries from `get_entries()`."""
-            menu.clear()
-            for elem in get_entries():
-
-                def select(elem=elem):
-                    """Update button's text and run `select_entry()`."""
-                    button.setText(elem)
-                    select_entry(elem)
-
-                menu.addAction(elem, select)
-
-        menu.aboutToShow.connect(add_actions)
-        return menu
-
-    def _create_label_button_layout(
-        self, label: str, button: QPushButton
-    ) -> QHBoxLayout:
+    def _horizontal_layout(self, label: str, widget: QWidget) -> QHBoxLayout:
         """Creates horizontal layout consisting of label on the left half and
-        button on the right half."""
+        a widget on the right half."""
         layout = QHBoxLayout()
         layout.addWidget(QLabel(label))
-        layout.addWidget(button)
+        layout.addWidget(widget)
         return layout
 
     def _edit_binds(self):

@@ -8,10 +8,10 @@ from qtpy.QtWidgets import (
     QPushButton,
     QLabel,
     QHBoxLayout,
-    QMenu,
     QRadioButton,
     QDialog,
     QScrollArea,
+    QComboBox,
 )
 
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
@@ -26,9 +26,9 @@ class ButtonBinds(QWidget):
     actions : List[str]
         List of all actions available to bind and an empty string (used when
         no action is bound).
-    button_menus : Tuple[int, QPushButton]
-        List of all pairs (button id, QPushButton used to set action). Each
-        QPushButton text is the currently selected action.
+    button_menus : Tuple[int, QComboBox]
+        List of all pairs (button id, QComboBox used to set action). Each
+        QComboBox text is the currently selected action.
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's button by its id.
     """
@@ -53,7 +53,7 @@ class ButtonBinds(QWidget):
         super().__init__()
 
         self.actions = [""] + actions
-        self.button_menus = []
+        self.button_combos = []
         self.binds_dict = {b.button_id: b for b in button_binds}
 
         # Description row.
@@ -64,8 +64,8 @@ class ButtonBinds(QWidget):
         # All buttons available to bind.
         button_list = QWidget()
         button_layout = QVBoxLayout()
-        for elem in buttons:
-            button_layout.addLayout(self._create_button_layout(elem.id, elem.name))
+        for button in buttons:
+            button_layout.addLayout(self._create_button_layout(button.id, button.name))
         button_layout.addStretch()
         button_list.setLayout(button_layout)
 
@@ -85,7 +85,7 @@ class ButtonBinds(QWidget):
         """Creates layout for a button.
 
         The layout consists of button name and action selector. An entry is
-        added to the `self.button_menus`.
+        added to the `self.button_combos`.
         """
         # Check if there is an action bound to the button.
         if (bind := self.binds_dict.get(button_id)) is not None:
@@ -93,34 +93,26 @@ class ButtonBinds(QWidget):
         else:
             action = None
 
-        # QPushButton with menu.
-        button_action = QPushButton(action)
-        button_action.setMenu(self._create_action_menu(button_action))
+        # QComboBox for action selection.
+        action_combo = QComboBox(self)
+        action_combo.addItems(self.actions)
+        action_combo.setEditable(True)
+        action_combo.setInsertPolicy(QComboBox.NoInsert)
+        action_combo.setCurrentText(action)
 
-        self.button_menus.append((button_id, button_action))
+        self.button_combos.append((button_id, action_combo))
 
         layout = QHBoxLayout()
         layout.addWidget(QLabel(button_name))
-        layout.addWidget(button_action)
+        layout.addWidget(action_combo)
 
         return layout
-
-    def _create_action_menu(self, button: QPushButton) -> QMenu:
-        """Creates a scrollable menu consisting of all `self.actions`.
-
-        When an action is selected, the text of `button` is set its name.
-        """
-        menu = QMenu(self)
-        menu.setStyleSheet("QMenu { menu-scrollable: 1; }")
-        for action in self.actions:
-            menu.addAction(action, lambda action=action: button.setText(action))
-        return menu
 
     def get_binds(self) -> List[ButtonBind]:
         """Returns list of all binds currently set in this widget."""
         result = []
-        for button_id, button in self.button_menus:
-            action = button.text() or None
+        for button_id, combo in self.button_combos:
+            action = combo.currentText() or None
             if action is not None:
                 result.append(ButtonBind(button_id=button_id, action_id=action))
         return result
@@ -134,9 +126,9 @@ class KnobBinds(QWidget):
     actions : List[str]
         List of all actions available to bind and an empty string (used when
         no action is bound).
-    knob_menus : Tuple[int, QPushButton, QPushButton]
-        List of all triples (knob id, QPushButton used to set increase action,
-        QPushButton used to set decrease action). Each QPushButton text is
+    knob_combos : Tuple[int, QComboBox, QComboBox]
+        List of all triples (knob id, QComboBox used to set increase action,
+        QComboBox used to set decrease action). Each QComboBox text is
         the currently selected action.
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's knob by its id.
@@ -162,7 +154,7 @@ class KnobBinds(QWidget):
         super().__init__()
 
         self.actions = [""] + actions
-        self.knob_menus = []
+        self.knob_combos = []
         self.binds_dict = {b.knob_id: b for b in knob_binds}
 
         # Description row.
@@ -191,53 +183,49 @@ class KnobBinds(QWidget):
 
         self.setLayout(layout)
 
-    def _create_action_menu(self, knob: QPushButton) -> QMenu:
-        """Creates a scrollable menu consisting of all `self.actions`.
-
-        When an action is selected, the text of `knob` is set its name.
-        """
-        menu = QMenu(self)
-        menu.setStyleSheet("QMenu { menu-scrollable: 1; }")
-        for action in self.actions:
-            menu.addAction(action, lambda action=action: knob.setText(action))
-        return menu
-
     def _create_knob_layout(self, knob_id: int, knob_name: str) -> QHBoxLayout:
         """Creates layout for a knob.
 
         The layout consists of knob name and increase/decrease action selector.
-        An entry is added to the `self.knob_menus`.
+        An entry is added to the `self.knob_combos`.
         """
         # Check if there are any actions bound to the knob.
         if (bind := self.binds_dict.get(knob_id)) is not None:
             action_increase = bind.action_id_increase
             action_decrease = bind.action_id_decrease
         else:
-            action_increase = ""
-            action_decrease = ""
+            action_increase = None
+            action_decrease = None
 
-        # QPushButton with menus.
-        knob_increase = QPushButton(action_increase)
-        knob_increase.setMenu(self._create_action_menu(knob_increase))
-        knob_decrease = QPushButton(action_decrease)
-        knob_decrease.setMenu(self._create_action_menu(knob_decrease))
+        # QComboBox for action selection.
+        increase_action_combo = QComboBox(self)
+        increase_action_combo.addItems(self.actions)
+        increase_action_combo.setEditable(True)
+        increase_action_combo.setInsertPolicy(QComboBox.NoInsert)
+        increase_action_combo.setCurrentText(action_increase)
 
-        self.knob_menus.append((knob_id, knob_increase, knob_decrease))
+        decrease_action_combo = QComboBox(self)
+        decrease_action_combo.addItems(self.actions)
+        decrease_action_combo.setEditable(True)
+        decrease_action_combo.setInsertPolicy(QComboBox.NoInsert)
+        decrease_action_combo.setCurrentText(action_decrease)
+
+        self.knob_combos.append((knob_id, increase_action_combo, decrease_action_combo))
 
         # Layout.
         layout = QHBoxLayout()
         layout.addWidget(QLabel(knob_name))
-        layout.addWidget(knob_increase)
-        layout.addWidget(knob_decrease)
+        layout.addWidget(increase_action_combo)
+        layout.addWidget(decrease_action_combo)
 
         return layout
 
     def get_binds(self) -> List[KnobBind]:
         """Returns list of all binds currently set in this widget."""
         result = []
-        for knob_id, knob_increase, knob_decrease in self.knob_menus:
-            increase_action = knob_increase.text() or None
-            decrease_action = knob_decrease.text() or None
+        for knob_id, increase_action_combo, decrease_action_combo in self.knob_combos:
+            increase_action = increase_action_combo.currentText() or None
+            decrease_action = decrease_action_combo.currentText() or None
             if increase_action is not None or decrease_action is not None:
                 result.append(
                     KnobBind(
@@ -333,7 +321,7 @@ class BindsEditor(QDialog):
         self.setLayout(layout)
         self.setStyleSheet(get_current_stylesheet())
         self.knobs_radio.setChecked(True)
-        self.setMinimumSize(500, 550)
+        self.setMinimumSize(830, 650)
 
     def _switch_editors(self, checked):
         """Switches binds editor view for knobs/buttons based on checked radio."""
