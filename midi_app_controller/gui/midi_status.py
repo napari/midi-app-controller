@@ -1,6 +1,8 @@
 import sys
 from typing import Callable, List
 
+from app_model.types import Action
+from napari.components import LayerList
 from napari._app_model import get_app
 from napari._app_model.actions._help_actions import HELP_ACTIONS
 from napari._app_model.actions._layer_actions import LAYER_ACTIONS
@@ -20,8 +22,37 @@ from midi_app_controller.models.controller import Controller
 from midi_app_controller.gui.binds_editor import BindsEditor
 from midi_app_controller.state.state_manager import StateManager
 
+
+def decrease_opacity(ll: LayerList):
+    for lay in ll.selection:
+        lay.opacity = max(0, lay.opacity - 0.01)
+
+
+def increase_opacity(ll: LayerList):
+    for lay in ll.selection:
+        lay.opacity = min(1, lay.opacity + 0.01)
+
+
+# TODO Added only to allow testing slider actions until they are added to napari.
+SLIDER_ACTIONS = [
+    Action(
+        id="napari:layer:increase_opacity",
+        title="Increase opacity",
+        callback=increase_opacity,
+    ),
+    Action(
+        id="napari:layer:decrease_opacity",
+        title="Decrease opacity",
+        callback=decrease_opacity,
+    ),
+]
+for action in SLIDER_ACTIONS:
+    get_app().register_action(action)
+
 # TODO I didn't find any better way to get all available actions.
-state_manager = StateManager(HELP_ACTIONS + LAYER_ACTIONS + VIEW_ACTIONS, get_app())
+NAPARI_ACTIONS = HELP_ACTIONS + LAYER_ACTIONS + VIEW_ACTIONS + SLIDER_ACTIONS
+
+state_manager = StateManager(NAPARI_ACTIONS, get_app())
 
 
 class MidiStatus(QWidget):
