@@ -3,6 +3,7 @@ from typing import Callable, List, Optional
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QComboBox, QWidget
 
+
 class DynamicQComboBox(QComboBox):
     """QComboBox that refreshes the list of items each time it is opened."""
 
