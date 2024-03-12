@@ -182,13 +182,26 @@ class ConnectedController:
         id : int
             Id of the knob.
         """
-        sleep_seconds = 0.3
+        sleep_seconds = 0.04
+        intervals = 14
 
-        for _ in range(3):
-            self.change_knob_value(id, self.controller.knob_value_min)
+        for value in range(
+            self.controller.knob_value_min,
+            self.controller.knob_value_max,
+            self.controller.knob_value_max // intervals,
+        ):
+            self.change_knob_value(id, value)
             time.sleep(sleep_seconds)
-            self.change_knob_value(id, self.controller.knob_value_max)
+
+        for value in range(
+            self.controller.knob_value_max,
+            self.controller.knob_value_min,
+            -self.controller.knob_value_max // intervals,
+        ):
+            self.change_knob_value(id, value)
             time.sleep(sleep_seconds)
+
+        self.change_knob_value(id, self.controller.knob_value_min)
 
     def flash_button(self, id: int) -> None:
         """Flashes the button LED on a MIDI controller.
@@ -198,11 +211,13 @@ class ConnectedController:
         id : int
             Id of the button.
         """
+        sleep_seconds = 0.3
+
         for _ in range(3):
             self.turn_on_button_led(id)
-            time.sleep(0.3)
+            time.sleep(sleep_seconds)
             self.turn_off_button_led(id)
-            time.sleep(0.3)
+            time.sleep(sleep_seconds)
 
     def build_message(
         self,

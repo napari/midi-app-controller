@@ -1,7 +1,9 @@
+import os
 from typing import Callable, List
 
 # TODO Move style somewhere else in the future to make this class independent from napari.
 from napari.qt import get_current_stylesheet
+from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -11,11 +13,17 @@ from qtpy.QtWidgets import (
     QRadioButton,
     QDialog,
     QScrollArea,
+    QGridLayout,
 )
 
 from midi_app_controller.gui.utils import SearchableQComboBox
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller, ControllerElement
+from midi_app_controller.state.state_manager import StateManager
+
+ASSETS_DIRECTORY = os.path.abspath(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "assets")
+)
 
 
 class ButtonBinds(QWidget):
@@ -37,6 +45,7 @@ class ButtonBinds(QWidget):
         buttons: List[ControllerElement],
         button_binds: List[ButtonBind],
         actions: List[str],
+        state_manager: StateManager,
     ):
         """Creates ButtonBinds widget.
 
@@ -50,6 +59,8 @@ class ButtonBinds(QWidget):
             List of all actions available to bind.
         """
         super().__init__()
+
+        self.state_manager = state_manager
 
         self.actions = [""] + actions
         self.button_combos = []
@@ -80,7 +91,13 @@ class ButtonBinds(QWidget):
 
         self.setLayout(layout)
 
-    def _create_button_layout(self, button_id: int, button_name: str) -> QHBoxLayout:
+    def _light_up_button(self, button_id: int):
+        if self.state_manager._connected_controller is None:
+            raise Exception("No controller connected.")
+
+        self.state_manager._connected_controller.flash_button(button_id)
+
+    def _create_button_layout(self, button_id: int, button_name: str) -> QGridLayout:
         """Creates layout for a button.
 
         The layout consists of button name and action selector. An entry is
@@ -96,9 +113,27 @@ class ButtonBinds(QWidget):
         action_combo = SearchableQComboBox(self.actions, action, self)
         self.button_combos.append((button_id, action_combo))
 
-        layout = QHBoxLayout()
-        layout.addWidget(QLabel(button_name))
-        layout.addWidget(action_combo)
+        # Button label
+        button_label = QLabel(button_name)
+
+        # Button for lighting up the controller element
+        light_up_button = QPushButton()
+        light_up_button.clicked.connect(lambda: self._light_up_button(button_id))
+
+        # Set icon to the button from a PNG file
+        light_bulb_path = os.path.join(ASSETS_DIRECTORY, "light_bulb.png")
+        icon = QIcon(light_bulb_path)
+        light_up_button.setIcon(icon)
+
+        button_size = 1
+        label_size = 9
+        combo_size = 10
+
+        layout = QGridLayout()
+        # Add elements to the layout with different row and column spans
+        layout.addWidget(light_up_button, 0, 0, 1, button_size)
+        layout.addWidget(button_label, 0, button_size, 1, label_size)
+        layout.addWidget(action_combo, 0, button_size + label_size, 1, combo_size)
 
         return layout
 
@@ -132,6 +167,7 @@ class KnobBinds(QWidget):
         knobs: List[ControllerElement],
         knob_binds: List[KnobBind],
         actions: List[str],
+        state_manager: StateManager,
     ):
         """Creates KnobBinds widget.
 
@@ -145,6 +181,8 @@ class KnobBinds(QWidget):
             List of all actions available to bind.
         """
         super().__init__()
+
+        self.state_manager = state_manager
 
         self.actions = [""] + actions
         self.knob_combos = []
@@ -176,6 +214,12 @@ class KnobBinds(QWidget):
 
         self.setLayout(layout)
 
+    def _light_up_knob(self, knob_id: int):
+        if self.state_manager._connected_controller is None:
+            raise Exception("No controller connected.")
+
+        self.state_manager._connected_controller.flash_knob(knob_id)
+
     def _create_knob_layout(self, knob_id: int, knob_name: str) -> QHBoxLayout:
         """Creates layout for a knob.
 
@@ -195,11 +239,34 @@ class KnobBinds(QWidget):
         decrease_action_combo = SearchableQComboBox(self.actions, action_decrease, self)
         self.knob_combos.append((knob_id, increase_action_combo, decrease_action_combo))
 
+        # Button for lighting up the controller element
+        light_up_knob = QPushButton()
+        light_up_knob.clicked.connect(lambda: self._light_up_knob(knob_id))
+
+        # Set icon to the button from a PNG file
+        light_bulb_path = os.path.join(ASSETS_DIRECTORY, "light_bulb.png")
+        icon = QIcon(light_bulb_path)
+        light_up_knob.setIcon(icon)
+
+        button_size = 1
+        label_size = 4
+        combo_size = 5
+
+        combo1_pos = button_size + label_size
+        combo2_pos = combo1_pos + combo_size
+
         # Layout.
-        layout = QHBoxLayout()
-        layout.addWidget(QLabel(knob_name))
-        layout.addWidget(increase_action_combo)
-        layout.addWidget(decrease_action_combo)
+        layout = QGridLayout()
+        # Add elements to the layout with different row and column spans
+        layout.addWidget(light_up_knob, 0, 0, 1, button_size)
+        layout.addWidget(QLabel(knob_name), 0, button_size, 1, label_size)
+        layout.addWidget(increase_action_combo, 0, combo1_pos, 1, combo_size)
+        layout.addWidget(decrease_action_combo, 0, combo2_pos, 1, combo_size)
+
+        # layout = QHBoxLayout()
+        # layout.addWidget()
+        # layout.addWidget(increase_action_combo)
+        # layout.addWidget(decrease_action_combo)
 
         return layout
 
@@ -244,6 +311,7 @@ class BindsEditor(QDialog):
         binds: Binds,
         actions: List[str],
         save_binds: Callable[[List[KnobBind], List[ButtonBind]], None],
+        state_manager: StateManager,
     ):
         """Creates BindsEditor widget.
 
@@ -287,11 +355,13 @@ class BindsEditor(QDialog):
             controller.knobs,
             binds.knob_binds,
             actions,
+            state_manager,
         )
         self.buttons_widget = ButtonBinds(
             controller.buttons,
             binds.button_binds,
             actions,
+            state_manager,
         )
 
         # Layout.
