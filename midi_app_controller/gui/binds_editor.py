@@ -263,11 +263,6 @@ class KnobBinds(QWidget):
         layout.addWidget(increase_action_combo, 0, combo1_pos, 1, combo_size)
         layout.addWidget(decrease_action_combo, 0, combo2_pos, 1, combo_size)
 
-        # layout = QHBoxLayout()
-        # layout.addWidget()
-        # layout.addWidget(increase_action_combo)
-        # layout.addWidget(decrease_action_combo)
-
         return layout
 
     def get_binds(self) -> List[KnobBind]:
