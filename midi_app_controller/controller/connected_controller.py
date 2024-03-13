@@ -1,34 +1,12 @@
 import logging
 import time
-from typing import List
+from typing import List, Tuple
 
 import rtmidi
 
 from midi_app_controller.models.controller import Controller
 from midi_app_controller.actions.actions_handler import ActionsHandler
 from .controller_constants import ControllerConstants
-
-
-def midi_callback(message: List[int], cls: "ConnectedController") -> None:
-    """Callback function for MIDI input, specified by rtmidi package.
-
-    Parameters
-    ----------
-    message : List[int]
-        Standard MIDI message.
-    cls : ConnectedController
-        ConnectedController class instance.
-    """
-
-    # Process MIDI message here
-    status_byte = message[0][0]
-    command = status_byte & 0xF0
-    channel = status_byte & 0x0F
-    data_bytes = message[0][1:]
-
-    logging.debug(f"command: {command}, channel: {channel}, data: {data_bytes}")
-
-    cls.handle_midi_message(command=command, channel=channel, data=data_bytes)
 
 
 class ConnectedController:
@@ -75,7 +53,6 @@ class ConnectedController:
         midi_out: rtmidi.MidiOut
             Midi output client with the controller's port opened.
         """
-
         self.controller = controller
         self.actions_handler = actions_handler
         self.midi_out = midi_out
@@ -84,11 +61,32 @@ class ConnectedController:
         self.knob_ids = [element.id for element in controller.knobs]
         self.knob_engagement = {}
 
+        # Set default values for buttons and knobs.
         self.init_buttons()
         self.init_knobs()
 
-        # Set callback for getting data from controller
-        self.midi_in.set_callback(midi_callback, data=self)
+        # Set callback for getting data from controller.
+        self.midi_in.set_callback(self.midi_callback)
+
+    def midi_callback(self, event: Tuple[List[int], float], data=None) -> None:
+        """Callback function for MIDI input, specified by rtmidi package.
+
+        Parameters
+        ----------
+        event : Tuple[List[int], float]
+            Pair of (MIDI message, delta time).
+        """
+        message, _ = event
+
+        command = message[0] & 0xF0
+        channel = message[0] & 0x0F
+        data_bytes = message[1:]
+
+        logging.debug(
+            f"Received command: {command}, channel: {channel}, data: {data_bytes}"
+        )
+
+        self.handle_midi_message(command, channel, data_bytes)
 
     def init_buttons(self) -> None:
         """Initializes the buttons on the controller, setting them
@@ -171,8 +169,9 @@ class ConnectedController:
         """
         try:
             self.midi_out.send_message(data)
+            logging.debug(f"Sent: {data}")
         except ValueError as err:
-            print(f"Value Error: {err}")
+            logging.error(f"Value Error: {err}")
 
     def flash_knob(self, id: int) -> None:
         """Flashes the LEDs corresponding to a knob on a MIDI controller.
