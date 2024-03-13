@@ -3,6 +3,7 @@ from typing import Callable, List
 
 # TODO Move style somewhere else in the future to make this class independent from napari.
 from napari.qt import get_current_stylesheet
+from qtpy.QtCore import Qt
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (
     QWidget,
@@ -118,6 +119,12 @@ class ButtonBinds(QWidget):
 
         # Button for lighting up the controller element
         light_up_button = QPushButton()
+        light_up_button.setToolTip(f"Lights up the '{button_name}'")
+        light_up_button.setStyleSheet(
+            "QPushButton { background-color: black; border: 2px solid #555555; }"
+            "QPushButton:hover { background-color: #555555; }"
+        )
+        light_up_button.setCursor(Qt.PointingHandCursor)
         light_up_button.clicked.connect(lambda: self._light_up_button(button_id))
 
         # Set icon to the button from a PNG file
@@ -241,6 +248,12 @@ class KnobBinds(QWidget):
 
         # Button for lighting up the controller element
         light_up_knob = QPushButton()
+        light_up_knob.setToolTip(f"Lights up the '{knob_name}'")
+        light_up_knob.setStyleSheet(
+            "QPushButton { background-color: black; border: 2px solid #555555; }"
+            "QPushButton:hover { background-color: #555555; }"
+        )
+        light_up_knob.setCursor(Qt.PointingHandCursor)
         light_up_knob.clicked.connect(lambda: self._light_up_knob(knob_id))
 
         # Set icon to the button from a PNG file
