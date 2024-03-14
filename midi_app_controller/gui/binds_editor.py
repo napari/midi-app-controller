@@ -1,10 +1,8 @@
-import os
 from typing import Callable, List
 
 # TODO Move style somewhere else in the future to make this class independent from napari.
 from napari.qt import get_current_stylesheet
 from qtpy.QtCore import Qt
-from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -15,16 +13,13 @@ from qtpy.QtWidgets import (
     QDialog,
     QScrollArea,
     QGridLayout,
+    QLayoutItem,
 )
 
 from midi_app_controller.gui.utils import SearchableQComboBox
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller, ControllerElement
 from midi_app_controller.state.state_manager import StateManager
-
-ASSETS_DIRECTORY = os.path.abspath(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "assets")
-)
 
 
 class ButtonBinds(QWidget):
@@ -118,29 +113,26 @@ class ButtonBinds(QWidget):
         button_label = QLabel(button_name)
 
         # Button for lighting up the controller element
-        light_up_button = QPushButton()
+        controller_disconnected = self.state_manager._connected_controller is None
+        light_up_button = QPushButton("Light up")
         light_up_button.setToolTip(f"Lights up the '{button_name}'")
-        light_up_button.setStyleSheet(
-            "QPushButton { background-color: black; border: 2px solid #555555; }"
-            "QPushButton:hover { background-color: #555555; }"
-        )
         light_up_button.setCursor(Qt.PointingHandCursor)
         light_up_button.clicked.connect(lambda: self._light_up_button(button_id))
 
-        # Set icon to the button from a PNG file
-        light_bulb_path = os.path.join(ASSETS_DIRECTORY, "light_bulb.png")
-        icon = QIcon(light_bulb_path)
-        light_up_button.setIcon(icon)
+        sizes = [2, 2, 6, 10]
+        elems = [
+            button_label,
+            light_up_button,
+            QWidget(),
+            action_combo,
+        ]
 
-        button_size = 1
-        label_size = 9
-        combo_size = 10
+        if controller_disconnected:
+            sizes = [2, 8, 10]
+            del elems[1]
 
         layout = QGridLayout()
-        # Add elements to the layout with different row and column spans
-        layout.addWidget(light_up_button, 0, 0, 1, button_size)
-        layout.addWidget(button_label, 0, button_size, 1, label_size)
-        layout.addWidget(action_combo, 0, button_size + label_size, 1, combo_size)
+        BindsEditor._add_elements_to_grid_layout(layout, elems, sizes)
 
         return layout
 
@@ -247,34 +239,28 @@ class KnobBinds(QWidget):
         self.knob_combos.append((knob_id, increase_action_combo, decrease_action_combo))
 
         # Button for lighting up the controller element
-        light_up_knob = QPushButton()
+        controller_disconnected = self.state_manager._connected_controller is None
+        light_up_knob = QPushButton("Light up")
         light_up_knob.setToolTip(f"Lights up the '{knob_name}'")
-        light_up_knob.setStyleSheet(
-            "QPushButton { background-color: black; border: 2px solid #555555; }"
-            "QPushButton:hover { background-color: #555555; }"
-        )
         light_up_knob.setCursor(Qt.PointingHandCursor)
         light_up_knob.clicked.connect(lambda: self._light_up_knob(knob_id))
 
-        # Set icon to the button from a PNG file
-        light_bulb_path = os.path.join(ASSETS_DIRECTORY, "light_bulb.png")
-        icon = QIcon(light_bulb_path)
-        light_up_knob.setIcon(icon)
+        sizes = [1, 1, 3, 5, 5]
+        elems = [
+            QLabel(knob_name),
+            light_up_knob,
+            QWidget(),
+            increase_action_combo,
+            decrease_action_combo,
+        ]
 
-        button_size = 1
-        label_size = 4
-        combo_size = 5
-
-        combo1_pos = button_size + label_size
-        combo2_pos = combo1_pos + combo_size
+        if controller_disconnected:
+            sizes = [1, 4, 5, 5]
+            del elems[1]
 
         # Layout.
         layout = QGridLayout()
-        # Add elements to the layout with different row and column spans
-        layout.addWidget(light_up_knob, 0, 0, 1, button_size)
-        layout.addWidget(QLabel(knob_name), 0, button_size, 1, label_size)
-        layout.addWidget(increase_action_combo, 0, combo1_pos, 1, combo_size)
-        layout.addWidget(decrease_action_combo, 0, combo2_pos, 1, combo_size)
+        BindsEditor._add_elements_to_grid_layout(layout, elems, sizes)
 
         return layout
 
@@ -383,6 +369,15 @@ class BindsEditor(QDialog):
         self.setStyleSheet(get_current_stylesheet())
         self.knobs_radio.setChecked(True)
         self.setMinimumSize(830, 650)
+
+    @staticmethod
+    def _add_elements_to_grid_layout(
+        layout: QGridLayout, elems: List[QLayoutItem], sizes: List[int]
+    ):
+        current_size = 0
+        for elem, size in zip(elems, sizes):
+            layout.addWidget(elem, 0, current_size, 1, size)
+            current_size += size
 
     def _switch_editors(self, checked):
         """Switches binds editor view for knobs/buttons based on checked radio."""
