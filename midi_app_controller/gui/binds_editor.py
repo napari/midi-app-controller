@@ -2,6 +2,7 @@ from typing import Callable, List
 
 # TODO Move style somewhere else in the future to make this class independent from napari.
 from napari.qt import get_current_stylesheet
+from app_model.types import Action
 from qtpy.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -13,7 +14,7 @@ from qtpy.QtWidgets import (
     QScrollArea,
 )
 
-from midi_app_controller.gui.utils import SearchableQComboBox
+from midi_app_controller.gui.utils import ActionsQComboBox
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller, ControllerElement
 
@@ -23,11 +24,11 @@ class ButtonBinds(QWidget):
 
     Attributes
     ----------
-    actions : List[str]
+    actions : List[Action]
         List of all actions available to bind and an empty string (used when
         no action is bound).
-    button_menus : Tuple[int, SearchableQComboBox]
-        List of all pairs (button id, SearchableQComboBox used to set action).
+    button_combos : Tuple[int, ActionsQComboBox]
+        List of all pairs (button id, ActionsQComboBox used to set action).
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's button by its id.
     """
@@ -36,7 +37,7 @@ class ButtonBinds(QWidget):
         self,
         buttons: List[ControllerElement],
         button_binds: List[ButtonBind],
-        actions: List[str],
+        actions: List[Action],
     ):
         """Creates ButtonBinds widget.
 
@@ -46,12 +47,12 @@ class ButtonBinds(QWidget):
             List of all available buttons.
         button_binds : List[ButtonBind]
             List of current binds.
-        actions : List[str]
+        actions : List[Action]
             List of all actions available to bind.
         """
         super().__init__()
 
-        self.actions = [""] + actions
+        self.actions = actions
         self.button_combos = []
         self.binds_dict = {b.button_id: b for b in button_binds}
 
@@ -92,8 +93,8 @@ class ButtonBinds(QWidget):
         else:
             action = None
 
-        # SearchableQComboBox for action selection.
-        action_combo = SearchableQComboBox(self.actions, action, self)
+        # ActionsQComboBox for action selection.
+        action_combo = ActionsQComboBox(self.actions, action, self)
         self.button_combos.append((button_id, action_combo))
 
         layout = QHBoxLayout()
@@ -106,7 +107,7 @@ class ButtonBinds(QWidget):
         """Returns list of all binds currently set in this widget."""
         result = []
         for button_id, combo in self.button_combos:
-            action = combo.currentText() or None
+            action = combo.get_selected_action_id()
             if action is not None:
                 result.append(ButtonBind(button_id=button_id, action_id=action))
         return result
@@ -117,12 +118,12 @@ class KnobBinds(QWidget):
 
     Attributes
     ----------
-    actions : List[str]
+    actions : List[Action]
         List of all actions available to bind and an empty string (used when
         no action is bound).
-    knob_combos : Tuple[int, SearchableQComboBox, SearchableQComboBox]
-        List of all triples (knob id, SearchableQComboBox used to set increase action,
-        SearchableQComboBox used to set decrease action).
+    knob_combos : Tuple[int, ActionsQComboBox, ActionsQComboBox]
+        List of all triples (knob id, ActionsQComboBox used to set increase action,
+        ActionsQComboBox used to set decrease action).
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's knob by its id.
     """
@@ -131,7 +132,7 @@ class KnobBinds(QWidget):
         self,
         knobs: List[ControllerElement],
         knob_binds: List[KnobBind],
-        actions: List[str],
+        actions: List[Action],
     ):
         """Creates KnobBinds widget.
 
@@ -146,7 +147,7 @@ class KnobBinds(QWidget):
         """
         super().__init__()
 
-        self.actions = [""] + actions
+        self.actions = actions
         self.knob_combos = []
         self.binds_dict = {b.knob_id: b for b in knob_binds}
 
@@ -190,9 +191,9 @@ class KnobBinds(QWidget):
             action_increase = None
             action_decrease = None
 
-        # SearchableQComboBox for action selection.
-        increase_action_combo = SearchableQComboBox(self.actions, action_increase, self)
-        decrease_action_combo = SearchableQComboBox(self.actions, action_decrease, self)
+        # ActionsQComboBox for action selection.
+        increase_action_combo = ActionsQComboBox(self.actions, action_increase, self)
+        decrease_action_combo = ActionsQComboBox(self.actions, action_decrease, self)
         self.knob_combos.append((knob_id, increase_action_combo, decrease_action_combo))
 
         # Layout.
@@ -207,8 +208,8 @@ class KnobBinds(QWidget):
         """Returns list of all binds currently set in this widget."""
         result = []
         for knob_id, increase_action_combo, decrease_action_combo in self.knob_combos:
-            increase_action = increase_action_combo.currentText() or None
-            decrease_action = decrease_action_combo.currentText() or None
+            increase_action = increase_action_combo.get_selected_action_id()
+            decrease_action = decrease_action_combo.get_selected_action_id()
             if increase_action is not None or decrease_action is not None:
                 result.append(
                     KnobBind(
@@ -242,7 +243,7 @@ class BindsEditor(QDialog):
         self,
         controller: Controller,
         binds: Binds,
-        actions: List[str],
+        actions: List[Action],
         save_binds: Callable[[List[KnobBind], List[ButtonBind]], None],
     ):
         """Creates BindsEditor widget.
@@ -253,7 +254,7 @@ class BindsEditor(QDialog):
             Controller for which the binds are created.
         binds : Binds
             Current binds that the widget will be initialized with.
-        actions : List[str]
+        actions : List[Action]
             List of all actions available to bind.
         save_binds : Callable[[List[KnobBind], List[ButtonBind]], None]
             Function called after "Save and exit" button is clicked.
@@ -263,12 +264,15 @@ class BindsEditor(QDialog):
         self.save_binds = save_binds
 
         # Save/exit buttons.
+        toggle_names_mode_button = QPushButton("Toggle names mode")
+        toggle_names_mode_button.clicked.connect(self._toggle_names_mode)
         save_and_exit_button = QPushButton("Save and exit")
         save_and_exit_button.clicked.connect(self._save_and_exit)
         exit_button = QPushButton("Exit")
         exit_button.clicked.connect(self._exit)
 
         buttons_layout = QHBoxLayout()
+        buttons_layout.addWidget(toggle_names_mode_button)
         buttons_layout.addWidget(save_and_exit_button)
         buttons_layout.addWidget(exit_button)
 
@@ -316,6 +320,14 @@ class BindsEditor(QDialog):
         else:
             self.knobs_widget.hide()
             self.buttons_widget.show()
+
+    def _toggle_names_mode(self):
+        """Toggles actions names mode: titles or ids."""
+        for _, combo in self.buttons_widget.button_combos:
+            combo.toggle_names_mode()
+        for _, combo1, combo2 in self.knobs_widget.knob_combos:
+            combo1.toggle_names_mode()
+            combo2.toggle_names_mode()
 
     def _save_and_exit(self):
         """Saves the binds and closes the widget."""
