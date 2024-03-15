@@ -125,7 +125,7 @@ class MidiStatus(QWidget):
         status_layout.addWidget(QLabel("Status"))
         status_layout.addWidget(self.status)
 
-        def update_status():
+        def update_status() -> None:
             if state_manager.is_running():
                 self.status.setText("Running")
             else:
@@ -169,7 +169,7 @@ class MidiStatus(QWidget):
         layout.addWidget(widget)
         return layout
 
-    def _edit_binds(self):
+    def _edit_binds(self) -> None:
         """Opens dialog that will allow to edit currently selected binds."""
         # Get selected controller and binds.
         selected_controller = state_manager.selected_controller

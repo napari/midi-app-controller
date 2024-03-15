@@ -2,7 +2,7 @@ from typing import Callable, List
 
 # TODO Move style somewhere else in the future to make this class independent from napari.
 from napari.qt import get_current_stylesheet
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, QThread, QMutex, QMutexLocker
 from qtpy.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -20,6 +20,29 @@ from midi_app_controller.gui.utils import SearchableQComboBox
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller, ControllerElement
 from midi_app_controller.state.state_manager import StateManager
+
+
+class LightUpQThread(QThread):
+    def __init__(self, func, mutex, id, id_set):
+        super().__init__()
+        self.func = func
+        self.mutex = mutex
+        self.id = id
+        self.id_set = id_set
+
+    def run(self):
+        flashing = False
+        with QMutexLocker(self.mutex):
+            if self.id in self.id_set:
+                flashing = True
+            else:
+                self.id_set.add(self.id)
+
+        if not flashing:
+            self.func()
+
+            with QMutexLocker(self.mutex):
+                self.id_set.remove(self.id)
 
 
 class ButtonBinds(QWidget):
@@ -87,11 +110,26 @@ class ButtonBinds(QWidget):
 
         self.setLayout(layout)
 
+        self.flashing_buttons = set([])
+        self.thread_list = []
+        self.buttons_mutex = QMutex()
+
     def _light_up_button(self, button_id: int):
         if self.state_manager._connected_controller is None:
             raise Exception("No controller connected.")
 
-        self.state_manager._connected_controller.flash_button(button_id)
+        def light_up_func():
+            self.state_manager._connected_controller.flash_button(button_id)
+
+        thread = LightUpQThread(
+            light_up_func,
+            self.buttons_mutex,
+            button_id,
+            self.flashing_buttons,
+        )
+
+        self.thread_list.append(thread)
+        thread.start()
 
     def _create_button_layout(self, button_id: int, button_name: str) -> QGridLayout:
         """Creates layout for a button.
@@ -213,11 +251,26 @@ class KnobBinds(QWidget):
 
         self.setLayout(layout)
 
+        self.flashing_knobs = set([])
+        self.thread_list = []
+        self.knobs_mutex = QMutex()
+
     def _light_up_knob(self, knob_id: int):
         if self.state_manager._connected_controller is None:
             raise Exception("No controller connected.")
 
-        self.state_manager._connected_controller.flash_knob(knob_id)
+        def light_up_func():
+            self.state_manager._connected_controller.flash_knob(knob_id)
+
+        thread = LightUpQThread(
+            light_up_func,
+            self.knobs_mutex,
+            knob_id,
+            self.flashing_knobs,
+        )
+
+        self.thread_list.append(thread)
+        thread.start()
 
     def _create_knob_layout(self, knob_id: int, knob_name: str) -> QHBoxLayout:
         """Creates layout for a knob.
@@ -373,7 +426,7 @@ class BindsEditor(QDialog):
     @staticmethod
     def _add_elements_to_grid_layout(
         layout: QGridLayout, elems: List[QLayoutItem], sizes: List[int]
-    ):
+    ) -> None:
         current_size = 0
         for elem, size in zip(elems, sizes):
             layout.addWidget(elem, 0, current_size, 1, size)

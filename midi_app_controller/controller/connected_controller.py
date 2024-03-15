@@ -3,6 +3,7 @@ import time
 from typing import List
 
 import rtmidi
+from qtpy.QtCore import QMutex, QMutexLocker
 
 from midi_app_controller.models.controller import Controller
 from midi_app_controller.actions.actions_handler import ActionsHandler
@@ -86,6 +87,8 @@ class ConnectedController:
 
         self.init_buttons()
         self.init_knobs()
+
+        self.mutex = QMutex()
 
         # Set callback for getting data from controller
         self.midi_in.set_callback(midi_callback, data=self)
@@ -182,6 +185,9 @@ class ConnectedController:
         id : int
             Id of the knob.
         """
+        with QMutexLocker(self.mutex):
+            current_value = self.knob_engagement[id]
+
         sleep_seconds = 0.04
         intervals = 14
 
@@ -201,7 +207,7 @@ class ConnectedController:
             self.change_knob_value(id, value)
             time.sleep(sleep_seconds)
 
-        self.change_knob_value(id, self.controller.knob_value_min)
+        self.change_knob_value(id, current_value)
 
     def flash_button(self, id: int) -> None:
         """Flashes the button LED on a MIDI controller.
