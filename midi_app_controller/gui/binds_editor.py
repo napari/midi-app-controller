@@ -1,4 +1,4 @@
-from typing import Callable, List
+from typing import Callable, List, Dict, Tuple
 
 # TODO Move style somewhere else in the future to make this class independent from napari.
 from napari.qt import get_current_stylesheet
@@ -19,7 +19,10 @@ from qtpy.QtWidgets import (
 from midi_app_controller.gui.utils import SearchableQComboBox
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller, ControllerElement
-from midi_app_controller.controller.connected_controller import ConnectedController
+from midi_app_controller.controller.connected_controller import (
+    ConnectedController,
+    ControllerConstants,
+)
 
 
 class LightUpQThread(QThread):
@@ -85,6 +88,12 @@ class ButtonBinds(QWidget):
         self.button_combos = []
         self.binds_dict = {b.button_id: b for b in button_binds}
 
+        self.flashing_buttons = set([])
+        self.thread_list = []
+        self.buttons_mutex = QMutex()
+
+        self.id_label_map = dict([])
+
         # Description row.
         description_layout = QHBoxLayout()
         description_layout.addWidget(QLabel("Name:"))
@@ -110,9 +119,8 @@ class ButtonBinds(QWidget):
 
         self.setLayout(layout)
 
-        self.flashing_buttons = set([])
-        self.thread_list = []
-        self.buttons_mutex = QMutex()
+    def _get_label_map(self) -> Dict[int, QLabel]:
+        return self.id_label_map
 
     def _light_up_button(self, button_id: int):
         if self.connected_controller is None:
@@ -149,6 +157,7 @@ class ButtonBinds(QWidget):
 
         # Button label
         button_label = QLabel(button_name)
+        self.id_label_map[button_id] = button_label
 
         # Button for lighting up the controller element
         controller_disconnected = self.connected_controller is None
@@ -225,6 +234,12 @@ class KnobBinds(QWidget):
         self.knob_combos = []
         self.binds_dict = {b.knob_id: b for b in knob_binds}
 
+        self.flashing_knobs = set([])
+        self.thread_list = []
+        self.knobs_mutex = QMutex()
+
+        self.id_label_map = dict([])
+
         # Description row.
         description_layout = QHBoxLayout()
         description_layout.addWidget(QLabel("Name:"))
@@ -251,9 +266,8 @@ class KnobBinds(QWidget):
 
         self.setLayout(layout)
 
-        self.flashing_knobs = set([])
-        self.thread_list = []
-        self.knobs_mutex = QMutex()
+    def _get_label_map(self) -> Dict[int, QLabel]:
+        return self.id_label_map
 
     def _light_up_knob(self, knob_id: int):
         if self.connected_controller is None:
@@ -291,6 +305,9 @@ class KnobBinds(QWidget):
         decrease_action_combo = SearchableQComboBox(self.actions, action_decrease, self)
         self.knob_combos.append((knob_id, increase_action_combo, decrease_action_combo))
 
+        knob_label = QLabel(knob_name)
+        self.id_label_map[knob_id] = knob_label
+
         # Button for lighting up the controller element
         controller_disconnected = self.connected_controller is None
         light_up_knob = QPushButton("Light up")
@@ -300,7 +317,7 @@ class KnobBinds(QWidget):
 
         sizes = [1, 1, 3, 5, 5]
         elems = [
-            QLabel(knob_name),
+            knob_label,
             light_up_knob,
             QWidget(),
             increase_action_combo,
@@ -426,6 +443,43 @@ class BindsEditor(QDialog):
         self.setStyleSheet(get_current_stylesheet())
         self.knobs_radio.setChecked(True)
         self.setMinimumSize(830, 650)
+
+        self.button_ids = connected_controller.button_ids
+        self.knob_ids = connected_controller.knob_ids
+        self.bl_map = self.buttons_widget._get_label_map()
+        self.kl_map = self.knobs_widget._get_label_map()
+        connected_controller.set_custom_callback(self.light_up_midi_callback)
+
+    def light_up_midi_callback(self, event: Tuple[List[int], float], data=None) -> None:
+        """Callback function for MIDI input, lights up elements of the interface that
+        user interacts with.
+
+        Parameters
+        ----------
+        event : Tuple[List[int], float]
+            Pair of (MIDI message, delta time).
+        """
+        message, _ = event
+
+        command = message[0] & 0xF0
+        data_bytes = message[1:]
+        id = data_bytes[0]
+        print(f"cb {id} {command}")
+
+        if (
+            id in self.knob_ids
+            and command == ControllerConstants.CONTROL_CHANGE_COMMAND
+        ):
+            print(f"knob{id}")
+            if id in self.kl_map:
+                self.kl_map[id].setText(f"<b>{self.kl_map[id].text()}</b>")
+        elif id in self.button_ids and (
+            command == ControllerConstants.BUTTON_ENGAGED_COMMAND
+            or command == ControllerConstants.BUTTON_DISENGAGED_COMMAND
+        ):
+            print(f"button{id}")
+            if id in self.bl_map:
+                self.bl_map[id].setText(f"<b>{self.bl_map[id].text()}</b>")
 
     @staticmethod
     def _add_elements_to_grid_layout(

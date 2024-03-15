@@ -69,6 +69,14 @@ class ConnectedController:
         self.mutex = QMutex()
 
         # Set callback for getting data from controller.
+        self.set_default_callback()
+
+    def set_custom_callback(self, callback: callable) -> None:
+        """Sets custom callback function"""
+        self.midi_in.set_callback(callback)
+
+    def set_default_callback(self) -> None:
+        """Sets default callback function"""
         self.midi_in.set_callback(self.midi_callback)
 
     def midi_callback(self, event: Tuple[List[int], float], data=None) -> None:
