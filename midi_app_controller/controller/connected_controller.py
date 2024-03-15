@@ -190,11 +190,12 @@ class ConnectedController:
 
         sleep_seconds = 0.04
         intervals = 14
+        min_max_diff = self.controller.knob_value_max - self.controller.knob_value_min
 
         for value in range(
             self.controller.knob_value_min,
             self.controller.knob_value_max,
-            self.controller.knob_value_max // intervals,
+            min_max_diff // intervals,
         ):
             self.change_knob_value(id, value)
             time.sleep(sleep_seconds)
@@ -202,7 +203,7 @@ class ConnectedController:
         for value in range(
             self.controller.knob_value_max,
             self.controller.knob_value_min,
-            -self.controller.knob_value_max // intervals,
+            -min_max_diff // intervals,
         ):
             self.change_knob_value(id, value)
             time.sleep(sleep_seconds)

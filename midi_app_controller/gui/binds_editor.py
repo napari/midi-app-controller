@@ -19,7 +19,7 @@ from qtpy.QtWidgets import (
 from midi_app_controller.gui.utils import SearchableQComboBox
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller, ControllerElement
-from midi_app_controller.state.state_manager import StateManager
+from midi_app_controller.controller.connected_controller import ConnectedController
 
 
 class LightUpQThread(QThread):
@@ -64,7 +64,7 @@ class ButtonBinds(QWidget):
         buttons: List[ControllerElement],
         button_binds: List[ButtonBind],
         actions: List[str],
-        state_manager: StateManager,
+        connected_controller: ConnectedController,
     ):
         """Creates ButtonBinds widget.
 
@@ -79,7 +79,7 @@ class ButtonBinds(QWidget):
         """
         super().__init__()
 
-        self.state_manager = state_manager
+        self.connected_controller = connected_controller
 
         self.actions = [""] + actions
         self.button_combos = []
@@ -115,11 +115,11 @@ class ButtonBinds(QWidget):
         self.buttons_mutex = QMutex()
 
     def _light_up_button(self, button_id: int):
-        if self.state_manager._connected_controller is None:
+        if self.connected_controller is None:
             raise Exception("No controller connected.")
 
         def light_up_func():
-            self.state_manager._connected_controller.flash_button(button_id)
+            self.connected_controller.flash_button(button_id)
 
         thread = LightUpQThread(
             light_up_func,
@@ -151,7 +151,7 @@ class ButtonBinds(QWidget):
         button_label = QLabel(button_name)
 
         # Button for lighting up the controller element
-        controller_disconnected = self.state_manager._connected_controller is None
+        controller_disconnected = self.connected_controller is None
         light_up_button = QPushButton("Light up")
         light_up_button.setToolTip(f"Lights up the '{button_name}'")
         light_up_button.setCursor(Qt.PointingHandCursor)
@@ -204,7 +204,7 @@ class KnobBinds(QWidget):
         knobs: List[ControllerElement],
         knob_binds: List[KnobBind],
         actions: List[str],
-        state_manager: StateManager,
+        connected_controller: ConnectedController,
     ):
         """Creates KnobBinds widget.
 
@@ -219,7 +219,7 @@ class KnobBinds(QWidget):
         """
         super().__init__()
 
-        self.state_manager = state_manager
+        self.connected_controller = connected_controller
 
         self.actions = [""] + actions
         self.knob_combos = []
@@ -256,11 +256,11 @@ class KnobBinds(QWidget):
         self.knobs_mutex = QMutex()
 
     def _light_up_knob(self, knob_id: int):
-        if self.state_manager._connected_controller is None:
+        if self.connected_controller is None:
             raise Exception("No controller connected.")
 
         def light_up_func():
-            self.state_manager._connected_controller.flash_knob(knob_id)
+            self.connected_controller.flash_knob(knob_id)
 
         thread = LightUpQThread(
             light_up_func,
@@ -292,7 +292,7 @@ class KnobBinds(QWidget):
         self.knob_combos.append((knob_id, increase_action_combo, decrease_action_combo))
 
         # Button for lighting up the controller element
-        controller_disconnected = self.state_manager._connected_controller is None
+        controller_disconnected = self.connected_controller is None
         light_up_knob = QPushButton("Light up")
         light_up_knob.setToolTip(f"Lights up the '{knob_name}'")
         light_up_knob.setCursor(Qt.PointingHandCursor)
@@ -358,7 +358,7 @@ class BindsEditor(QDialog):
         binds: Binds,
         actions: List[str],
         save_binds: Callable[[List[KnobBind], List[ButtonBind]], None],
-        state_manager: StateManager,
+        connected_controller: ConnectedController,
     ):
         """Creates BindsEditor widget.
 
@@ -402,19 +402,23 @@ class BindsEditor(QDialog):
             controller.knobs,
             binds.knob_binds,
             actions,
-            state_manager,
+            connected_controller,
         )
         self.buttons_widget = ButtonBinds(
             controller.buttons,
             binds.button_binds,
             actions,
-            state_manager,
+            connected_controller,
         )
 
         # Layout.
         layout = QVBoxLayout()
         layout.addLayout(radio_layout)
         layout.addLayout(buttons_layout)
+
+        if connected_controller is None:
+            layout.addWidget(QLabel("Connect controller to enable 'Light up' buttons."))
+
         layout.addWidget(self.knobs_widget)
         layout.addWidget(self.buttons_widget)
 

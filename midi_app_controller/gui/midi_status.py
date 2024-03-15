@@ -196,7 +196,7 @@ class MidiStatus(QWidget):
             binds,
             list(map(lambda a: a.id, state_manager.actions)),
             save,
-            state_manager,
+            state_manager._connected_controller,
         )
         editor_dialog.exec_()
 
