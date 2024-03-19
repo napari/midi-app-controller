@@ -1,7 +1,6 @@
 import pytest
 
 from midi_app_controller.config import Config
-from midi_app_controller.gui.midi_status import MidiStatus, decrease_opacity, increase_opacity
 import os
 from midi_app_controller.models.controller import Controller
 from midi_app_controller.models.binds import Binds
@@ -9,8 +8,13 @@ from PyQt5.QtCore import Qt
 from unittest.mock import MagicMock, patch
 from midi_app_controller.state.state_manager import SelectedItem
 
-with patch('rtmidi.MidiIn', autospec=True), patch('rtmidi.MidiOut', autospec=True):
-    from midi_app_controller.gui.midi_status import state_manager
+with patch('rtmidi.MidiOut', autospec=True) as mock_midi_out:
+    mock_midi_in = MagicMock()
+    mock_midi_out = MagicMock()
+    mock_midi_in.return_value = ['Mocked Port 1', 'Mocked Port 2']
+    mock_midi_in.return_value = ['Mocked Port 1', 'Mocked Port 2']
+
+from midi_app_controller.gui.midi_status import state_manager, MidiStatus, decrease_opacity, increase_opacity
 
 BASE_DIR = os.path.abspath(__file__)
 while os.path.basename(BASE_DIR) != 'midi_app_controller':
