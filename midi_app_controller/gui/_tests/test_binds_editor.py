@@ -78,7 +78,6 @@ def binds_editor_fixture_basic(qtbot, controller_sample, binds_sample):
     actions = ["play_action", "volume_up", "volume_down", "zoom_in", "zoom_out"]
     widget = BindsEditor(controller_sample, binds_sample, actions, save_binds=lambda x, y: None)
     qtbot.addWidget(widget)
-    widget.show()
     return widget
 
 
@@ -89,7 +88,6 @@ def binds_editor_fixture(qtbot, controller_sample, binds_sample):
         actions = ["play_action", "volume_up", "volume_down", "zoom_in", "zoom_out"]
         widget = BindsEditor(controller_sample, binds_sample, actions, save_binds=lambda x, y: None)
         qtbot.addWidget(widget)
-        widget.show()
         yield widget, mock_save_and_exit, mock_exit
 
 

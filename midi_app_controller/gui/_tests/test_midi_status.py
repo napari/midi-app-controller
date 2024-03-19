@@ -38,13 +38,6 @@ def midi_status_fixture(qtbot):
     return widget
 
 
-@pytest.fixture(autouse=True)
-def mock_midi_in_out():
-    with patch("midi_app_controller.state.state_manager.rtmidi.MidiIn") as mock_in, patch(
-            "midi_app_controller.state.state_manager.rtmidi.MidiOut") as mock_out:
-        yield mock_in.return_value, mock_out.return_value
-
-
 def test_start_stop_handling_updates_status_label(midi_status_fixture, qtbot):
     assert midi_status_fixture.status.text() == "Not running"
     qtbot.mouseClick(midi_status_fixture.start_handling_button, Qt.LeftButton)
