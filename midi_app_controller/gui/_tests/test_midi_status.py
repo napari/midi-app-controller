@@ -7,7 +7,6 @@ from midi_app_controller.models.controller import Controller
 from midi_app_controller.models.binds import Binds
 from PyQt5.QtCore import Qt
 from unittest.mock import MagicMock, patch
-
 from midi_app_controller.state.state_manager import SelectedItem
 
 BASE_DIR = os.path.abspath(__file__)
