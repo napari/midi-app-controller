@@ -1,18 +1,12 @@
 import pytest
-from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtCore import Qt
-from PyQt5.QtTest import QTest
 
 from midi_app_controller.config import Config
-from midi_app_controller.gui.binds_editor import ButtonBinds, KnobBinds, BindsEditor
 from midi_app_controller.gui.midi_status import state_manager, MidiStatus, decrease_opacity, increase_opacity
-from midi_app_controller.models.controller import ControllerElement, Controller
-from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 import os
-from midi_app_controller.models.controller import ControllerElement, Controller
-from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
+from midi_app_controller.models.controller import Controller
+from midi_app_controller.models.binds import Binds
 from PyQt5.QtCore import Qt
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from midi_app_controller.state.state_manager import SelectedItem
 
@@ -41,6 +35,11 @@ def midi_status_fixture(qtbot):
     widget = MidiStatus()
     qtbot.addWidget(widget)
     return widget
+
+@pytest.fixture(autouse=True)
+def mock_midi_in_out():
+    with patch("rtmidi.MidiIn") as mock_in, patch("rtmidi.MidiOut") as mock_out:
+        yield mock_in.return_value, mock_out.return_value
 
 def test_start_stop_handling_updates_status_label(midi_status_fixture, qtbot):
     assert midi_status_fixture.status.text() == "Not running"
