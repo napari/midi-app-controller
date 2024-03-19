@@ -8,13 +8,21 @@ from PyQt5.QtCore import Qt
 from unittest.mock import MagicMock, patch
 from midi_app_controller.state.state_manager import SelectedItem
 
-with patch('rtmidi.MidiOut', autospec=True) as mock_midi_out:
-    mock_midi_in = MagicMock()
-    mock_midi_out = MagicMock()
-    mock_midi_in.return_value = ['Mocked Port 1', 'Mocked Port 2']
-    mock_midi_in.return_value = ['Mocked Port 1', 'Mocked Port 2']
+
+midi_in_mock = MagicMock(name='MidiIn')
+midi_out_mock = MagicMock(name='MidiOut')
+
+# Zastosuj patch na poziomie modułu
+patcher_midi_in = patch('rtmidi.MidiIn', new=midi_in_mock)
+patcher_midi_out = patch('rtmidi.MidiOut', new=midi_out_mock)
+
+# Uruchom patch przed importowaniem modułów
+patcher_midi_in.start()
+patcher_midi_out.start()
+
 
 from midi_app_controller.gui.midi_status import state_manager, MidiStatus, decrease_opacity, increase_opacity
+
 
 BASE_DIR = os.path.abspath(__file__)
 while os.path.basename(BASE_DIR) != 'midi_app_controller':
@@ -27,7 +35,9 @@ BINDS_CONFIG_PATH = os.path.join(BASE_DIR, 'config_files', 'binds', 'x_touch_min
 state_manager.selected_controller = SelectedItem("X_TOUCH_MINI", CONTROLLER_CONFIG_PATH)
 state_manager.selected_binds = SelectedItem("TestBinds", BINDS_CONFIG_PATH)
 state_manager.selected_midi_in = state_manager._midi_in.get_ports()[0]
+state_manager.selected_midi_in = 'Midi Through:Midi Through Port-0 14:0'
 state_manager.selected_midi_out = state_manager._midi_out.get_ports()[0]
+state_manager.selected_midi_out = 'Midi Through:Midi Through Port-0 14:0'
 
 binds = Binds.load_all_from(Config.BINDS_DIRECTORY)
 binds_names = [b.name for b, _ in binds]
