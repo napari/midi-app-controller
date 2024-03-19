@@ -30,16 +30,20 @@ controller_names = [c.name for c, _ in controller]
 state_manager.get_available_binds = MagicMock(return_value=binds_names)
 state_manager.get_available_controllers = MagicMock(return_value=controller_names)
 
+
 @pytest.fixture
 def midi_status_fixture(qtbot):
     widget = MidiStatus()
     qtbot.addWidget(widget)
     return widget
 
+
 @pytest.fixture(autouse=True)
 def mock_midi_in_out():
-    with patch("rtmidi.MidiIn") as mock_in, patch("rtmidi.MidiOut") as mock_out:
+    with patch("midi_app_controller.state.state_manager.rtmidi.MidiIn") as mock_in, patch(
+            "midi_app_controller.state.state_manager.rtmidi.MidiOut") as mock_out:
         yield mock_in.return_value, mock_out.return_value
+
 
 def test_start_stop_handling_updates_status_label(midi_status_fixture, qtbot):
     assert midi_status_fixture.status.text() == "Not running"
@@ -47,6 +51,7 @@ def test_start_stop_handling_updates_status_label(midi_status_fixture, qtbot):
     assert midi_status_fixture.status.text() == "Running"
     qtbot.mouseClick(midi_status_fixture.stop_handling_button, Qt.LeftButton)
     assert midi_status_fixture.status.text() == "Not running"
+
 
 def test_controller_and_binds_selection_changes(qtbot, midi_status_fixture):
     initial_controller = midi_status_fixture.current_controller.currentText()
@@ -98,6 +103,3 @@ def test_init_select_controller_updates_state_and_resets_binds(midi_status_fixtu
     y = state_manager.selected_controller.name
     assert x == controller_names[0]
     assert y == controller_names[1]
-
-
-
