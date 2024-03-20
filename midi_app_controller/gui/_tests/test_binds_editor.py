@@ -12,11 +12,11 @@ from unittest.mock import patch
 def controller_sample():
     buttons = [
         ControllerElement(id=1, name="Play"),
-        ControllerElement(id=2, name="Stop")
+        ControllerElement(id=2, name="Stop"),
     ]
     knobs = [
         ControllerElement(id=3, name="Volume"),
-        ControllerElement(id=4, name="Zoom")
+        ControllerElement(id=4, name="Zoom"),
     ]
 
     return Controller(
@@ -26,7 +26,7 @@ def controller_sample():
         knob_value_min=0,
         knob_value_max=127,
         buttons=buttons,
-        knobs=knobs
+        knobs=knobs,
     )
 
 
@@ -34,15 +34,19 @@ def controller_sample():
 def button_binds_sample():
     return [
         ButtonBind(button_id=1, action_id="play_action"),
-        ButtonBind(button_id=2, action_id="stop_action")
+        ButtonBind(button_id=2, action_id="stop_action"),
     ]
 
 
 @pytest.fixture
 def knob_binds_sample():
     return [
-        KnobBind(knob_id=3, action_id_increase="volume_up", action_id_decrease="volume_down"),
-        KnobBind(knob_id=4, action_id_increase="zoom_in", action_id_decrease="zoom_out")
+        KnobBind(
+            knob_id=3, action_id_increase="volume_up", action_id_decrease="volume_down"
+        ),
+        KnobBind(
+            knob_id=4, action_id_increase="zoom_in", action_id_decrease="zoom_out"
+        ),
     ]
 
 
@@ -53,7 +57,7 @@ def binds_sample(button_binds_sample, knob_binds_sample):
         app_name="TestApp",
         controller_name="TestController",
         button_binds=button_binds_sample,
-        knob_binds=knob_binds_sample
+        knob_binds=knob_binds_sample,
     )
 
 
@@ -76,7 +80,9 @@ def knob_binds_fixture(qtbot, controller_sample, knob_binds_sample):
 @pytest.fixture
 def binds_editor_fixture_basic(qtbot, controller_sample, binds_sample):
     actions = ["play_action", "volume_up", "volume_down", "zoom_in", "zoom_out"]
-    widget = BindsEditor(controller_sample, binds_sample, actions, save_binds=lambda x, y: None)
+    widget = BindsEditor(
+        controller_sample, binds_sample, actions, save_binds=lambda x, y: None
+    )
     qtbot.addWidget(widget)
     widget.show()
     return widget
@@ -84,10 +90,13 @@ def binds_editor_fixture_basic(qtbot, controller_sample, binds_sample):
 
 @pytest.fixture
 def binds_editor_fixture(qtbot, controller_sample, binds_sample):
-    with patch.object(BindsEditor, '_save_and_exit') as mock_save_and_exit, \
-            patch.object(BindsEditor, '_exit') as mock_exit:
+    with patch.object(
+        BindsEditor, "_save_and_exit"
+    ) as mock_save_and_exit, patch.object(BindsEditor, "_exit") as mock_exit:
         actions = ["play_action", "volume_up", "volume_down", "zoom_in", "zoom_out"]
-        widget = BindsEditor(controller_sample, binds_sample, actions, save_binds=lambda x, y: None)
+        widget = BindsEditor(
+            controller_sample, binds_sample, actions, save_binds=lambda x, y: None
+        )
         qtbot.addWidget(widget)
         widget.show()
         yield widget, mock_save_and_exit, mock_exit
@@ -129,7 +138,9 @@ def test_binds_editor_switch_views(binds_editor_fixture_basic, qtbot):
 def test_binds_editor_save_and_exit(binds_editor_fixture, qtbot):
     widget, mock_save_and_exit, _ = binds_editor_fixture
     all_buttons = widget.findChildren(QPushButton)
-    save_and_exit_button = next((btn for btn in all_buttons if btn.text() == "Save and exit"), None)
+    save_and_exit_button = next(
+        (btn for btn in all_buttons if btn.text() == "Save and exit"), None
+    )
     assert save_and_exit_button is not None
 
     QTest.mouseClick(save_and_exit_button, Qt.LeftButton)
@@ -151,7 +162,9 @@ def test_binds_editor_exit(binds_editor_fixture, qtbot):
 def test_binds_editor_save_and_exit_no_mock(binds_editor_fixture_basic, qtbot):
     widget = binds_editor_fixture_basic
     all_buttons = widget.findChildren(QPushButton)
-    save_and_exit_button = next((btn for btn in all_buttons if btn.text() == "Save and exit"), None)
+    save_and_exit_button = next(
+        (btn for btn in all_buttons if btn.text() == "Save and exit"), None
+    )
     assert save_and_exit_button is not None
 
     QTest.mouseClick(save_and_exit_button, Qt.LeftButton)
