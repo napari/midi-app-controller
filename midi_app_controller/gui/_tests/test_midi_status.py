@@ -14,30 +14,31 @@ def patch_rtmidi():
     midi_in_mock = MagicMock(name='MidiIn')
     midi_out_mock = MagicMock(name='MidiOut')
 
-    with (patch('rtmidi.MidiIn', new=midi_in_mock), patch('rtmidi.MidiOut', new=midi_out_mock)):
-        from midi_app_controller.gui.midi_status import state_manager
-        BASE_DIR = os.path.abspath(__file__)
-        while os.path.basename(BASE_DIR) != 'midi_app_controller':
+    with patch('rtmidi.MidiIn', new=midi_in_mock):
+        with patch('rtmidi.MidiOut', new=midi_out_mock):
+            from midi_app_controller.gui.midi_status import state_manager
+            BASE_DIR = os.path.abspath(__file__)
+            while os.path.basename(BASE_DIR) != 'midi_app_controller':
+                BASE_DIR = os.path.dirname(BASE_DIR)
             BASE_DIR = os.path.dirname(BASE_DIR)
-        BASE_DIR = os.path.dirname(BASE_DIR)
 
-        CONTROLLER_CONFIG_PATH = os.path.join(BASE_DIR, 'config_files', 'controllers', 'x_touch_mini_example.yaml')
-        BINDS_CONFIG_PATH = os.path.join(BASE_DIR, 'config_files', 'binds', 'x_touch_mini_test.yaml')
+            CONTROLLER_CONFIG_PATH = os.path.join(BASE_DIR, 'config_files', 'controllers', 'x_touch_mini_example.yaml')
+            BINDS_CONFIG_PATH = os.path.join(BASE_DIR, 'config_files', 'binds', 'x_touch_mini_test.yaml')
 
-        state_manager.selected_controller = SelectedItem("X_TOUCH_MINI", CONTROLLER_CONFIG_PATH)
-        state_manager.selected_binds = SelectedItem("TestBinds", BINDS_CONFIG_PATH)
-        state_manager.selected_midi_in = state_manager._midi_in.get_ports()[0]
-        state_manager.selected_midi_in = 'Midi Through:Midi Through Port-0 14:0'
-        state_manager.selected_midi_out = state_manager._midi_out.get_ports()[0]
-        state_manager.selected_midi_out = 'Midi Through:Midi Through Port-0 14:0'
+            state_manager.selected_controller = SelectedItem("X_TOUCH_MINI", CONTROLLER_CONFIG_PATH)
+            state_manager.selected_binds = SelectedItem("TestBinds", BINDS_CONFIG_PATH)
+            state_manager.selected_midi_in = state_manager._midi_in.get_ports()[0]
+            state_manager.selected_midi_in = 'Midi Through:Midi Through Port-0 14:0'
+            state_manager.selected_midi_out = state_manager._midi_out.get_ports()[0]
+            state_manager.selected_midi_out = 'Midi Through:Midi Through Port-0 14:0'
 
-        binds = Binds.load_all_from(Config.BINDS_DIRECTORY)
-        binds_names = [b.name for b, _ in binds]
-        controller = Controller.load_all_from(Config.CONTROLLERS_DIRECTORY)
-        controller_names = [c.name for c, _ in controller]
-        state_manager.get_available_binds = MagicMock(return_value=binds_names)
-        state_manager.get_available_controllers = MagicMock(return_value=controller_names)
-        yield state_manager, binds_names, controller_names
+            binds = Binds.load_all_from(Config.BINDS_DIRECTORY)
+            binds_names = [b.name for b, _ in binds]
+            controller = Controller.load_all_from(Config.CONTROLLERS_DIRECTORY)
+            controller_names = [c.name for c, _ in controller]
+            state_manager.get_available_binds = MagicMock(return_value=binds_names)
+            state_manager.get_available_controllers = MagicMock(return_value=controller_names)
+            yield state_manager, binds_names, controller_names
 
 
 @pytest.fixture
