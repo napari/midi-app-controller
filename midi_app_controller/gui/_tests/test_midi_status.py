@@ -108,10 +108,13 @@ def test_init_select_controller_updates_state_and_resets_binds(midi_status_fixtu
     from PyQt5.QtTest import QTest
     state_manager, binds_names, controller_names = patch_rtmidi
     x = state_manager.selected_controller.name
+    QTest.qWait(400)
     qtbot.mouseClick(midi_status_fixture.current_controller, Qt.LeftButton)
-    QTest.qWait(100)
+    QTest.qWait(400)
     qtbot.keyClick(midi_status_fixture.current_controller, Qt.Key_Down)
-    QTest.qWait(100)
+    QTest.qWait(400)
+    qtbot.keyClick(midi_status_fixture.current_controller, Qt.Key_Enter)
+    QTest.qWait(400)
     y = state_manager.selected_controller.name
     print(x, y)
     assert x == controller_names[0]
