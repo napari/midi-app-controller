@@ -114,6 +114,7 @@ def test_init_select_controller_updates_state_and_resets_binds(midi_status_fixtu
     qtbot.keyClick(midi_status_fixture.current_controller, Qt.Key_Down)
     QTest.qWait(400)
     qtbot.keyClick(midi_status_fixture.current_controller, Qt.Key_Enter)
+    qtbot.mouseClick(midi_status_fixture.current_controller, Qt.LeftButton)
     QTest.qWait(400)
     y = state_manager.selected_controller.name
     print(x, y)
