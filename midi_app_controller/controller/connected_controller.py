@@ -29,8 +29,10 @@ class ConnectedController:
         A list containing all valid button ids on a handled controller.
     knob_ids : List[int]
         A list containing all valid knob ids on a handled controller.
-    knob_engagement: Dict[int, int]
+    knob_engagement : Dict[int, int]
         A dictionary that keeps the value of every knob.
+    mutex : QMutex
+        A mutex for concurrect access of `knob_engagement` dictionary.
     """
 
     def __init__(

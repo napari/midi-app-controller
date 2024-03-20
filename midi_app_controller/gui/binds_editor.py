@@ -23,6 +23,20 @@ from midi_app_controller.controller.connected_controller import ConnectedControl
 
 
 class LightUpQThread(QThread):
+    """Worker thread responsible for lighting up a controller element.
+
+    Attributes
+    ----------
+    id : int
+        Id of the controller element.
+    id_set: set[int]
+        Set of all element ids, that are being lit up.
+    mutex : QMutex
+        Mutex to exclude mutual access to the set.
+    func : callable
+        Function for lighting up the element.
+    """
+
     def __init__(self, func, mutex, id, id_set):
         super().__init__()
         self.func = func
@@ -31,6 +45,7 @@ class LightUpQThread(QThread):
         self.id_set = id_set
 
     def run(self):
+        """Function that checks if the element is lit up, and lights it up otherwise."""
         flashing = False
         with QMutexLocker(self.mutex):
             if self.id in self.id_set:
@@ -76,6 +91,12 @@ class ButtonBinds(QWidget):
             List of current binds.
         actions : List[str]
             List of all actions available to bind.
+        flashing_buttons : set[int]
+            Set of the button ids, that are currently flashing.
+        thread_list : List[QThread]
+            List of worker threads responsible for lighting up buttons.
+        butons_mutex : QMutex
+            Mutex for worker threads.
         """
         super().__init__()
 
@@ -115,6 +136,7 @@ class ButtonBinds(QWidget):
         self.buttons_mutex = QMutex()
 
     def _light_up_button(self, button_id: int):
+        """Creates a QThread responsible for lighting up a knob."""
         if self.connected_controller is None:
             raise Exception("No controller connected.")
 
@@ -197,6 +219,12 @@ class KnobBinds(QWidget):
         SearchableQComboBox used to set decrease action).
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's knob by its id.
+    flashing_knobs : set[int]
+        Set of the knob ids, that are currently flashing.
+    thread_list : List[QThread]
+        List of worker threads responsible for lighting up knobs.
+    knobs_mutex : QMutex
+        Mutex for worker threads.
     """
 
     def __init__(
@@ -216,6 +244,8 @@ class KnobBinds(QWidget):
             List of current binds.
         actions : List[str]
             List of all actions available to bind.
+        connected_controller : ConnectedController
+            Class representing currently connected MIDI controller.
         """
         super().__init__()
 
@@ -256,6 +286,7 @@ class KnobBinds(QWidget):
         self.knobs_mutex = QMutex()
 
     def _light_up_knob(self, knob_id: int):
+        """Creates a QThread responsible for lighting up a knob."""
         if self.connected_controller is None:
             raise Exception("No controller connected.")
 
@@ -431,12 +462,13 @@ class BindsEditor(QDialog):
     def _add_elements_to_grid_layout(
         layout: QGridLayout, elems: List[QLayoutItem], sizes: List[int]
     ) -> None:
+        """Adds elements with certain sizes to grid layout in a single row."""
         current_size = 0
         for elem, size in zip(elems, sizes):
             layout.addWidget(elem, 0, current_size, 1, size)
             current_size += size
 
-    def _switch_editors(self, checked):
+    def _switch_editors(self, checked: bool):
         """Switches binds editor view for knobs/buttons based on checked radio."""
         if not checked:
             return
