@@ -105,18 +105,9 @@ def test_increase_opacity():
 
 
 def test_init_select_controller_updates_state_and_resets_binds(midi_status_fixture, qtbot, patch_rtmidi):
-    from PyQt5.QtTest import QTest
     state_manager, binds_names, controller_names = patch_rtmidi
     x = state_manager.selected_controller.name
-    QTest.qWait(400)
-    qtbot.mouseClick(midi_status_fixture.current_controller, Qt.LeftButton)
-    QTest.qWait(400)
-    qtbot.keyClick(midi_status_fixture.current_controller, Qt.Key_Down)
-    QTest.qWait(400)
-    qtbot.keyClick(midi_status_fixture.current_controller, Qt.Key_Enter)
-    qtbot.mouseClick(midi_status_fixture.current_controller, Qt.LeftButton)
-    QTest.qWait(400)
+    midi_status_fixture.current_controller.textActivated.emit(controller_names[1])
     y = state_manager.selected_controller.name
-    print(x, y)
     assert x == controller_names[0]
     assert y == controller_names[1]
