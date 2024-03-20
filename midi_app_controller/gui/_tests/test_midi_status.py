@@ -46,6 +46,7 @@ def midi_status_fixture(qtbot, patch_rtmidi):
     from midi_app_controller.gui.midi_status import MidiStatus
     widget = MidiStatus()
     qtbot.addWidget(widget)
+    widget.show()
     return widget
 
 
