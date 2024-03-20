@@ -78,7 +78,7 @@ def binds_editor_fixture_basic(qtbot, controller_sample, binds_sample):
     actions = ["play_action", "volume_up", "volume_down", "zoom_in", "zoom_out"]
     widget = BindsEditor(controller_sample, binds_sample, actions, save_binds=lambda x, y: None)
     qtbot.addWidget(widget)
-    # widget.show()
+    widget.show()
     return widget
 
 
@@ -89,7 +89,7 @@ def binds_editor_fixture(qtbot, controller_sample, binds_sample):
         actions = ["play_action", "volume_up", "volume_down", "zoom_in", "zoom_out"]
         widget = BindsEditor(controller_sample, binds_sample, actions, save_binds=lambda x, y: None)
         qtbot.addWidget(widget)
-        # widget.show()
+        widget.show()
         yield widget, mock_save_and_exit, mock_exit
 
 
@@ -115,15 +115,15 @@ def test_get_knob_binds(knob_binds_fixture):
     assert binds[1].action_id_decrease == "zoom_out"
 
 
-# def test_binds_editor_switch_views(binds_editor_fixture_basic, qtbot):
-#     widget = binds_editor_fixture_basic
-#     QTest.mouseClick(widget.buttons_radio, Qt.LeftButton)
-#     assert widget.buttons_widget.isVisible()
-#     assert not widget.knobs_widget.isVisible()
-#
-#     QTest.mouseClick(widget.knobs_radio, Qt.LeftButton)
-#     assert widget.knobs_widget.isVisible()
-#     assert not widget.buttons_widget.isVisible()
+def test_binds_editor_switch_views(binds_editor_fixture_basic, qtbot):
+    widget = binds_editor_fixture_basic
+    QTest.mouseClick(widget.buttons_radio, Qt.LeftButton)
+    assert widget.buttons_widget.isVisible()
+    assert not widget.knobs_widget.isVisible()
+
+    QTest.mouseClick(widget.knobs_radio, Qt.LeftButton)
+    assert widget.knobs_widget.isVisible()
+    assert not widget.buttons_widget.isVisible()
 
 
 def test_binds_editor_save_and_exit(binds_editor_fixture, qtbot):
