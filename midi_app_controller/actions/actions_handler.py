@@ -35,14 +35,15 @@ class ActionsHandler:
         """Returns knob's value from the action associated with the knob."""
         raise NotImplementedError  # TODO
 
-    @ensure_main_thread
+    # Without `await_return` closing MIDI ports freezes after handling at least two actions.
+    @ensure_main_thread(await_return=True)
     def handle_button_action(self, button_id: int) -> None:
         """Executes an action associated with the button if it exists."""
         action = self.bound_controller.get_button_press_action(button_id)
         if action is not None:
             self.app.commands.execute_command(action.id)
 
-    @ensure_main_thread
+    @ensure_main_thread(await_return=True)
     def handle_knob_action(
         self,
         *,
