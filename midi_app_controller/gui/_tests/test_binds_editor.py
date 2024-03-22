@@ -32,7 +32,7 @@ def controller_sample() -> Controller:
 
 
 @pytest.fixture
-def button_binds_sample() -> list[ButtonBind]:
+def button_binds_sample() -> list:
     return [
         ButtonBind(button_id=1, action_id="play_action"),
         ButtonBind(button_id=2, action_id="stop_action"),
@@ -40,7 +40,7 @@ def button_binds_sample() -> list[ButtonBind]:
 
 
 @pytest.fixture
-def knob_binds_sample() -> list[KnobBind]:
+def knob_binds_sample() -> list:
     return [
         KnobBind(
             knob_id=3, action_id_increase="volume_up", action_id_decrease="volume_down"
@@ -52,14 +52,14 @@ def knob_binds_sample() -> list[KnobBind]:
 
 
 @pytest.fixture
-def mixed_button_binds_sample() -> list[ButtonBind]:
+def mixed_button_binds_sample() -> list:
     return [
         ButtonBind(button_id=1, action_id="play_action"),
     ]
 
 
 @pytest.fixture
-def mixed_knob_binds_sample() -> list[KnobBind]:
+def mixed_knob_binds_sample() -> list:
     return [
         KnobBind(
             knob_id=3, action_id_increase="volume_up", action_id_decrease="volume_down"
