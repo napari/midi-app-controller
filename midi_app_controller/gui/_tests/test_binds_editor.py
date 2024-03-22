@@ -126,9 +126,7 @@ def binds_editor_fixture_basic(qtbot, controller_sample, binds_sample) -> BindsE
 
 
 @pytest.fixture
-def binds_editor_fixture(
-    qtbot, controller_sample, binds_sample
-) -> tuple[BindsEditor, patch, patch]:
+def binds_editor_fixture(qtbot, controller_sample, binds_sample) -> tuple:
     with patch.object(
         BindsEditor, "_save_and_exit"
     ) as mock_save_and_exit, patch.object(BindsEditor, "_exit") as mock_exit:
