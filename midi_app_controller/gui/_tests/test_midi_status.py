@@ -1,16 +1,21 @@
 import pytest
+import os
+import numpy
+from PyQt5.QtTest import QTest
+from qtpy.QtCore import Qt
+from unittest.mock import MagicMock, patch
+from napari.components import LayerList
+from napari.layers import Image
 
 from midi_app_controller.config import Config
-import os
 from midi_app_controller.models.controller import Controller
 from midi_app_controller.models.binds import Binds
-from PyQt5.QtCore import Qt
-from unittest.mock import MagicMock, patch
 from midi_app_controller.state.state_manager import SelectedItem
+from midi_app_controller.gui.midi_status import decrease_opacity, increase_opacity
 
 
 @pytest.fixture
-def patch_rtmidi():
+def patch_rtmidi() -> tuple:
     midi_in_mock = MagicMock(name="MidiIn")
     midi_out_mock = MagicMock(name="MidiOut")
 
@@ -34,9 +39,7 @@ def patch_rtmidi():
                 "X_TOUCH_MINI", CONTROLLER_CONFIG_PATH
             )
             state_manager.selected_binds = SelectedItem("TestBinds", BINDS_CONFIG_PATH)
-            state_manager.selected_midi_in = state_manager._midi_in.get_ports()[0]
             state_manager.selected_midi_in = "Midi Through:Midi Through Port-0 14:0"
-            state_manager.selected_midi_out = state_manager._midi_out.get_ports()[0]
             state_manager.selected_midi_out = "Midi Through:Midi Through Port-0 14:0"
 
             binds = Binds.load_all_from(Config.BINDS_DIRECTORY)
@@ -63,8 +66,10 @@ def midi_status_fixture(qtbot, patch_rtmidi):
 def test_start_stop_handling_updates_status_label(midi_status_fixture, qtbot):
     assert midi_status_fixture.status.text() == "Not running"
     qtbot.mouseClick(midi_status_fixture.start_handling_button, Qt.LeftButton)
+    QTest.qWait(100)
     assert midi_status_fixture.status.text() == "Running"
     qtbot.mouseClick(midi_status_fixture.stop_handling_button, Qt.LeftButton)
+    QTest.qWait(100)
     assert midi_status_fixture.status.text() == "Not running"
 
 
@@ -79,7 +84,9 @@ def test_controller_and_binds_selection_changes(
     assert initial_binds == ""
 
     qtbot.mouseClick(midi_status_fixture.current_controller, Qt.LeftButton)
+    QTest.qWait(100)
     qtbot.mouseClick(midi_status_fixture.current_binds, Qt.LeftButton)
+    QTest.qWait(100)
 
     updated_controller = midi_status_fixture.current_controller.currentText()
     updated_binds = midi_status_fixture.current_binds.currentText()
@@ -89,44 +96,59 @@ def test_controller_and_binds_selection_changes(
 
 
 def test_decrease_opacity():
-    from napari.components import LayerList
-    from napari.layers import Image
-
     ll = LayerList()
-    import numpy
 
     layer = Image(numpy.random.random((10, 10)), opacity=0.5)
     ll.append(layer)
     ll.selection.add(layer)
-    from midi_app_controller.gui.midi_status import decrease_opacity
 
     decrease_opacity(ll)
     assert layer.opacity == 0.49
 
 
-def test_increase_opacity():
-    from napari.components import LayerList
-    from napari.layers import Image
-
+@pytest.mark.parametrize(
+    "initial_opacity, expected_opacity, action",
+    [
+        (0.5, 0.49, decrease_opacity),
+        (0, 0, decrease_opacity),
+        (0.5, 0.51, increase_opacity),
+        (1, 1, increase_opacity),
+    ],
+)
+def test_opacity_changes(initial_opacity, expected_opacity, action):
     ll = LayerList()
-    import numpy
 
-    layer = Image(numpy.random.random((10, 10)), opacity=0.5)
+    layer = Image(numpy.random.random((10, 10)), opacity=initial_opacity)
     ll.append(layer)
     ll.selection.add(layer)
-    from midi_app_controller.gui.midi_status import increase_opacity
 
-    increase_opacity(ll)
-    assert layer.opacity == 0.51
+    action(ll)
+    assert layer.opacity == expected_opacity
 
 
 def test_init_select_controller_updates_state_and_resets_binds(
     midi_status_fixture, patch_rtmidi
 ):
     state_manager, binds_names, controller_names = patch_rtmidi
+    binds0 = state_manager.selected_binds
     midi_status_fixture.current_controller.textActivated.emit(controller_names[0])
     x = state_manager.selected_controller.name
+    binds1 = state_manager.selected_binds
     midi_status_fixture.current_controller.textActivated.emit(controller_names[1])
     y = state_manager.selected_controller.name
+    binds2 = state_manager.selected_binds
+
+    assert binds0 and binds0.name == "TestBinds"
+    assert binds1 is None
+    assert binds2 is None
     assert x == controller_names[0]
     assert y == controller_names[1]
+
+
+def test_edit_binds(midi_status_fixture, patch_rtmidi):
+    state_manager, binds_names, controller_names = patch_rtmidi
+    assert state_manager.selected_binds.name == binds_names[0]
+    midi_status_fixture.current_binds.textActivated.emit(binds_names[1])
+    assert state_manager.selected_binds.name == binds_names[1]
+    midi_status_fixture.current_binds.textActivated.emit(binds_names[0])
+    assert state_manager.selected_binds.name == binds_names[0]

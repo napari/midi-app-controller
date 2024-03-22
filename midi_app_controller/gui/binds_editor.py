@@ -263,14 +263,14 @@ class BindsEditor(QDialog):
         self.save_binds = save_binds
 
         # Save/exit buttons.
-        save_and_exit_button = QPushButton("Save and exit")
-        save_and_exit_button.clicked.connect(self._save_and_exit)
-        exit_button = QPushButton("Exit")
-        exit_button.clicked.connect(self._exit)
+        self.save_and_exit_button = QPushButton("Save and exit")
+        self.save_and_exit_button.clicked.connect(self._save_and_exit)
+        self.exit_button = QPushButton("Exit")
+        self.exit_button.clicked.connect(self._exit)
 
         buttons_layout = QHBoxLayout()
-        buttons_layout.addWidget(save_and_exit_button)
-        buttons_layout.addWidget(exit_button)
+        buttons_layout.addWidget(self.save_and_exit_button)
+        buttons_layout.addWidget(self.exit_button)
 
         # Radio buttons for switching knobs/buttons view.
         self.knobs_radio = QRadioButton("Knobs")
