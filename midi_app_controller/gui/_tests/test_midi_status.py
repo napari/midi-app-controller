@@ -85,7 +85,7 @@ def test_start_stop_handling_updates_status_label(midi_status_fixture, qtbot):
 def test_controller_and_binds_selection_changes(
     qtbot, midi_status_fixture, patch_rtmidi
 ):
-    state_manager, binds_names, controller_names = patch_rtmidi
+    state_manager, binds_names, controller_names, _, _ = patch_rtmidi
     initial_controller = midi_status_fixture.current_controller.currentText()
     initial_binds = midi_status_fixture.current_binds.currentText()
 
@@ -132,7 +132,7 @@ def test_opacity_changes(initial_opacity, expected_opacity, action, patch_rtmidi
 def test_init_select_controller_updates_state_and_resets_binds(
     midi_status_fixture, patch_rtmidi
 ):
-    state_manager, binds_names, controller_names = patch_rtmidi
+    state_manager, binds_names, controller_names, _, _ = patch_rtmidi
     binds0 = state_manager.selected_binds
     midi_status_fixture.current_controller.textActivated.emit(controller_names[0])
     x = state_manager.selected_controller.name
@@ -149,7 +149,7 @@ def test_init_select_controller_updates_state_and_resets_binds(
 
 
 def test_edit_binds(midi_status_fixture, patch_rtmidi):
-    state_manager, binds_names, controller_names = patch_rtmidi
+    state_manager, binds_names, controller_names, _, _ = patch_rtmidi
     assert state_manager.selected_binds.name == binds_names[0]
     midi_status_fixture.current_binds.textActivated.emit(binds_names[1])
     assert state_manager.selected_binds.name == binds_names[1]
