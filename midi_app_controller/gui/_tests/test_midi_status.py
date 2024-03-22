@@ -11,7 +11,6 @@ from midi_app_controller.config import Config
 from midi_app_controller.models.controller import Controller
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.state.state_manager import SelectedItem
-from midi_app_controller.gui.midi_status import decrease_opacity, increase_opacity
 
 
 @pytest.fixture
@@ -21,7 +20,11 @@ def patch_rtmidi() -> tuple:
 
     with patch("rtmidi.MidiIn", new=midi_in_mock):
         with patch("rtmidi.MidiOut", new=midi_out_mock):
-            from midi_app_controller.gui.midi_status import state_manager
+            from midi_app_controller.gui.midi_status import (
+                state_manager,
+                increase_opacity,
+                decrease_opacity,
+            )
 
             BASE_DIR = os.path.abspath(__file__)
             while os.path.basename(BASE_DIR) != "midi_app_controller":
@@ -50,7 +53,13 @@ def patch_rtmidi() -> tuple:
             state_manager.get_available_controllers = MagicMock(
                 return_value=controller_names
             )
-            yield state_manager, binds_names, controller_names
+            yield (
+                state_manager,
+                binds_names,
+                controller_names,
+                increase_opacity,
+                decrease_opacity,
+            )
 
 
 @pytest.fixture
@@ -95,27 +104,21 @@ def test_controller_and_binds_selection_changes(
     assert updated_binds == binds_names[0]
 
 
-def test_decrease_opacity():
-    ll = LayerList()
-
-    layer = Image(numpy.random.random((10, 10)), opacity=0.5)
-    ll.append(layer)
-    ll.selection.add(layer)
-
-    decrease_opacity(ll)
-    assert layer.opacity == 0.49
-
-
 @pytest.mark.parametrize(
     "initial_opacity, expected_opacity, action",
     [
-        (0.5, 0.49, decrease_opacity),
-        (0, 0, decrease_opacity),
-        (0.5, 0.51, increase_opacity),
-        (1, 1, increase_opacity),
+        (0.5, 0.49, "decrease_opacity"),
+        (0, 0, "decrease_opacity"),
+        (0.5, 0.51, "increase_opacity"),
+        (1, 1, "increase_opacity"),
     ],
 )
-def test_opacity_changes(initial_opacity, expected_opacity, action):
+def test_opacity_changes(initial_opacity, expected_opacity, action, patch_rtmidi):
+    if action == "decrease_opacity":
+        action = patch_rtmidi[-1]
+    else:
+        action = patch_rtmidi[-2]
+
     ll = LayerList()
 
     layer = Image(numpy.random.random((10, 10)), opacity=initial_opacity)
