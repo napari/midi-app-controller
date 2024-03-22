@@ -145,15 +145,8 @@ class StateManager:
         """Stops handling any MIDI signals."""
         self._midi_in.cancel_callback()
         self._connected_controller = None
-
-        # TODO This does NOT work - it freezes. Using other methods like delete()
-        # does NOT work too. Removing "@ensure_main_thread" in the ActionHandler
-        # seems to fix this issue (but we need it for other reasons).
-        # self._midi_in.close_port()
-        # self._midi_out.close_port()
-        # Very dirty workaround (it does not close previously opened interfaces!):
-        self._midi_in = rtmidi.MidiIn()
-        self._midi_out = rtmidi.MidiOut()
+        self._midi_in.close_port()
+        self._midi_out.close_port()
 
     def start_handling(self) -> None:
         """Starts handling MIDI input using current values of binds, controller, etc.
