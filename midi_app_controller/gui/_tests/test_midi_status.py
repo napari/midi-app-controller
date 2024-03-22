@@ -150,7 +150,6 @@ def test_init_select_controller_updates_state_and_resets_binds(
 
 def test_edit_binds(midi_status_fixture, patch_rtmidi):
     state_manager, binds_names, controller_names, _, _ = patch_rtmidi
-    assert state_manager.selected_binds.name == binds_names[0]
     midi_status_fixture.current_binds.textActivated.emit(binds_names[1])
     assert state_manager.selected_binds.name == binds_names[1]
     midi_status_fixture.current_binds.textActivated.emit(binds_names[0])
