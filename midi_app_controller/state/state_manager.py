@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pathlib import Path
 
 import rtmidi
@@ -101,12 +101,16 @@ class StateManager:
         """Returns names of all MIDI output ports."""
         return self._midi_out.get_ports()
 
-    def select_binds(self, name: str) -> None:
+    def select_binds(self, name: Optional[str]) -> None:
         """Updates currently selected binds.
 
         Does not have any immediate effect except updating the value and
-        finding path to the config file.
+        finding path to the config file if the name is not None.
         """
+        if name is None:
+            self.selected_binds = None
+            return
+
         all_binds = Binds.load_all_from(Config.BINDS_DIRECTORY)
         for binds, path in all_binds:
             if binds.name == name:
@@ -114,12 +118,16 @@ class StateManager:
                 return
         raise Exception("Config file of selected binds not found.")
 
-    def select_controller(self, name: str) -> None:
+    def select_controller(self, name: Optional[str]) -> None:
         """Updates currently selected controller schema.
 
         Does not have any immediate effect except updating the value and
-        finding path to the config file.
+        finding path to the config file if the name is not None.
         """
+        if name is None:
+            self.selected_controller = None
+            return
+
         all_controllers = Controller.load_all_from(Config.CONTROLLERS_DIRECTORY)
         for controller, path in all_controllers:
             if controller.name == name:
@@ -127,14 +135,14 @@ class StateManager:
                 return
         raise Exception("Config file of selected controller not found.")
 
-    def select_midi_in(self, name: str) -> None:
+    def select_midi_in(self, name: Optional[str]) -> None:
         """Updates currently selected MIDI input port name.
 
         Does not have any immediate effect except updating the value.
         """
         self.selected_midi_in = name
 
-    def select_midi_out(self, name: str) -> None:
+    def select_midi_out(self, name: Optional[str]) -> None:
         """Updates currently selected MIDI output port name.
 
         Does not have any immediate effect except updating the value.

@@ -96,8 +96,8 @@ class MidiStatus(QWidget):
         # Controller selection.
         def select_controller(name: str) -> None:
             state_manager.select_controller(name)
-            state_manager.selected_binds = None
-            self.current_binds.setCurrentText(None)
+            state_manager.select_binds(None)
+            self.current_binds.clear()
 
         selected_controller = state_manager.selected_controller
         self.current_controller = DynamicQComboBox(
