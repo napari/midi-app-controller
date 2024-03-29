@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import List, Tuple, Set
+from typing import List, Tuple, Set, Callable
 
 import rtmidi
 from qtpy.QtCore import QMutex, QMutexLocker
@@ -190,7 +190,7 @@ class ConnectedController:
 
     @staticmethod
     def check_set_and_run(
-        func: callable, id: int, mutex: QMutex, id_set: Set[int]
+        func: Callable, id: int, mutex: QMutex, id_set: Set[int]
     ) -> None:
         """Checks if the provided set contains `id`.
         It executes `func` if it doesn't and does nothing otherwise.
