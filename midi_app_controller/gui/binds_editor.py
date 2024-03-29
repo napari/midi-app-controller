@@ -35,8 +35,8 @@ class LightUpQThread(QThread):
         self.func = func
 
     def run(self):
+        """Runs the lighting up function."""
         self.func()
-        """Function that checks if the element is lit up, and lights it up otherwise."""
 
 
 class ButtonBinds(QWidget):
