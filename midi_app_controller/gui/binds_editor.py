@@ -1,4 +1,4 @@
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 # TODO Move style somewhere else in the future to make this class independent from napari.
 from napari.qt import get_current_stylesheet
@@ -13,7 +13,6 @@ from qtpy.QtWidgets import (
     QDialog,
     QScrollArea,
     QGridLayout,
-    QLayoutItem,
 )
 
 from midi_app_controller.gui.utils import SearchableQComboBox
@@ -191,8 +190,9 @@ class ButtonBinds(QWidget):
             sizes = [2, 8, 10]
             del elems[1]
 
-        layout = QGridLayout()
-        BindsEditor._add_elements_to_grid_layout(layout, elems, sizes)
+        layout = QHBoxLayout()
+        for elem, size in zip(elems, sizes):
+            layout.addWidget(elem, size)
 
         return layout
 
@@ -342,9 +342,9 @@ class KnobBinds(QWidget):
             sizes = [1, 4, 5, 5]
             del elems[1]
 
-        # Layout.
-        layout = QGridLayout()
-        BindsEditor._add_elements_to_grid_layout(layout, elems, sizes)
+        layout = QHBoxLayout()
+        for elem, size in zip(elems, sizes):
+            layout.addWidget(elem, size)
 
         return layout
 
@@ -389,7 +389,7 @@ class BindsEditor(QDialog):
         binds: Binds,
         actions: List[str],
         save_binds: Callable[[List[KnobBind], List[ButtonBind]], None],
-        connected_controller: ConnectedController,
+        connected_controller: Optional[ConnectedController],
     ):
         """Creates BindsEditor widget.
 
@@ -457,16 +457,6 @@ class BindsEditor(QDialog):
         self.setStyleSheet(get_current_stylesheet())
         self.knobs_radio.setChecked(True)
         self.setMinimumSize(830, 650)
-
-    @staticmethod
-    def _add_elements_to_grid_layout(
-        layout: QGridLayout, elems: List[QLayoutItem], sizes: List[int]
-    ) -> None:
-        """Adds elements with certain sizes to grid layout in a single row."""
-        current_size = 0
-        for elem, size in zip(elems, sizes):
-            layout.addWidget(elem, 0, current_size, 1, size)
-            current_size += size
 
     def _switch_editors(self, checked: bool):
         """Switches binds editor view for knobs/buttons based on checked radio."""

@@ -32,7 +32,7 @@ class ConnectedController:
     knob_engagement : Dict[int, int]
         A dictionary that keeps the value of every knob.
     mutex : QMutex
-        A mutex for concurrect access of `knob_engagement` dictionary.
+        A mutex for concurrect access of the `knob_engagement` dictionary.
     """
 
     def __init__(
