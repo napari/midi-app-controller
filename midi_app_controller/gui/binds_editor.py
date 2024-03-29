@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Set
 
 # TODO Move style somewhere else in the future to make this class independent from napari.
 from napari.qt import get_current_stylesheet
@@ -36,7 +36,7 @@ class LightUpQThread(QThread):
         Function for lighting up the element.
     """
 
-    def __init__(self, func, mutex, id, id_set):
+    def __init__(self, func: Callable, mutex: QMutex, id: int, id_set: Set[int]):
         super().__init__()
         self.func = func
         self.mutex = mutex
@@ -130,7 +130,7 @@ class ButtonBinds(QWidget):
 
         self.setLayout(layout)
 
-        self.flashing_buttons = set([])
+        self.flashing_buttons = set()
         self.thread_list = []
         self.buttons_mutex = QMutex()
 
@@ -245,7 +245,7 @@ class KnobBinds(QWidget):
         actions : List[str]
             List of all actions available to bind.
         connected_controller : ConnectedController
-            Class representing currently connected MIDI controller.
+            Object representing currently connected MIDI controller.
         """
         super().__init__()
 
@@ -281,7 +281,7 @@ class KnobBinds(QWidget):
 
         self.setLayout(layout)
 
-        self.flashing_knobs = set([])
+        self.flashing_knobs = set()
         self.thread_list = []
         self.knobs_mutex = QMutex()
 
@@ -447,8 +447,11 @@ class BindsEditor(QDialog):
         layout.addLayout(radio_layout)
         layout.addLayout(buttons_layout)
 
-        if connected_controller is None:
-            layout.addWidget(QLabel("Connect controller to enable 'Light up' buttons."))
+        handling_controller = connected_controller is not None
+        if not handling_controller:
+            layout.addWidget(
+                QLabel("Start handling a controller to enable 'Light up' buttons.")
+            )
 
         layout.addWidget(self.knobs_widget)
         layout.addWidget(self.buttons_widget)
@@ -474,7 +477,16 @@ class BindsEditor(QDialog):
         knob_binds = self.knobs_widget.get_binds()
         button_binds = self.buttons_widget.get_binds()
         self.save_binds(knob_binds, button_binds)
+        self._wait_for_worker_threads()
         self._exit()
+
+    def _wait_for_worker_threads(self):
+        """Waits for the threads responsible for lighting up the controller elements"""
+        for thread in self.buttons_widget.thread_list:
+            thread.wait()
+
+        for thread in self.knobs_widget.thread_list:
+            thread.wait()
 
     def _exit(self):
         """Closes the widget."""
