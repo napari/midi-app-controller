@@ -1,8 +1,8 @@
-from typing import Callable, List, Optional, Set
+from typing import Callable, List, Optional
 
 # TODO Move style somewhere else in the future to make this class independent from napari.
 from napari.qt import get_current_stylesheet
-from qtpy.QtCore import Qt, QThread, QMutex, QMutexLocker
+from qtpy.QtCore import Qt, QThread
 from qtpy.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -26,37 +26,17 @@ class LightUpQThread(QThread):
 
     Attributes
     ----------
-    id : int
-        Id of the controller element.
-    id_set: set[int]
-        Set of all element ids, that are being lit up.
-    mutex : QMutex
-        Mutex to exclude mutual access to the set.
     func : callable
         Function for lighting up the element.
     """
 
-    def __init__(self, func: Callable, mutex: QMutex, id: int, id_set: Set[int]):
+    def __init__(self, func: Callable):
         super().__init__()
         self.func = func
-        self.mutex = mutex
-        self.id = id
-        self.id_set = id_set
 
     def run(self):
+        self.func()
         """Function that checks if the element is lit up, and lights it up otherwise."""
-        flashing = False
-        with QMutexLocker(self.mutex):
-            if self.id in self.id_set:
-                flashing = True
-            else:
-                self.id_set.add(self.id)
-
-        if not flashing:
-            self.func()
-
-            with QMutexLocker(self.mutex):
-                self.id_set.remove(self.id)
 
 
 class ButtonBinds(QWidget):
@@ -78,7 +58,7 @@ class ButtonBinds(QWidget):
         buttons: List[ControllerElement],
         button_binds: List[ButtonBind],
         actions: List[str],
-        connected_controller: ConnectedController,
+        connected_controller: Optional[ConnectedController],
     ):
         """Creates ButtonBinds widget.
 
@@ -90,12 +70,8 @@ class ButtonBinds(QWidget):
             List of current binds.
         actions : List[str]
             List of all actions available to bind.
-        flashing_buttons : set[int]
-            Set of the button ids, that are currently flashing.
         thread_list : List[QThread]
             List of worker threads responsible for lighting up buttons.
-        butons_mutex : QMutex
-            Mutex for worker threads.
         """
         super().__init__()
 
@@ -130,9 +106,7 @@ class ButtonBinds(QWidget):
 
         self.setLayout(layout)
 
-        self.flashing_buttons = set()
         self.thread_list = []
-        self.buttons_mutex = QMutex()
 
     def _light_up_button(self, button_id: int):
         """Creates a QThread responsible for lighting up a knob."""
@@ -142,12 +116,7 @@ class ButtonBinds(QWidget):
         def light_up_func():
             self.connected_controller.flash_button(button_id)
 
-        thread = LightUpQThread(
-            light_up_func,
-            self.buttons_mutex,
-            button_id,
-            self.flashing_buttons,
-        )
+        thread = LightUpQThread(light_up_func)
 
         self.thread_list.append(thread)
         thread.start()
@@ -219,12 +188,8 @@ class KnobBinds(QWidget):
         SearchableQComboBox used to set decrease action).
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's knob by its id.
-    flashing_knobs : set[int]
-        Set of the knob ids, that are currently flashing.
     thread_list : List[QThread]
         List of worker threads responsible for lighting up knobs.
-    knobs_mutex : QMutex
-        Mutex for worker threads.
     """
 
     def __init__(
@@ -232,7 +197,7 @@ class KnobBinds(QWidget):
         knobs: List[ControllerElement],
         knob_binds: List[KnobBind],
         actions: List[str],
-        connected_controller: ConnectedController,
+        connected_controller: Optional[ConnectedController],
     ):
         """Creates KnobBinds widget.
 
@@ -281,9 +246,7 @@ class KnobBinds(QWidget):
 
         self.setLayout(layout)
 
-        self.flashing_knobs = set()
         self.thread_list = []
-        self.knobs_mutex = QMutex()
 
     def _light_up_knob(self, knob_id: int):
         """Creates a QThread responsible for lighting up a knob."""
@@ -293,12 +256,7 @@ class KnobBinds(QWidget):
         def light_up_func():
             self.connected_controller.flash_knob(knob_id)
 
-        thread = LightUpQThread(
-            light_up_func,
-            self.knobs_mutex,
-            knob_id,
-            self.flashing_knobs,
-        )
+        thread = LightUpQThread(light_up_func)
 
         self.thread_list.append(thread)
         thread.start()
