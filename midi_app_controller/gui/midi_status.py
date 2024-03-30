@@ -49,7 +49,7 @@ SLIDER_ACTIONS = [
 for action in SLIDER_ACTIONS:
     get_app().register_action(action)
 
-# TODO I didn't find any better way to get all available actions.
+# TODO Get actions directly from app-model when it's supported.
 NAPARI_ACTIONS = HELP_ACTIONS + LAYER_ACTIONS + VIEW_ACTIONS + SLIDER_ACTIONS
 
 state_manager = StateManager(NAPARI_ACTIONS, get_app())
@@ -194,7 +194,8 @@ class MidiStatus(QWidget):
         editor_dialog = BindsEditor(
             controller,
             binds,
-            list(map(lambda a: a.id, state_manager.actions)),
+            # TODO Get actions directly from app-model when it's supported.
+            state_manager.actions,
             save,
             state_manager._connected_controller,
         )
