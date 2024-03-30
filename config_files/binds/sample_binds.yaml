@@ -1,4 +1,4 @@
-name: TestBinds
+name: Sample Binds Config
 controller_name: TestController
 description: Test description
 app_name: napari
