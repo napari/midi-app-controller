@@ -1,4 +1,4 @@
-name: Sample Controller Config
+name: TestController
 button_value_off: 0
 button_value_on: 127
 buttons:

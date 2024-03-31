@@ -74,27 +74,24 @@ class StateManager:
         """Checks if any controller is being handled now."""
         return self._connected_controller is not None
 
-    def get_available_controllers(self) -> List[str]:
-        """Returns names of all controller schemas."""
-        # TODO Extract the loading logic to a separate file that will handle storage.
-        controllers = Controller.load_all_from(Config.CONTROLLER_DIRS)
-        assert len(controllers) > 0, \
-            "No controller config files found but there should be at least one in built-in files"
-        return [c.name for c, _ in controllers]
-    
     def get_available_binds(self) -> List[str]:
         """Returns names of all binds sets suitable for current controller and app."""
         # TODO Extract the loading logic to a separate file that will handle storage.
         if self.selected_controller is None:
             return []
-        all_binds = Binds.load_all_from(Config.BINDS_DIRS)
-        assert len(all_binds) > 0
+        all_binds = Binds.load_all_from(Config.BINDS_DIRECTORY)
         return [
             b.name
             for b, _ in all_binds
             if b.app_name == self._app_name
             and b.controller_name == self.selected_controller.name
         ]
+
+    def get_available_controllers(self) -> List[str]:
+        """Returns names of all controller schemas."""
+        # TODO Extract the loading logic to a separate file that will handle storage.
+        controllers = Controller.load_all_from(Config.CONTROLLERS_DIRECTORY)
+        return [c.name for c, _ in controllers]
 
     def get_available_midi_in(self) -> List[str]:
         """Returns names of all MIDI input ports."""
@@ -110,7 +107,7 @@ class StateManager:
         Does not have any immediate effect except updating the value and
         finding path to the config file.
         """
-        all_binds = Binds.load_all_from(Config.BINDS_DIRS)
+        all_binds = Binds.load_all_from(Config.BINDS_DIRECTORY)
         for binds, path in all_binds:
             if binds.name == name:
                 self.selected_binds = SelectedItem(name, path)
@@ -123,7 +120,7 @@ class StateManager:
         Does not have any immediate effect except updating the value and
         finding path to the config file.
         """
-        all_controllers = Controller.load_all_from(Config.CONTROLLER_DIRS)
+        all_controllers = Controller.load_all_from(Config.CONTROLLERS_DIRECTORY)
         for controller, path in all_controllers:
             if controller.name == name:
                 self.selected_controller = SelectedItem(name, path)

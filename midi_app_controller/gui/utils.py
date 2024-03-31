@@ -1,8 +1,4 @@
-import platform
-import subprocess
 from typing import Callable, List, Optional
-from pathlib import Path
-import re
 
 from app_model.types import Action
 from qtpy.QtCore import Qt
@@ -108,21 +104,3 @@ class ActionsQComboBox(QComboBox):
         """Returns the id of currently selected action."""
         if (action := self.currentData()) is not None:
             return action.id
-
-
-def is_subpath(path: Path, subpath: Path) -> bool:
-    # TODO: A nicer way to do this?
-    path_str = str(subpath.resolve().absolute())
-    subpath_str = str(path.resolve().absolute())
-    return path_str.startswith(subpath_str)
-
-def reveal_in_explorer(file: Path):
-    if platform.system() == "Windows":
-        subprocess.Popen(rf'explorer /select,"{file}"')
-        return
-    
-    if platform.system() == "Linux":
-        subprocess.Popen(rf'xdg-open "{file.parent}"')
-        return
-    
-    raise NotImplementedError("Only Linux and Windows are supported")

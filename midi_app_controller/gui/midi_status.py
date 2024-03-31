@@ -19,9 +19,8 @@ from qtpy.QtWidgets import (
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller
 from midi_app_controller.gui.binds_editor import BindsEditor
-from midi_app_controller.gui.utils import DynamicQComboBox, is_subpath, reveal_in_explorer
+from midi_app_controller.gui.utils import DynamicQComboBox
 from midi_app_controller.state.state_manager import StateManager
-from midi_app_controller.config import Config
 
 
 def decrease_opacity(ll: LayerList):
@@ -86,12 +85,19 @@ class MidiStatus(QWidget):
     def __init__(self):
         super().__init__()
 
+        # Binds selection.
+        selected_binds = state_manager.selected_binds
+        self.current_binds = DynamicQComboBox(
+            selected_binds.name if selected_binds is not None else None,
+            state_manager.get_available_binds,
+            state_manager.select_binds,
+        )
+
         # Controller selection.
         def select_controller(name: str) -> None:
             state_manager.select_controller(name)
             state_manager.selected_binds = None
             self.current_binds.setCurrentText(None)
-            self.show_controllers_file_button.setEnabled(state_manager.selected_controller.path is not None)
 
         selected_controller = state_manager.selected_controller
         self.current_controller = DynamicQComboBox(
@@ -99,28 +105,6 @@ class MidiStatus(QWidget):
             state_manager.get_available_controllers,
             select_controller,
         )
-
-        self.show_controllers_file_button = QPushButton("Reveal in explorer")
-        self.show_controllers_file_button.clicked.connect(lambda: reveal_in_explorer(state_manager.selected_controller.path))
-        self.show_controllers_file_button.setEnabled(False)
-        
-        def select_binds(name: str) -> None:
-            state_manager.select_binds(name)
-            self.show_binds_file_button.setEnabled(state_manager.selected_binds.path is not None)
-            self.edit_binds_button.setEnabled(state_manager.selected_binds.path is not None)
-            self.copy_binds_button.setEnabled(state_manager.selected_binds.path is not None)
-
-        # Binds selection.
-        selected_binds = state_manager.selected_binds
-        self.current_binds = DynamicQComboBox(
-            selected_binds.name if selected_binds is not None else None,
-            state_manager.get_available_binds,
-            select_binds,
-        )
-
-        self.show_binds_file_button = QPushButton("Reveal in explorer")
-        self.show_binds_file_button.clicked.connect(lambda: reveal_in_explorer(state_manager.selected_binds.path))
-        self.show_binds_file_button.setEnabled(False)
 
         # MIDI input and output selection.
         self.current_midi_in = DynamicQComboBox(
@@ -152,11 +136,6 @@ class MidiStatus(QWidget):
         # Edit, start and stop buttons.
         self.edit_binds_button = QPushButton("Edit binds")
         self.edit_binds_button.clicked.connect(self._edit_binds)
-        self.edit_binds_button.setEnabled(False)
-
-        self.copy_binds_button = QPushButton("Copy config file")
-        self.copy_binds_button.clicked.connect(self._copy_binds)
-        self.copy_binds_button.setEnabled(False)
 
         self.start_handling_button = QPushButton("Start handling")
         self.start_handling_button.clicked.connect(state_manager.start_handling)
@@ -171,14 +150,11 @@ class MidiStatus(QWidget):
         layout.addLayout(
             self._horizontal_layout("Controller:", self.current_controller)
         )
-        layout.addWidget(self.show_controllers_file_button)
         layout.addLayout(self._horizontal_layout("Binds:", self.current_binds))
-        layout.addWidget(self.show_binds_file_button)
-        layout.addWidget(self.copy_binds_button)
-        layout.addWidget(self.edit_binds_button)
         layout.addLayout(self._horizontal_layout("MIDI input:", self.current_midi_in))
         layout.addLayout(self._horizontal_layout("MIDI output:", self.current_midi_out))
         layout.addLayout(status_layout)
+        layout.addWidget(self.edit_binds_button)
         layout.addWidget(self.start_handling_button)
         layout.addWidget(self.stop_handling_button)
         layout.addStretch()
@@ -188,18 +164,10 @@ class MidiStatus(QWidget):
     def _horizontal_layout(self, label: str, widget: QWidget) -> QHBoxLayout:
         """Creates horizontal layout consisting of the `label` on the left half\
         and the `widget` on the right half."""
-        layout = QVBoxLayout()
+        layout = QHBoxLayout()
         layout.addWidget(QLabel(label))
         layout.addWidget(widget)
         return layout
-    
-    def _copy_binds(self):
-        if state_manager.selected_binds is None:
-            raise Exception("No binds selected")
-        
-        binds = Binds.load_from(state_manager.selected_binds.path)
-        binds.name += " (Copy)"
-        binds.save_copy_to(state_manager.selected_binds.path, Config.BINDS_USER_DIR)
 
     def _edit_binds(self):
         """Opens dialog that will allow to edit currently selected binds."""
@@ -217,16 +185,10 @@ class MidiStatus(QWidget):
         binds = Binds.load_from(selected_binds.path)
 
         def save(knob_binds: List[KnobBind], button_binds: List[ButtonBind]) -> None:
-            """Saves updated binds in the original location or in a new file if the location was read-only."""
-
+            """Saves updated binds in the original location."""
             binds.knob_binds = knob_binds
             binds.button_binds = button_binds
-
-            if is_subpath(Config.BINDS_READONLY_DIR, selected_binds.path):
-                binds.name = binds.name + " (Copy)"
-                binds.save_copy_to(selected_binds.path, Config.BINDS_USER_DIR)
-            else:
-              binds.save_to(selected_binds.path)
+            binds.save_to(selected_binds.path)
 
         # Show the dialog.
         editor_dialog = BindsEditor(
