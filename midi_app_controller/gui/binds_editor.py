@@ -453,7 +453,7 @@ class BindsEditor(QDialog):
         self._exit()
 
     def _wait_for_worker_threads(self):
-        """Waits for the threads responsible for lighting up the controller elements"""
+        """Waits for the threads responsible for lighting up the controller elements."""
         for thread in self.buttons_widget.thread_list:
             thread.wait()
 
