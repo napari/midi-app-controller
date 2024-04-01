@@ -27,11 +27,11 @@ class LightUpQThread(QThread):
 
     Attributes
     ----------
-    func : callable
+    func : Callable[[], None]
         Function for lighting up the element.
     """
 
-    def __init__(self, func: Callable):
+    def __init__(self, func: Callable[[], None]):
         super().__init__()
         self.func = func
 
@@ -411,8 +411,7 @@ class BindsEditor(QDialog):
         layout.addLayout(radio_layout)
         layout.addLayout(buttons_layout)
 
-        handling_controller = connected_controller is not None
-        if not handling_controller:
+        if connected_controller is None:
             layout.addWidget(
                 QLabel("Start handling a controller to enable 'Light up' buttons.")
             )

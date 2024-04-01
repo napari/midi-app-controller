@@ -190,14 +190,14 @@ class ConnectedController:
 
     @staticmethod
     def check_set_and_run(
-        func: Callable, id: int, mutex: QMutex, id_set: Set[int]
+        func: Callable[[], None], id: int, mutex: QMutex, id_set: Set[int]
     ) -> None:
         """Checks if the provided set contains `id`.
         It executes `func` if it doesn't and does nothing otherwise.
 
         Parameters
         ----------
-        func : Callable
+        func : Callable[[], None]
             Function to execute.
         id : int
             Id for which we check provided set.
@@ -214,9 +214,8 @@ class ConnectedController:
             else:
                 id_set.add(id)
 
-        func()
-
         if not already_flashing:
+            func()
             with QMutexLocker(mutex):
                 id_set.remove(id)
 
@@ -272,7 +271,7 @@ class ConnectedController:
                 time.sleep(sleep_seconds)
 
         self.check_set_and_run(
-            light_up_func, id, self.buttons_mutex, self.flashing_knobs
+            light_up_func, id, self.buttons_mutex, self.flashing_buttons
         )
 
     def build_message(
