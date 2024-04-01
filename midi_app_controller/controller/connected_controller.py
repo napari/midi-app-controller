@@ -1,6 +1,5 @@
 import logging
 import time
-from typing import List, Tuple
 
 import rtmidi
 
@@ -24,9 +23,9 @@ class ConnectedController:
         Midi input client interface from python-rtmidi package.
     midi_out: rtmidi.MidiOut
         Midi output client interface from python-rtmidi package.
-    button_ids : List[int]
+    button_ids : list[int]
         A list containing all valid button ids on a handled controller.
-    knob_ids : List[int]
+    knob_ids : list[int]
         A list containing all valid knob ids on a handled controller.
     knob_engagement: Dict[int, int]
         A dictionary that keeps the value of every knob.
@@ -68,12 +67,12 @@ class ConnectedController:
         # Set callback for getting data from controller.
         self.midi_in.set_callback(self.midi_callback)
 
-    def midi_callback(self, event: Tuple[List[int], float], data=None) -> None:
+    def midi_callback(self, event: tuple[list[int], float], data=None) -> None:
         """Callback function for MIDI input, specified by rtmidi package.
 
         Parameters
         ----------
-        event : Tuple[List[int], float]
+        event : tuple[list[int], float]
             Pair of (MIDI message, delta time).
         """
         message, _ = event
@@ -112,7 +111,7 @@ class ConnectedController:
 
         Parameters
         ----------
-        data : List[int]
+        data : list[int]
             Standard MIDI message.
         """
         id = data[0]
@@ -121,24 +120,24 @@ class ConnectedController:
             button_id=id,
         )
 
-    def handle_button_disengagement(self, data: List[int]) -> None:
+    def handle_button_disengagement(self, data: list[int]) -> None:
         """Runs the action bound to the button release, specified in
         `actions_handler`.
 
         Parameters
         ----------
-        data : List[int]
+        data : list[int]
             Standard MIDI message.
         """
         pass  # TODO: for now we're not handling button disengagement
 
-    def handle_knob_message(self, data: List[int]) -> None:
+    def handle_knob_message(self, data: list[int]) -> None:
         """Runs the action bound to the knob turn, specified in
         `actions_handler`.
 
         Parameters
         ----------
-        data : List[int]
+        data : list[int]
             Standard MIDI message.
         """
         id = data[0]
@@ -159,12 +158,12 @@ class ConnectedController:
             new_value=velocity,
         )
 
-    def send_midi_message(self, data: List[int]) -> None:
+    def send_midi_message(self, data: list[int]) -> None:
         """Sends the specified MIDI message.
 
         Parameters
         ----------
-        data : List[int]
+        data : list[int]
             Standard MIDI message.
         """
         try:
@@ -207,8 +206,8 @@ class ConnectedController:
         self,
         command: int,
         channel: int,
-        data: List[int],
-    ) -> List[int]:
+        data: list[int],
+    ) -> list[int]:
         """Builds the MIDI message, that is later sent to the controller."""
         status_byte = command ^ (channel - 1)
         return [status_byte, data[0], data[1]]
@@ -275,7 +274,7 @@ class ConnectedController:
 
         self.send_midi_message(data)
 
-    def handle_midi_message(self, command: int, channel: int, data: List[int]) -> None:
+    def handle_midi_message(self, command: int, channel: int, data: list[int]) -> None:
         """Handles the incoming MIDI message.
 
         The message is interpreted as follows:
@@ -288,7 +287,7 @@ class ConnectedController:
             Command id.
         channel : int
             Channel the MIDI message came from.
-        data : List[int]
+        data : list[int]
             Remaining part of the MIDI message.
         """
         id = data[0]
