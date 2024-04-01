@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import ValidationError
 import pytest
@@ -10,7 +10,7 @@ from ..utils import find_duplicate, YamlBaseModel
 class TempYamlModel(YamlBaseModel):
     key1: str
     key2: str
-    key3: List[str]
+    key3: list[str]
     key4: Optional[int]
 
 

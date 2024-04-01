@@ -1,5 +1,4 @@
 import sys
-from typing import List
 
 from app_model.types import Action
 from napari.components import LayerList
@@ -184,7 +183,7 @@ class MidiStatus(QWidget):
         controller = Controller.load_from(selected_controller.path)
         binds = Binds.load_from(selected_binds.path)
 
-        def save(knob_binds: List[KnobBind], button_binds: List[ButtonBind]) -> None:
+        def save(knob_binds: list[KnobBind], button_binds: list[ButtonBind]) -> None:
             """Saves updated binds in the original location."""
             binds.knob_binds = knob_binds
             binds.button_binds = button_binds

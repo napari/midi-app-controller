@@ -1,5 +1,4 @@
 from unittest.mock import Mock, patch
-from typing import List
 
 from app_model import Application
 from app_model.types import Action
@@ -11,7 +10,7 @@ from ..state_manager import StateManager, SelectedItem
 
 
 @pytest.fixture
-def actions() -> List[Action]:
+def actions() -> list[Action]:
     return [
         Action(
             id="Action1",
