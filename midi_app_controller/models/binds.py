@@ -44,12 +44,10 @@ class Binds(YamlBaseModel):
     ----------
     name : str
         The name of the binds set. Cannot be empty. Must be unique among all binds sets.
-    description : Optional[str]
-        Additional information that the user may provide.
     app_name : str
         For which app are the binds intended. Cannot be empty.
     controller_name : str
-        For which controller are the binds intended.
+        For which controller are the binds intended. Cannot be empty.
     button_binds : List[ButtonBind]
         A list of bound buttons.
     knob_binds : List[KnobBind]
@@ -57,9 +55,9 @@ class Binds(YamlBaseModel):
     """
 
     name: str = Field(min_length=1)
-    description: Optional[str]
     app_name: str = Field(min_length=1)
-    controller_name: str
+    controller_name: str = Field(min_length=1)
+    description: Optional[str]
     button_binds: List[ButtonBind]
     knob_binds: List[KnobBind]
 
