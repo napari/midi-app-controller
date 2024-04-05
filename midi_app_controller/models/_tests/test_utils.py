@@ -20,7 +20,7 @@ class OtherTempYamlModel(YamlBaseModel):
 
 @pytest.fixture
 def yaml_data():
-    return {"key1": "value1", "key2": "value2", "key3": ["a", "b"], "key4": None}
+    return {"key2": "value2", "key1": "value1", "key3": ["a", "b"], "key4": None}
 
 
 @pytest.fixture
