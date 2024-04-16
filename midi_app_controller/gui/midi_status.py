@@ -184,6 +184,8 @@ class MidiStatus(QWidget):
         self.refresh()
 
     def refresh(self):
+        """Updates all widgets to ensure they match the data stored inside the StateManager."""
+
         self.current_controller.refresh_items()
         self.current_controller.set_current(state.selected_controller)
         self.show_controllers_file_button.setEnabled(state.selected_controller is not None)
@@ -218,6 +220,7 @@ class MidiStatus(QWidget):
         self.refresh()
 
     def _delete_binds(self):
+        """Deletes the file with currently selected binds setup."""
         assert state.selected_binds is not None, "No binds selected"
         if is_subpath(Config.BINDS_READONLY_DIR, state.selected_binds.path):
             raise PermissionError("This config file is read-only")

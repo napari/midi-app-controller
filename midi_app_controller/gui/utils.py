@@ -68,7 +68,6 @@ class DynamicQComboBox(QComboBox):
             self.addItem(label, userData=item)
         self.set_current(current_item, _items=new_items)
         
-
     def showPopup(self):
         self.refresh_items()
         super().showPopup()
@@ -136,3 +135,26 @@ class ActionsQComboBox(QComboBox):
         """Returns the id of currently selected action."""
         if (action := self.currentData()) is not None:
             return action.id
+
+
+def is_subpath(path: Path, subpath: Path) -> bool:
+    """Checks if one path represents a file/directory inside the other directory."""
+    path_str = str(subpath.resolve().absolute())
+    subpath_str = str(path.resolve().absolute())
+    return path_str.startswith(subpath_str)
+
+
+def reveal_in_explorer(file: Path):
+    """Show where the file is in the system's file explorer.
+    
+    Currently only Windows and Linux (majority of distributions) are supported.
+    """
+    if platform.system() == "Windows":
+        subprocess.Popen(rf'explorer /select,"{file}"')
+        return
+    
+    if platform.system() == "Linux":
+        subprocess.Popen(rf'xdg-open "{file.parent}"')
+        return
+    
+    raise NotImplementedError("Only Linux and Windows are supported")

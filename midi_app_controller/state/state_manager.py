@@ -39,6 +39,8 @@ class StateManager:
         Currently selected schema of a controller.
     selected_binds : Optional[SelectedItem]
         Currently selected binds set.
+    recent_binds_for_controller: dict[Path, Path] = {}
+        Mapping of controller schemas to the binds set most recently used with the schema.
     selected_midi_in : Optional[str]
         Name of currently selected MIDI input.
     selected_midi_out : Optional[str]
@@ -112,8 +114,7 @@ class StateManager:
     def select_binds(self, binds_file: Optional[Path]) -> None:
         """Updates currently selected binds.
 
-        Does not have any immediate effect except updating the value and
-        finding path to the config file.
+        Does not have any immediate effect except updating the value and finding the name of the binds set.
         """
         if binds_file is None:
             self.selected_binds = None
@@ -127,8 +128,7 @@ class StateManager:
     def select_controller(self, controller_file: Optional[Path]) -> None:
         """Updates currently selected controller schema.
 
-        Does not have any immediate effect except updating the value and
-        finding path to the config file.
+        Does not have any immediate effect except updating the value and finding the name of the binds set.
         """
         if controller_file is None:
             self.selected_controller = None
