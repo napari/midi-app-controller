@@ -60,6 +60,7 @@ class StateManager:
     def __init__(self, actions: List[Action], app: Application):
         self.selected_controller = None
         self.selected_binds = None
+        self.recent_binds_for_controller: dict[Path, Path] = {} 
         self.selected_midi_in = None
         self.selected_midi_out = None
         self.actions = actions
@@ -116,9 +117,12 @@ class StateManager:
         """
         if binds_file is None:
             self.selected_binds = None
-            return
+        else:
+            self.selected_binds = SelectedItem(Binds.load_from(binds_file).name, binds_file)
 
-        self.selected_binds = SelectedItem(Binds.load_from(binds_file).name, binds_file)
+        if self.selected_controller is not None:
+            self.recent_binds_for_controller[self.selected_controller.path] = \
+              self.selected_binds.path if self.selected_binds is not None else None
 
     def select_controller(self, controller_file: Optional[Path]) -> None:
         """Updates currently selected controller schema.
@@ -208,7 +212,8 @@ class StateManager:
             selected_controller_path=self.selected_controller.path if self.selected_controller else None,
             selected_binds_path=self.selected_binds.path if self.selected_binds else None,
             selected_midi_in=self.selected_midi_in,
-            selected_midi_out=self.selected_midi_out
+            selected_midi_out=self.selected_midi_out,
+            recent_binds_for_controller=self.recent_binds_for_controller
         ).save_to(Config.APP_STATE_FILE)
         
     def load_state(self):
@@ -219,3 +224,4 @@ class StateManager:
         self.select_binds(state.selected_binds_path)
         self.select_midi_in(state.selected_midi_in)
         self.select_midi_out(state.selected_midi_out)
+        self.recent_binds_for_controller = state.recent_binds_for_controller

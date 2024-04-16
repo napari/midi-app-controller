@@ -91,9 +91,9 @@ class MidiStatus(QWidget):
 
         # Controller selection.
         def select_controller(controller: Optional[SelectedItem]) -> None:
-            state.select_controller(None if controller is None else controller.path)
-            state.selected_binds = None
-            # self.current_binds.setCurrentText(None)
+            controller_path = None if controller is None else controller.path
+            state.select_controller(controller_path)
+            state.select_binds(state.recent_binds_for_controller.get(controller_path, None))
             self.refresh()
 
         selected_controller = state.selected_controller
