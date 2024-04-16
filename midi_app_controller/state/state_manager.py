@@ -1,10 +1,11 @@
-from typing import List
+from typing import List, Optional
 from pathlib import Path
 
 import rtmidi
 from app_model import Application
 from app_model.types import Action
 
+from midi_app_controller.models.app_state import AppState
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
 from midi_app_controller.actions.bound_controller import BoundController
@@ -101,31 +102,40 @@ class StateManager:
         """Returns names of all MIDI output ports."""
         return self._midi_out.get_ports()
 
-    def select_binds(self, name: str) -> None:
+    def select_binds(self, name: Optional[str]) -> None:
         """Updates currently selected binds.
 
         Does not have any immediate effect except updating the value and
         finding path to the config file.
         """
-        all_binds = Binds.load_all_from(Config.BINDS_DIRECTORY)
+        if name is None:
+            self.selected_binds = None
+            return
+        
+        all_binds = Binds.load_all_from(Config.BINDS_DIRS)
         for binds, path in all_binds:
             if binds.name == name:
                 self.selected_binds = SelectedItem(name, path)
                 return
-        raise Exception("Config file of selected binds not found.")
+        raise Exception(f"Config file of selected binds {name!r} not found.")
 
-    def select_controller(self, name: str) -> None:
+    def select_controller(self, name: Optional[str]) -> None:
         """Updates currently selected controller schema.
 
         Does not have any immediate effect except updating the value and
         finding path to the config file.
         """
-        all_controllers = Controller.load_all_from(Config.CONTROLLERS_DIRECTORY)
+
+        if name is None:
+            self.selected_controller = None
+            return
+
+        all_controllers = Controller.load_all_from(Config.CONTROLLER_DIRS)
         for controller, path in all_controllers:
             if controller.name == name:
                 self.selected_controller = SelectedItem(name, path)
                 return
-        raise Exception("Config file of selected controller not found.")
+        raise Exception(f"Config file of selected controller {name!r} not found.")
 
     def select_midi_in(self, name: str) -> None:
         """Updates currently selected MIDI input port name.
@@ -154,6 +164,8 @@ class StateManager:
         Stops previous handler first. If any error occurs in this method, the
         previous handler will NOT be restored.
         """
+        self.save_state()  # TODO: shouldn't be here
+
         self.stop_handling()
 
         # Check if all required field are not None.
@@ -195,3 +207,23 @@ class StateManager:
             midi_in=self._midi_in,
             midi_out=self._midi_out,
         )
+
+    def save_state(self):
+        print(repr(str(self.selected_controller.path) if self.selected_controller else None))
+        AppState(
+            selected_controller_path=str(self.selected_controller.path) if self.selected_controller else None,
+            selected_binds_path=str(self.selected_binds.path) if self.selected_binds else None,
+            selected_midi_in=self.selected_midi_in,
+            selected_midi_out=self.selected_midi_out
+        ).save_to(Config.APP_STATE_FILE)
+        
+    def load_state(self):
+        if not Config.APP_STATE_FILE.exists():
+            return
+        state = AppState.load_from(Config.APP_STATE_FILE)
+        self.select_controller(Controller.load_from(state.selected_controller_path).name if state.selected_controller_path else None)
+        self.select_binds(Binds.load_from(state.selected_binds_path).name if state.selected_binds_path else None)
+        # self.selected_binds = SelectedItem(Controller.load_from(state.selected_binds_path).name, state.selected_binds_path) if state.selected_binds_path else None
+        # self.selected_controller = SelectedItem(Controller.load_from(state.selected_controller_path).name, state.selected_controller_path) if state.selected_controller_path else None
+        self.selected_midi_in = state.selected_midi_in
+        self.selected_midi_out = state.selected_midi_out

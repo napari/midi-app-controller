@@ -32,6 +32,8 @@ class DynamicQComboBox(QComboBox):
 
         self.get_items = get_items
         self.textActivated.connect(select_item)
+
+        self.addItems([None] + self.get_items())
         self.setCurrentText(current_item)
 
     def showPopup(self):

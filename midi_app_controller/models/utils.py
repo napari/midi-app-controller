@@ -1,9 +1,17 @@
 import os
-from pathlib import Path
+from pathlib import Path, WindowsPath
 from typing import Any, List, Optional, Tuple
 
 from pydantic import BaseModel
 import yaml
+
+
+
+# Enable writing Path objects as strings. When reading, pydantic converts strings into Paths automatically.
+def _path_representer(dumper, data):
+    return dumper.represent_scalar('tag:yaml.org,2002:str', str(data))
+
+yaml.SafeDumper.add_multi_representer(Path, _path_representer)
 
 
 class YamlBaseModel(BaseModel):
@@ -23,6 +31,7 @@ class YamlBaseModel(BaseModel):
         """
         with open(path) as f:
             data = yaml.safe_load(f)
+            assert data is not None, "Empty file"
             return cls(**data)
 
     @classmethod
@@ -51,6 +60,9 @@ class YamlBaseModel(BaseModel):
     def save_to(self, path: Path) -> None:
         """Saves the model's data to a YAML file.
 
+        Never saves anything to readonly dirs as defined in Config. The folder 
+        where the output file should be will also be created.
+
         Parameters
         ----------
         path : Path
@@ -58,6 +70,14 @@ class YamlBaseModel(BaseModel):
         """
         with open(path, "w") as f:
             yaml.safe_dump(self.dict(), f, default_flow_style=False)
+
+    def save_copy_to(self, path: Path, new_dir: Path) -> Path:
+        """Copy YAML to a new file avoiding file name collisions."""
+        new_path = new_dir / path.name
+        while new_path.exists():
+            new_path = new_path.with_stem(f"{new_path.stem} (Copy)")
+        self.save_to(new_path)
+        return new_path
 
 
 def find_duplicate(values: List[Any]) -> Optional[Any]:

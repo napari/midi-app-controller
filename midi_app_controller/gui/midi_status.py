@@ -85,13 +85,7 @@ class MidiStatus(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Binds selection.
-        selected_binds = state_manager.selected_binds
-        self.current_binds = DynamicQComboBox(
-            selected_binds.name if selected_binds is not None else None,
-            state_manager.get_available_binds,
-            state_manager.select_binds,
-        )
+        state_manager.load_state()
 
         # Controller selection.
         def select_controller(name: str) -> None:
@@ -168,6 +162,14 @@ class MidiStatus(QWidget):
         layout.addWidget(QLabel(label))
         layout.addWidget(widget)
         return layout
+    
+    def _copy_binds(self):
+        if state_manager.selected_binds is None:
+            raise Exception("No binds selected")
+        
+        binds = Binds.load_from(state_manager.selected_binds.path)
+        binds.name += " (Copy)"
+        binds.save_copy_to(state_manager.selected_binds.path.with_stem(binds.name), Config.BINDS_USER_DIR)
 
     def _edit_binds(self):
         """Opens dialog that will allow to edit currently selected binds."""
@@ -188,7 +190,12 @@ class MidiStatus(QWidget):
             """Saves updated binds in the original location."""
             binds.knob_binds = knob_binds
             binds.button_binds = button_binds
-            binds.save_to(selected_binds.path)
+
+            if is_subpath(Config.BINDS_READONLY_DIR, selected_binds.path):
+                binds.name = binds.name + " (Copy)"
+                binds.save_copy_to(selected_binds.path.with_stem(binds.name), Config.BINDS_USER_DIR)
+            else:
+              binds.save_to(selected_binds.path)
 
         # Show the dialog.
         editor_dialog = BindsEditor(
