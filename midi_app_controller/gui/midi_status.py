@@ -244,18 +244,17 @@ class MidiStatus(QWidget):
         controller = Controller.load_from(selected_controller.path)
         binds = Binds.load_from(selected_binds.path)
 
-        def save(knob_binds: List[KnobBind], button_binds: List[ButtonBind]) -> None:
-            """Saves updated binds in the original location."""
-            binds.knob_binds = knob_binds
-            binds.button_binds = button_binds
+        def save(new_binds) -> None:
+            """Saves updated binds in the original location or in a new file if the location was read-only."""
 
             if is_subpath(Config.BINDS_READONLY_DIR, selected_binds.path):
-                binds.name = binds.name + " (Copy)"
-                new_file = binds.save_copy_to(selected_binds.path.with_stem(binds.name), Config.BINDS_USER_DIR)
+                if new_binds.name == binds.name:
+                    new_binds.name = new_binds.name + " (Copy)"
+                new_file = new_binds.save_copy_to(selected_binds.path.with_stem(new_binds.name), Config.BINDS_USER_DIR)
                 state.select_binds(new_file)
                 self.refresh()
             else:
-              binds.save_to(selected_binds.path)
+              new_binds.save_to(selected_binds.path)
 
         # Show the dialog.
         editor_dialog = BindsEditor(
