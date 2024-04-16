@@ -1,46 +1,76 @@
-from typing import Callable, List, Optional
+import platform
+import subprocess
+from typing import Callable, List, Optional, TypeVar
+from pathlib import Path
+import re
 
 from app_model.types import Action
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QComboBox, QWidget
 
+T = TypeVar('T')
 
 class DynamicQComboBox(QComboBox):
     """QComboBox that refreshes the list of items each time it is opened."""
 
     def __init__(
         self,
-        current_item: Optional[str],
-        get_items: Callable[[], List[str]],
-        select_item: Callable[[str], None],
+        current_item: Optional[T],
+        get_items: Callable[[], list[T]],
+        select_item: Callable[[T], None],
+        get_item_label: Callable[[T], str] = str,
         parent: QWidget = None,
     ):
         """Creates DynamicQComboBox widget.
 
         Parameters
         ---------
-        current_item : Optional[str]
+        current_item : Optional[T]
             Optional default item.
-        get_items : Callable[[], List[str]]
-            Functions that fetches list of current items.
-        select_item : Callable[[str], None]
-            Function that should be called when `textActivated` is emitted.
+        get_items : Callable[[], List[T]]
+            Functions that fetches list of current items. An option corresponding to "None" will be added anyway.
+        select_item : Callable[[T], None]
+            Function that should be called when the user chooses an option.
+        get_item_label : Callable[[T], str]
+            Function that returns a label corresponding to an item. Doesn't have to accept the "None" option.
         parent : QWidget
             Parent widget.
         """
         super().__init__(parent)
 
-        self.get_items = get_items
-        self.textActivated.connect(select_item)
+        self.get_items = lambda: [None] + get_items()
+        self.get_item_label = get_item_label
+        self.activated.connect(lambda _: select_item(self.currentData()))
 
-        self.addItems([None] + self.get_items())
-        self.setCurrentText(current_item)
+        self.refresh_items()
+        self.set_current(current_item)
+
+    def set_current(self, item: Optional[T], _items: Optional[List[Optional[T]]] = None):
+        """Sets the currently selected item.
+        
+        Does not select the item if the item is not in the list returned by get_items().
+        If provided, _items is used instead of calling get_item().
+        """
+        items = _items if _items is not None else self.get_items()
+        self.setCurrentIndex((items + [item]).index(item))
+
+    def refresh_items(self):
+        """Refresh the list of items. Optionally set currently selected item."""
+
+        # Note that the objects in here may be equal to the objects that were returned last time
+        # but not be exactly the same objects.
+        new_items = self.get_items()
+        
+        current_item = self.currentData()
+        self.clear()
+        for item in new_items:
+            label = self.get_item_label(item) if item is not None else "(none)"
+            self.addItem(label, userData=item)
+        self.set_current(current_item, _items=new_items)
+        
 
     def showPopup(self):
-        # Refresh items.
-        self.clear()
-        self.addItems(self.get_items())
-
+        self.refresh_items()
         super().showPopup()
 
 

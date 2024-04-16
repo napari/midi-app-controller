@@ -1,5 +1,5 @@
 import sys
-from typing import List
+from typing import List, Optional
 
 from app_model.types import Action
 from napari.components import LayerList
@@ -19,8 +19,9 @@ from qtpy.QtWidgets import (
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller
 from midi_app_controller.gui.binds_editor import BindsEditor
-from midi_app_controller.gui.utils import DynamicQComboBox
-from midi_app_controller.state.state_manager import StateManager
+from midi_app_controller.gui.utils import DynamicQComboBox, is_subpath, reveal_in_explorer
+from midi_app_controller.state.state_manager import SelectedItem, StateManager
+from midi_app_controller.config import Config
 
 
 def decrease_opacity(ll: LayerList):
@@ -52,7 +53,7 @@ for action in SLIDER_ACTIONS:
 # TODO Get actions directly from app-model when it's supported.
 NAPARI_ACTIONS = HELP_ACTIONS + LAYER_ACTIONS + VIEW_ACTIONS + SLIDER_ACTIONS
 
-state_manager = StateManager(NAPARI_ACTIONS, get_app())
+state = StateManager(NAPARI_ACTIONS, get_app())
 
 
 class MidiStatus(QWidget):
@@ -85,32 +86,60 @@ class MidiStatus(QWidget):
     def __init__(self):
         super().__init__()
 
-        state_manager.load_state()
+        state.load_state()
 
         # Controller selection.
-        def select_controller(name: str) -> None:
-            state_manager.select_controller(name)
-            state_manager.selected_binds = None
-            self.current_binds.setCurrentText(None)
+        def select_controller(controller: Optional[SelectedItem]) -> None:
+            state.select_controller(None if controller is None else controller.path)
+            state.selected_binds = None
+            # self.current_binds.setCurrentText(None)
+            self.refresh()
 
-        selected_controller = state_manager.selected_controller
+        selected_controller = state.selected_controller
         self.current_controller = DynamicQComboBox(
-            selected_controller.name if selected_controller is not None else None,
-            state_manager.get_available_controllers,
+            selected_controller,
+            state.get_available_controllers,
             select_controller,
+            get_item_label=lambda x: x.name
         )
 
+        self.show_controllers_file_button = QPushButton("Reveal in explorer")
+        self.show_controllers_file_button.clicked.connect(lambda: reveal_in_explorer(state.selected_controller.path))
+        
+        def select_binds(binds: Optional[SelectedItem]) -> None:
+            state.select_binds(None if binds is None else binds.path)
+            self.refresh()
+
+        # Binds selection.
+        selected_binds = state.selected_binds
+        self.current_binds = DynamicQComboBox(
+            selected_binds,
+            get_items=state.get_available_binds,
+            select_item=select_binds,
+            get_item_label=lambda x: x.name
+        )
+
+        self.show_binds_file_button = QPushButton("Reveal in explorer")
+        self.show_binds_file_button.clicked.connect(lambda: reveal_in_explorer(state.selected_binds.path))
+
+        # Edit, start and stop buttons.
+        self.edit_binds_button = QPushButton("Edit binds")
+        self.edit_binds_button.clicked.connect(self._edit_binds)
+
+        self.copy_binds_button = QPushButton("Copy config file")
+        self.copy_binds_button.clicked.connect(self._copy_binds)
+        
         # MIDI input and output selection.
         self.current_midi_in = DynamicQComboBox(
-            state_manager.selected_midi_in,
-            state_manager.get_available_midi_in,
-            state_manager.select_midi_in,
+            state.selected_midi_in,
+            state.get_available_midi_in,
+            state.select_midi_in,
         )
 
         self.current_midi_out = DynamicQComboBox(
-            state_manager.selected_midi_out,
-            state_manager.get_available_midi_out,
-            state_manager.select_midi_out,
+            state.selected_midi_out,
+            state.get_available_midi_out,
+            state.select_midi_out,
         )
 
         # Status.
@@ -119,25 +148,15 @@ class MidiStatus(QWidget):
         status_layout.addWidget(QLabel("Status"))
         status_layout.addWidget(self.status)
 
-        def update_status():
-            if state_manager.is_running():
-                self.status.setText("Running")
-            else:
-                self.status.setText("Not running")
-
-        update_status()
-
-        # Edit, start and stop buttons.
-        self.edit_binds_button = QPushButton("Edit binds")
-        self.edit_binds_button.clicked.connect(self._edit_binds)
+        self.refresh()
 
         self.start_handling_button = QPushButton("Start handling")
-        self.start_handling_button.clicked.connect(state_manager.start_handling)
-        self.start_handling_button.clicked.connect(update_status)
+        self.start_handling_button.clicked.connect(state.start_handling)
+        self.start_handling_button.clicked.connect(self.refresh)
 
         self.stop_handling_button = QPushButton("Stop handling")
-        self.stop_handling_button.clicked.connect(state_manager.stop_handling)
-        self.stop_handling_button.clicked.connect(update_status)
+        self.stop_handling_button.clicked.connect(state.stop_handling)
+        self.stop_handling_button.clicked.connect(self.refresh)
 
         # Layout.
         layout = QVBoxLayout()
@@ -155,6 +174,17 @@ class MidiStatus(QWidget):
 
         self.setLayout(layout)
 
+    def refresh(self):
+        self.show_controllers_file_button.setEnabled(state.selected_controller is not None)
+        
+        self.show_binds_file_button.setEnabled(state.selected_binds is not None)
+        self.edit_binds_button.setEnabled(state.selected_binds is not None)
+        self.copy_binds_button.setEnabled(state.selected_binds is not None)
+
+        self.status.setText("Running" if state.is_running() else "Not running")
+        self.start_handling_button.setEnabled(not state.is_running())
+        self.stop_handling_button.setEnabled(state.is_running())
+
     def _horizontal_layout(self, label: str, widget: QWidget) -> QHBoxLayout:
         """Creates horizontal layout consisting of the `label` on the left half\
         and the `widget` on the right half."""
@@ -164,18 +194,18 @@ class MidiStatus(QWidget):
         return layout
     
     def _copy_binds(self):
-        if state_manager.selected_binds is None:
+        if state.selected_binds is None:
             raise Exception("No binds selected")
         
-        binds = Binds.load_from(state_manager.selected_binds.path)
+        binds = Binds.load_from(state.selected_binds.path)
         binds.name += " (Copy)"
-        binds.save_copy_to(state_manager.selected_binds.path.with_stem(binds.name), Config.BINDS_USER_DIR)
+        binds.save_copy_to(state.selected_binds.path.with_stem(binds.name), Config.BINDS_USER_DIR)
 
     def _edit_binds(self):
         """Opens dialog that will allow to edit currently selected binds."""
         # Get selected controller and binds.
-        selected_controller = state_manager.selected_controller
-        selected_binds = state_manager.selected_binds
+        selected_controller = state.selected_controller
+        selected_binds = state.selected_binds
 
         if selected_controller is None:
             raise Exception("No controller selected.")
@@ -202,7 +232,7 @@ class MidiStatus(QWidget):
             controller,
             binds,
             # TODO Get actions directly from app-model when it's supported.
-            state_manager.actions,
+            state.actions,
             save,
         )
         editor_dialog.exec_()
