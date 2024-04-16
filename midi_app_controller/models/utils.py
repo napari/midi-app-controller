@@ -1,6 +1,7 @@
 import os
 from pathlib import Path, WindowsPath
 from typing import Any, List, Optional, Tuple
+import uuid
 
 from pydantic import BaseModel
 import yaml
@@ -75,7 +76,7 @@ class YamlBaseModel(BaseModel):
         """Copy YAML to a new file avoiding file name collisions."""
         new_path = new_dir / path.name
         while new_path.exists():
-            new_path = new_path.with_stem(f"{new_path.stem} (Copy)")
+            new_path = new_path.with_stem(f"{new_path.stem} {uuid.uuid1()}")
         self.save_to(new_path)
         return new_path
 

@@ -1,3 +1,4 @@
+import datetime
 import sys
 from typing import List, Optional
 
@@ -148,7 +149,6 @@ class MidiStatus(QWidget):
         status_layout.addWidget(QLabel("Status"))
         status_layout.addWidget(self.status)
 
-        self.refresh()
 
         self.start_handling_button = QPushButton("Start handling")
         self.start_handling_button.clicked.connect(state.start_handling)
@@ -174,9 +174,15 @@ class MidiStatus(QWidget):
 
         self.setLayout(layout)
 
+        self.refresh()
+
     def refresh(self):
+        self.current_controller.refresh_items()
+        self.current_controller.set_current(state.selected_controller)
         self.show_controllers_file_button.setEnabled(state.selected_controller is not None)
         
+        self.current_binds.refresh_items()
+        self.current_binds.set_current(state.selected_binds)
         self.show_binds_file_button.setEnabled(state.selected_binds is not None)
         self.edit_binds_button.setEnabled(state.selected_binds is not None)
         self.copy_binds_button.setEnabled(state.selected_binds is not None)
@@ -194,12 +200,14 @@ class MidiStatus(QWidget):
         return layout
     
     def _copy_binds(self):
-        if state.selected_binds is None:
-            raise Exception("No binds selected")
+        """Copies the currently selected binds to a new file, and selects that file."""
+        assert state.selected_binds is not None, "No binds selected"
         
         binds = Binds.load_from(state.selected_binds.path)
-        binds.name += " (Copy)"
-        binds.save_copy_to(state.selected_binds.path.with_stem(binds.name), Config.BINDS_USER_DIR)
+        binds.name += f" ({datetime.datetime.now().isoformat().replace(':', '-')} copy)"
+        new_file = binds.save_copy_to(state.selected_binds.path.with_stem(binds.name), Config.BINDS_USER_DIR)
+        state.select_binds(new_file)
+        self.refresh()
 
     def _edit_binds(self):
         """Opens dialog that will allow to edit currently selected binds."""
