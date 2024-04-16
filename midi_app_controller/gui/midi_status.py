@@ -129,6 +129,9 @@ class MidiStatus(QWidget):
 
         self.copy_binds_button = QPushButton("Copy config file")
         self.copy_binds_button.clicked.connect(self._copy_binds)
+
+        self.delete_binds_button = QPushButton("Delete config file")
+        self.delete_binds_button.clicked.connect(self._delete_binds)
         
         # MIDI input and output selection.
         self.current_midi_in = DynamicQComboBox(
@@ -164,6 +167,10 @@ class MidiStatus(QWidget):
             self._horizontal_layout("Controller:", self.current_controller)
         )
         layout.addLayout(self._horizontal_layout("Binds:", self.current_binds))
+        layout.addWidget(self.show_binds_file_button)
+        layout.addWidget(self.copy_binds_button)
+        layout.addWidget(self.delete_binds_button)
+        layout.addWidget(self.edit_binds_button)
         layout.addLayout(self._horizontal_layout("MIDI input:", self.current_midi_in))
         layout.addLayout(self._horizontal_layout("MIDI output:", self.current_midi_out))
         layout.addLayout(status_layout)
@@ -185,6 +192,7 @@ class MidiStatus(QWidget):
         self.current_binds.set_current(state.selected_binds)
         self.show_binds_file_button.setEnabled(state.selected_binds is not None)
         self.edit_binds_button.setEnabled(state.selected_binds is not None)
+        self.delete_binds_button.setEnabled(state.selected_binds is not None)
         self.copy_binds_button.setEnabled(state.selected_binds is not None)
 
         self.status.setText("Running" if state.is_running() else "Not running")
@@ -209,6 +217,15 @@ class MidiStatus(QWidget):
         state.select_binds(new_file)
         self.refresh()
 
+    def _delete_binds(self):
+        assert state.selected_binds is not None, "No binds selected"
+        if is_subpath(Config.BINDS_READONLY_DIR, state.selected_binds.path):
+            raise PermissionError("This config file is read-only")
+        
+        state.selected_binds.path.unlink()
+        state.select_binds(None)
+        self.refresh()
+
     def _edit_binds(self):
         """Opens dialog that will allow to edit currently selected binds."""
         # Get selected controller and binds.
@@ -231,7 +248,9 @@ class MidiStatus(QWidget):
 
             if is_subpath(Config.BINDS_READONLY_DIR, selected_binds.path):
                 binds.name = binds.name + " (Copy)"
-                binds.save_copy_to(selected_binds.path.with_stem(binds.name), Config.BINDS_USER_DIR)
+                new_file = binds.save_copy_to(selected_binds.path.with_stem(binds.name), Config.BINDS_USER_DIR)
+                state.select_binds(new_file)
+                self.refresh()
             else:
               binds.save_to(selected_binds.path)
 
