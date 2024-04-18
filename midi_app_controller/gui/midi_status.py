@@ -51,13 +51,20 @@ SLIDER_ACTIONS = [
 for action in SLIDER_ACTIONS:
     get_app().register_action(action)
 
+
 def get_actions() -> List[CommandRule]:
     """Returns a list of all actions currently registered in app model (and available in the command pallette)."""
-    return sorted(list(set(
-        item.command
-        for item in get_app().menus.get_menu(MenusRegistry.COMMAND_PALETTE_ID)
-        if isinstance(item, MenuItem)
-    )), key=lambda command: command.id)
+    return sorted(
+        list(
+            set(
+                item.command
+                for item in get_app().menus.get_menu(MenusRegistry.COMMAND_PALETTE_ID)
+                if isinstance(item, MenuItem)
+            )
+        ),
+        key=lambda command: command.id,
+    )
+
 
 NAPARI_ACTIONS = get_actions()
 
