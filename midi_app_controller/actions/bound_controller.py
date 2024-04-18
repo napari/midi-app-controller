@@ -1,4 +1,4 @@
-from app_model.types import Action
+from app_model.types import CommandRule
 from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
 
@@ -11,11 +11,11 @@ class ButtonActions(BaseModel):
 
     Attributes
     ----------
-    action_press : Action
+    action_press : CommandRule
         Action to be executed when the button is pressed.
     """
 
-    action_press: Action
+    action_press: CommandRule
 
 
 class KnobActions(BaseModel):
@@ -23,14 +23,14 @@ class KnobActions(BaseModel):
 
     Attributes
     ----------
-    action_increase : Action
+    action_increase : CommandRule
         Action to be executed when the knob's value increases.
-    action_decrease : Action
+    action_decrease : CommandRule
         Action to be executed when the knob's value decreases.
     """
 
-    action_increase: Action
-    action_decrease: Action
+    action_increase: CommandRule
+    action_decrease: CommandRule
 
 
 class BoundController(BaseModel):
@@ -57,7 +57,7 @@ class BoundController(BaseModel):
 
     @classmethod
     def create(
-        cls, *, binds: Binds, controller: Controller, actions: List[Action]
+        cls, *, binds: Binds, controller: Controller, commands: List[CommandRule]
     ) -> "BoundController":
         """Creates an instance of `BoundController`.
 
@@ -71,7 +71,7 @@ class BoundController(BaseModel):
             Information about binds.
         controller : Controller
             Information about the controller the binds are for.
-        actions : List[Action]
+        commands : List[CommandRule]
             List of actions available in the application the binds are for.
 
         Returns
@@ -93,7 +93,7 @@ class BoundController(BaseModel):
             )
 
         # Create a dictionary to retrieve actions by id faster.
-        actions_dict = {action.id: action for action in actions}
+        actions_dict = {action.id: action for action in commands}
 
         # Find actions for all bound buttons.
         bound_buttons = {}
@@ -140,7 +140,7 @@ class BoundController(BaseModel):
             knobs=bound_knobs,
         )
 
-    def get_button_press_action(self, button_id: int) -> Optional[Action]:
+    def get_button_press_action(self, button_id: int) -> Optional[CommandRule]:
         """Finds the action to be executed when a button is pressed.
         Returns None if there is no such action.
         """
@@ -148,7 +148,7 @@ class BoundController(BaseModel):
         if button is not None:
             return button.action_press
 
-    def get_knob_increase_action(self, knob_id: int) -> Optional[Action]:
+    def get_knob_increase_action(self, knob_id: int) -> Optional[CommandRule]:
         """Finds action to be executed when knob's value is increased.
         Returns None if there is no such action.
         """
@@ -156,7 +156,7 @@ class BoundController(BaseModel):
         if knob is not None:
             return knob.action_increase
 
-    def get_knob_decrease_action(self, knob_id: int) -> Optional[Action]:
+    def get_knob_decrease_action(self, knob_id: int) -> Optional[CommandRule]:
         """Finds action to be executed when knob's value is decreased.
         Returns None if there is no such action.
         """
