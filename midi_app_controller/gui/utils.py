@@ -1,6 +1,6 @@
 from typing import Callable, List, Optional
 
-from app_model.types import Action
+from app_model.types import CommandRule
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QComboBox, QWidget
 
@@ -51,7 +51,7 @@ class ActionsQComboBox(QComboBox):
 
     def __init__(
         self,
-        actions: List[Action],
+        commands: List[CommandRule],
         default_action_id: Optional[str],
         parent: QWidget = None,
     ):
@@ -59,7 +59,7 @@ class ActionsQComboBox(QComboBox):
 
         Parameters
         ---------
-        actions : List[Action]
+        commands: List[CommandRule]
             List of available actions.
         default_action_id : Optional[str]
             Optional default action used to initialize the widget.
@@ -71,8 +71,8 @@ class ActionsQComboBox(QComboBox):
         # Add items.
         self.addItem(None)  # Empty item
         self.setCurrentIndex(0)
-        for action in actions:
-            self.addItem(action.id, action)
+        for command in commands:
+            self.addItem(command.id, command)
 
         # Find and select the default action.
         for i in range(self.count()):
