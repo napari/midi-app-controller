@@ -64,7 +64,7 @@ def bound_controller() -> BoundController:
     return BoundController.create(
         controller=Controller(**controller_data),
         binds=Binds(**binds_data),
-        commands=actions,
+        actions=actions,
     )
 
 

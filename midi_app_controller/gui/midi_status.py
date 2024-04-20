@@ -211,7 +211,7 @@ class MidiStatus(QWidget):
             controller,
             binds,
             # TODO Get actions directly from app-model when it's supported.
-            state_manager.commands,
+            state_manager.actions,
             save,
         )
         editor_dialog.exec_()

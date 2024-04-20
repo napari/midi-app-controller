@@ -57,7 +57,7 @@ class BoundController(BaseModel):
 
     @classmethod
     def create(
-        cls, *, binds: Binds, controller: Controller, commands: List[CommandRule]
+        cls, *, binds: Binds, controller: Controller, actions: List[CommandRule]
     ) -> "BoundController":
         """Creates an instance of `BoundController`.
 
@@ -71,7 +71,7 @@ class BoundController(BaseModel):
             Information about binds.
         controller : Controller
             Information about the controller the binds are for.
-        commands : List[CommandRule]
+        actions : List[CommandRule]
             List of actions available in the application the binds are for.
 
         Returns
@@ -93,7 +93,7 @@ class BoundController(BaseModel):
             )
 
         # Create a dictionary to retrieve actions by id faster.
-        actions_dict = {action.id: action for action in commands}
+        actions_dict = {action.id: action for action in actions}
 
         # Find actions for all bound buttons.
         bound_buttons = {}

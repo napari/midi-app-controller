@@ -68,7 +68,7 @@ def actions() -> List[Action]:
 
 @pytest.fixture
 def bound_controller(binds, controller, actions) -> BoundController:
-    return BoundController.create(binds=binds, controller=controller, commands=actions)
+    return BoundController.create(binds=binds, controller=controller, actions=actions)
 
 
 def test_button_actions(actions):
@@ -87,7 +87,7 @@ def test_knob_actions(actions):
 
 def test_bound_controller(binds, controller, actions):
     bound_controller = BoundController.create(
-        binds=binds, controller=controller, commands=actions
+        binds=binds, controller=controller, actions=actions
     )
 
     assert bound_controller.knob_value_min == controller.knob_value_min
@@ -111,28 +111,28 @@ def test_non_existent_action_id(binds, controller, actions, action_index_to_dele
     actions.pop(action_index_to_delete)
 
     with pytest.raises(ValueError):
-        BoundController.create(binds=binds, controller=controller, commands=actions)
+        BoundController.create(binds=binds, controller=controller, actions=actions)
 
 
 def test_non_existent_knob(binds, controller, actions):
     controller.knobs.pop(0)
 
     with pytest.raises(ValueError):
-        BoundController.create(binds=binds, controller=controller, commands=actions)
+        BoundController.create(binds=binds, controller=controller, actions=actions)
 
 
 def test_non_existent_button(binds, controller, actions):
     controller.buttons.pop(1)
 
     with pytest.raises(ValueError):
-        BoundController.create(binds=binds, controller=controller, commands=actions)
+        BoundController.create(binds=binds, controller=controller, actions=actions)
 
 
 def test_different_controller_name(binds, controller, actions):
     controller.name = "asdfjkasdfjk"
 
     with pytest.raises(ValueError):
-        BoundController.create(binds=binds, controller=controller, commands=actions)
+        BoundController.create(binds=binds, controller=controller, actions=actions)
 
 
 def test_get_button_press_action(actions, bound_controller):

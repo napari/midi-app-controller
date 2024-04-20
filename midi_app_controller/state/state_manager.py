@@ -44,7 +44,7 @@ class StateManager:
         Name of currently selected MIDI input.
     selected_midi_out : Optional[str]
         Name of currently selected MIDI output.
-    commands : List[CommandRule]
+    actions : List[CommandRule]
         List of app_model actions that are available in the app.
     _app_name : str
         Name of the app we want to handle. Used to filter binds files.
@@ -58,12 +58,12 @@ class StateManager:
         MIDI output client interface.
     """
 
-    def __init__(self, commands: List[CommandRule], app: Application):
+    def __init__(self, actions: List[CommandRule], app: Application):
         self.selected_controller = None
         self.selected_binds = None
         self.selected_midi_in = None
         self.selected_midi_out = None
-        self.commands = commands
+        self.actions = actions
         self._app_name = app.name
         self._app = app
         self._connected_controller = None
@@ -178,7 +178,7 @@ class StateManager:
         bound_controller = BoundController.create(
             binds=binds,
             controller=controller,
-            commands=self.commands,
+            actions=self.actions,
         )
         actions_handler = ActionsHandler(
             bound_controller=bound_controller, app=self._app
