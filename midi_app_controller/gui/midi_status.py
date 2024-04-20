@@ -2,8 +2,6 @@ import sys
 from typing import List
 
 from app_model.types import Action
-from app_model.types import CommandRule, MenuItem
-from app_model.registries import MenusRegistry
 from napari.components import LayerList
 
 # TODO: This will be made public in some future napari version
@@ -52,23 +50,7 @@ for action in SLIDER_ACTIONS:
     get_app().register_action(action)
 
 
-def get_actions() -> List[CommandRule]:
-    """Returns a list of all actions currently registered in app model (and available in the command pallette)."""
-    return sorted(
-        list(
-            set(
-                item.command
-                for item in get_app().menus.get_menu(MenusRegistry.COMMAND_PALETTE_ID)
-                if isinstance(item, MenuItem)
-            )
-        ),
-        key=lambda command: command.id,
-    )
-
-
-NAPARI_ACTIONS = get_actions()
-
-state_manager = StateManager(NAPARI_ACTIONS, get_app())
+state_manager = StateManager(get_app())
 
 
 class MidiStatus(QWidget):
@@ -210,8 +192,7 @@ class MidiStatus(QWidget):
         editor_dialog = BindsEditor(
             controller,
             binds,
-            # TODO Get actions directly from app-model when it's supported.
-            state_manager.actions,
+            state_manager.get_actions(),
             save,
         )
         editor_dialog.exec_()
