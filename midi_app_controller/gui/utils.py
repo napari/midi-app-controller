@@ -152,9 +152,9 @@ def reveal_in_explorer(file: Path):
     Currently only Windows, Linux (majority of distributions), and macOS are supported.
     """
     if platform.system() == "Windows":
-        subprocess.Popen([rf'explorer /select,"{file}"'])
+        subprocess.Popen(["explorer", f'/select,"{file}"'])
     elif platform.system() == "Linux":
-        subprocess.Popen([rf'xdg-open "{file.parent}"'])
+        subprocess.Popen(["xdg-open", f'"{file.parent}"'])
     elif platform.system() == "Darwin":
         subprocess.Popen(["open", file.parent])
     else:
