@@ -24,7 +24,7 @@ class ButtonBinds(QWidget):
 
     Attributes
     ----------
-    actions : List[CommandRule]
+    actions_ : List[CommandRule]
         List of all actions available to bind and an empty string (used when
         no action is bound).
     button_combos : Tuple[int, ActionsQComboBox]
@@ -52,7 +52,7 @@ class ButtonBinds(QWidget):
         """
         super().__init__()
 
-        self.actions = actions
+        self.actions_ = actions
         self.button_combos = []
         self.binds_dict = {b.button_id: b for b in button_binds}
 
@@ -94,7 +94,7 @@ class ButtonBinds(QWidget):
             action = None
 
         # ActionsQComboBox for action selection.
-        action_combo = ActionsQComboBox(self.actions, action, self)
+        action_combo = ActionsQComboBox(self.actions_, action, self)
         self.button_combos.append((button_id, action_combo))
 
         layout = QHBoxLayout()
