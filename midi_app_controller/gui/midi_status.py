@@ -1,6 +1,6 @@
 import datetime
 import sys
-from typing import List, Optional
+from typing import Optional
 
 from app_model.types import Action
 from napari.components import LayerList
@@ -17,7 +17,7 @@ from qtpy.QtWidgets import (
     QHBoxLayout,
 )
 
-from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
+from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
 from midi_app_controller.gui.binds_editor import BindsEditor
 from midi_app_controller.gui.utils import DynamicQComboBox, is_subpath, reveal_in_explorer
@@ -166,6 +166,7 @@ class MidiStatus(QWidget):
         layout.addLayout(
             self._horizontal_layout("Controller:", self.current_controller)
         )
+        layout.addWidget(self.show_controllers_file_button)
         layout.addLayout(self._horizontal_layout("Binds:", self.current_binds))
         layout.addWidget(self.show_binds_file_button)
         layout.addWidget(self.copy_binds_button)
@@ -174,7 +175,6 @@ class MidiStatus(QWidget):
         layout.addLayout(self._horizontal_layout("MIDI input:", self.current_midi_in))
         layout.addLayout(self._horizontal_layout("MIDI output:", self.current_midi_out))
         layout.addLayout(status_layout)
-        layout.addWidget(self.edit_binds_button)
         layout.addWidget(self.start_handling_button)
         layout.addWidget(self.stop_handling_button)
         layout.addStretch()
@@ -204,7 +204,7 @@ class MidiStatus(QWidget):
     def _horizontal_layout(self, label: str, widget: QWidget) -> QHBoxLayout:
         """Creates horizontal layout consisting of the `label` on the left half\
         and the `widget` on the right half."""
-        layout = QHBoxLayout()
+        layout = QVBoxLayout()
         layout.addWidget(QLabel(label))
         layout.addWidget(widget)
         return layout

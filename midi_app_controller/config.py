@@ -1,6 +1,6 @@
 import os
-from pathlib import Path
 import appdirs
+from pathlib import Path
 
 
 class Config:

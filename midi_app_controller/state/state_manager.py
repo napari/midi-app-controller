@@ -97,12 +97,6 @@ class StateManager:
             if b.controller_name == self.selected_controller.name
         ]
 
-    def get_available_controllers(self) -> List[str]:
-        """Returns names of all controller schemas."""
-        # TODO Extract the loading logic to a separate file that will handle storage.
-        controllers = Controller.load_all_from(Config.CONTROLLERS_DIRECTORY)
-        return [c.name for c, _ in controllers]
-
     def get_available_midi_in(self) -> List[str]:
         """Returns names of all MIDI input ports."""
         return self._midi_in.get_ports()

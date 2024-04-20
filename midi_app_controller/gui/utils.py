@@ -2,7 +2,6 @@ import platform
 import subprocess
 from typing import Callable, List, Optional, TypeVar
 from pathlib import Path
-import re
 
 from app_model.types import Action
 from qtpy.QtCore import Qt
