@@ -150,12 +150,14 @@ def reveal_in_explorer(file: Path):
     """Show where the file is in the system's file explorer.
 
     Currently only Windows, Linux (majority of distributions), and macOS are supported.
+    On Linux, only the folder is opened.
     """
+    assert file.is_file(), "Not a valid file"
     if platform.system() == "Windows":
         subprocess.Popen(["explorer", f'/select,"{file}"'])
     elif platform.system() == "Linux":
-        subprocess.Popen(["xdg-open", f'"{file.parent}"'])
+        subprocess.Popen(["xdg-open", str(file.parent)])
     elif platform.system() == "Darwin":
-        subprocess.Popen(["open", file.parent])
+        subprocess.Popen(["open", "-R", str(file)])
     else:
         raise NotImplementedError("Only Linux and Windows are supported")
