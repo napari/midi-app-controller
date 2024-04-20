@@ -4,12 +4,16 @@ import appdirs
 from pathlib import Path
 
 
+
 class Config:
     """Class that stores configuration."""
 
     _CONFIG_DIR = (Path(__file__) / "../../config_files").resolve().absolute()
     _USER_CONFIG_DIR = (
-        Path(appdirs.user_config_dir(appname="MIDI App Controller")) / "config"
+        Path(appdirs.user_config_dir(appname="MIDI App Controller"))
+    ).absolute()
+    _USER_STATE_DIR = (
+        Path(appdirs.user_state_dir(appname="MIDI App Controller"))
     ).absolute()
 
     BINDS_READONLY_DIR: Path = _CONFIG_DIR / "binds"
@@ -20,7 +24,7 @@ class Config:
     CONTROLLERS_USER_DIR: Path = _USER_CONFIG_DIR / "controllers"
     CONTROLLER_DIRS: tuple[Path, ...] = (CONTROLLERS_READONLY_DIR, CONTROLLERS_USER_DIR)
 
-    APP_STATE_FILE: Path = _USER_CONFIG_DIR / "app_state.yaml"
+    APP_STATE_FILE: Path = _USER_STATE_DIR / "app_state.yaml"
 
 
 def get_yaml_files_in_dirs(directories: Iterable[Path]) -> list[Path]:

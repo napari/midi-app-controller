@@ -5,6 +5,7 @@ import rtmidi
 from app_model import Application
 from app_model.types import Action
 
+from midi_app_controller.gui.utils import is_subpath
 from midi_app_controller.models.app_state import AppState
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
@@ -72,8 +73,6 @@ class StateManager:
         self._connected_controller = None
         self._midi_in = rtmidi.MidiIn()
         self._midi_out = rtmidi.MidiOut()
-
-        self.load_state()
 
     def is_running(self) -> bool:
         """Checks if any controller is being handled now."""
@@ -165,8 +164,6 @@ class StateManager:
         Stops previous handler first. If any error occurs in this method, the
         previous handler will NOT be restored.
         """
-        self.save_state()  # TODO: shouldn't be here
-
         self.stop_handling()
 
         # Check if all required field are not None.
@@ -226,6 +223,22 @@ class StateManager:
         if not Config.APP_STATE_FILE.exists():
             return
         state = AppState.load_from(Config.APP_STATE_FILE)
+
+        # If the app state was saved by a different instance of this package,
+        # there may be references to files local to the package, and we don't
+        # want to use them. So we make sure that all file paths are ok for us
+        # to use.
+        controller_file = state.selected_controller_path
+        if not any(is_subpath(d, controller_file) for d in Config.CONTROLLER_DIRS):
+            return
+        binds_files = [
+            state.selected_binds_path,
+            *state.recent_binds_for_controller.values(),
+        ]
+        for file in binds_files:
+            if not any(is_subpath(d, file) for d in Config.BINDS_DIRS):
+                return
+
         self.select_controller(state.selected_controller_path)
         self.select_binds(state.selected_binds_path)
         self.select_midi_in(state.selected_midi_in)

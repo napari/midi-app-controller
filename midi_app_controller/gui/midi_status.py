@@ -61,6 +61,7 @@ for action in SLIDER_ACTIONS:
 NAPARI_ACTIONS = HELP_ACTIONS + LAYER_ACTIONS + VIEW_ACTIONS + SLIDER_ACTIONS
 
 state = StateManager(NAPARI_ACTIONS, get_app())
+state.load_state()
 
 
 class MidiStatus(QWidget):
@@ -163,7 +164,9 @@ class MidiStatus(QWidget):
         status_layout.addWidget(self.status)
 
         self.start_handling_button = QPushButton("Start handling")
-        self.start_handling_button.clicked.connect(state.start_handling)
+        self.start_handling_button.clicked.connect(
+            lambda: (state.save_state(), state.start_handling())
+        )
         self.start_handling_button.clicked.connect(self.refresh)
 
         self.stop_handling_button = QPushButton("Stop handling")
