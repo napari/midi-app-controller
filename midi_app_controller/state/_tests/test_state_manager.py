@@ -1,5 +1,6 @@
 from unittest.mock import Mock, patch
 from typing import List
+import uuid
 
 from app_model import Application
 from app_model.types import Action
@@ -71,9 +72,10 @@ def controller() -> Controller:
 
 @pytest.fixture
 def state_manager(actions) -> StateManager:
-    actions = actions
-    app = Application.get_or_create("app123")
-    return StateManager(actions, app)
+    app = Application("app123" + str(uuid.uuid4()))
+    for action in actions:
+        app.register_action(action)
+    return StateManager(app)
 
 
 @pytest.fixture
