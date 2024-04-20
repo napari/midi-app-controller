@@ -73,6 +73,8 @@ class StateManager:
         self._midi_in = rtmidi.MidiIn()
         self._midi_out = rtmidi.MidiOut()
 
+        self.load_state()
+
     def is_running(self) -> bool:
         """Checks if any controller is being handled now."""
         return self._connected_controller is not None

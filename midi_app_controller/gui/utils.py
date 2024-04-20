@@ -28,7 +28,7 @@ class DynamicQComboBox(QComboBox):
         current_item : Optional[T]
             Optional default item.
         get_items : Callable[[], List[T]]
-            Functions that fetches list of current items. An option corresponding to "None" will be added anyway.
+            Function that fetches list of current items. An option corresponding to "None" will be added anyway.
         select_item : Callable[[T], None]
             Function that should be called when the user chooses an option.
         get_item_label : Callable[[T], str]
@@ -51,7 +51,7 @@ class DynamicQComboBox(QComboBox):
         """Sets the currently selected item.
 
         Does not select the item if the item is not in the list returned by get_items().
-        If provided, _items is used instead of calling get_item().
+        If provided, _items is used instead of calling get_items().
         """
         items = _items if _items is not None else self.get_items()
         self.setCurrentIndex((items + [item]).index(item))
@@ -149,14 +149,13 @@ def is_subpath(path: Path, subpath: Path) -> bool:
 def reveal_in_explorer(file: Path):
     """Show where the file is in the system's file explorer.
 
-    Currently only Windows and Linux (majority of distributions) are supported.
+    Currently only Windows, Linux (majority of distributions), and macOS are supported.
     """
     if platform.system() == "Windows":
-        subprocess.Popen(rf'explorer /select,"{file}"')
-        return
-
-    if platform.system() == "Linux":
-        subprocess.Popen(rf'xdg-open "{file.parent}"')
-        return
-
-    raise NotImplementedError("Only Linux and Windows are supported")
+        subprocess.Popen([rf'explorer /select,"{file}"'])
+    elif platform.system() == "Linux":
+        subprocess.Popen([rf'xdg-open "{file.parent}"'])
+    elif platform.system() == "Darwin":
+        subprocess.Popen(["open", file.parent])
+    else:
+        raise NotImplementedError("Only Linux and Windows are supported")

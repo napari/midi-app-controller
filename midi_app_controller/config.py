@@ -1,4 +1,5 @@
 import os
+from typing import Iterable
 import appdirs
 from pathlib import Path
 
@@ -22,7 +23,7 @@ class Config:
     APP_STATE_FILE: Path = _USER_CONFIG_DIR / "app_state.yaml"
 
 
-def get_yaml_files_in_dirs(directories) -> list[Path]:
+def get_yaml_files_in_dirs(directories: Iterable[Path]) -> list[Path]:
     return [
         directory / filename
         for directory in directories

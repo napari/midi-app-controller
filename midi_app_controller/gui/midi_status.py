@@ -1,4 +1,5 @@
 import datetime
+import re
 import sys
 from typing import Optional
 
@@ -15,6 +16,7 @@ from qtpy.QtWidgets import (
     QPushButton,
     QLabel,
     QHBoxLayout,
+    QMessageBox,
 )
 
 from midi_app_controller.models.binds import Binds
@@ -90,8 +92,6 @@ class MidiStatus(QWidget):
 
     def __init__(self):
         super().__init__()
-
-        state.load_state()
 
         # Controller selection.
         def select_controller(controller: Optional[SelectedItem]) -> None:
@@ -209,7 +209,9 @@ class MidiStatus(QWidget):
         self.copy_binds_button.setEnabled(state.selected_binds is not None)
 
         self.status.setText("Running" if state.is_running() else "Not running")
-        self.start_handling_button.setEnabled(not state.is_running())
+        self.start_handling_button.setText(
+            "Start handling" if not state.is_running() else "Restart handling"
+        )
         self.stop_handling_button.setEnabled(state.is_running())
 
     def _horizontal_layout(self, label: str, widget: QWidget) -> QHBoxLayout:
@@ -219,13 +221,24 @@ class MidiStatus(QWidget):
         layout.addWidget(QLabel(label))
         layout.addWidget(widget)
         return layout
+    
+    @staticmethod
+    def _get_copy_name(current_name: str) -> str:
+        """Finds a good name for a copy of a file.
+         
+        Currently adds "({timestamp} copy)" to the end of the name, or replaces the timestamp with current time if already present.
+        """
+        if m := re.fullmatch(r"(.*) \([0-9. -]* copy\)", current_name):
+            current_name = m.group(1)
+        timestamp = datetime.datetime.now().isoformat().replace(':', '-').replace('T', ' ')
+        return f"{current_name} ({timestamp} copy)"
 
     def _copy_binds(self):
         """Copies the currently selected binds to a new file, and selects that file."""
         assert state.selected_binds is not None, "No binds selected"
 
         binds = Binds.load_from(state.selected_binds.path)
-        binds.name += f" ({datetime.datetime.now().isoformat().replace(':', '-')} copy)"
+        binds.name = self._get_copy_name(binds.name)
         new_file = binds.save_copy_to(
             state.selected_binds.path.with_stem(binds.name), Config.BINDS_USER_DIR
         )
@@ -235,8 +248,20 @@ class MidiStatus(QWidget):
     def _delete_binds(self):
         """Deletes the file with currently selected binds setup."""
         assert state.selected_binds is not None, "No binds selected"
-        if is_subpath(Config.BINDS_READONLY_DIR, state.selected_binds.path):
+        if not is_subpath(Config.BINDS_USER_DIR, state.selected_binds.path):
             raise PermissionError("This config file is read-only")
+
+        if (
+            QMessageBox.question(
+                self,
+                "Confirm deletion",
+                f"Are you sure you want to delete this config file?\n{state.selected_binds.path}",
+                buttons=QMessageBox.Yes | QMessageBox.No,
+                defaultButton=QMessageBox.No,
+            )
+            != QMessageBox.Yes
+        ):
+            return
 
         state.selected_binds.path.unlink()
         state.select_binds(None)
@@ -262,7 +287,7 @@ class MidiStatus(QWidget):
 
             if is_subpath(Config.BINDS_READONLY_DIR, selected_binds.path):
                 if new_binds.name == binds.name:
-                    new_binds.name = new_binds.name + " (Copy)"
+                    new_binds.name = self._get_copy_name(new_binds.name)
                 new_file = new_binds.save_copy_to(
                     selected_binds.path.with_stem(new_binds.name), Config.BINDS_USER_DIR
                 )
