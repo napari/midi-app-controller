@@ -7,7 +7,8 @@ from app_model.types import Action
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QComboBox, QWidget
 
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 class DynamicQComboBox(QComboBox):
     """QComboBox that refreshes the list of items each time it is opened."""
@@ -44,9 +45,11 @@ class DynamicQComboBox(QComboBox):
         self.refresh_items()
         self.set_current(current_item)
 
-    def set_current(self, item: Optional[T], _items: Optional[List[Optional[T]]] = None):
+    def set_current(
+        self, item: Optional[T], _items: Optional[List[Optional[T]]] = None
+    ):
         """Sets the currently selected item.
-        
+
         Does not select the item if the item is not in the list returned by get_items().
         If provided, _items is used instead of calling get_item().
         """
@@ -59,14 +62,14 @@ class DynamicQComboBox(QComboBox):
         # Note that the objects in here may be equal to the objects that were returned last time
         # but not be exactly the same objects.
         new_items = self.get_items()
-        
+
         current_item = self.currentData()
         self.clear()
         for item in new_items:
             label = self.get_item_label(item) if item is not None else "(none)"
             self.addItem(label, userData=item)
         self.set_current(current_item, _items=new_items)
-        
+
     def showPopup(self):
         self.refresh_items()
         super().showPopup()
@@ -145,15 +148,15 @@ def is_subpath(path: Path, subpath: Path) -> bool:
 
 def reveal_in_explorer(file: Path):
     """Show where the file is in the system's file explorer.
-    
+
     Currently only Windows and Linux (majority of distributions) are supported.
     """
     if platform.system() == "Windows":
         subprocess.Popen(rf'explorer /select,"{file}"')
         return
-    
+
     if platform.system() == "Linux":
         subprocess.Popen(rf'xdg-open "{file.parent}"')
         return
-    
+
     raise NotImplementedError("Only Linux and Windows are supported")

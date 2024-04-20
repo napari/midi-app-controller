@@ -3,9 +3,10 @@ from typing import Optional
 
 from .utils import YamlBaseModel
 
+
 class AppState(YamlBaseModel):
     """Schema of data StateManager should remember between sessions.
-    
+
     Attributes
     ----------
     selected_controller_path : Optional[Path]

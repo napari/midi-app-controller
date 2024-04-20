@@ -10,10 +10,10 @@ from midi_app_controller.config import Config
 from midi_app_controller.gui.utils import is_subpath
 
 
-
 # Enable writing Path objects as strings. When reading, pydantic converts strings into Paths automatically.
 def _path_representer(dumper, data):
-    return dumper.represent_scalar('tag:yaml.org,2002:str', str(data))
+    return dumper.represent_scalar("tag:yaml.org,2002:str", str(data))
+
 
 yaml.SafeDumper.add_multi_representer(Path, _path_representer)
 
@@ -39,7 +39,9 @@ class YamlBaseModel(BaseModel):
             return cls(**data)
 
     @classmethod
-    def load_all_from(cls, directories: List[Path]) -> List[Tuple["YamlBaseModel", Path]]:
+    def load_all_from(
+        cls, directories: List[Path]
+    ) -> List[Tuple["YamlBaseModel", Path]]:
         """Creates models initialized with data from all YAML files in multiple directories.
 
         Parameters
@@ -66,7 +68,7 @@ class YamlBaseModel(BaseModel):
     def save_to(self, path: Path) -> None:
         """Saves the model's data to a YAML file.
 
-        Never saves anything to readonly dirs as defined in Config. The folder 
+        Never saves anything to readonly dirs as defined in Config. The folder
         where the output file should be will also be created.
 
         Parameters

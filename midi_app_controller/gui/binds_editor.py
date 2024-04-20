@@ -12,7 +12,7 @@ from qtpy.QtWidgets import (
     QRadioButton,
     QDialog,
     QScrollArea,
-    QLineEdit
+    QLineEdit,
 )
 
 from midi_app_controller.gui.utils import ActionsQComboBox

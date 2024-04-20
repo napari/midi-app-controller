@@ -24,6 +24,7 @@ class SelectedItem(NamedTuple):
     path: Path
         Path to the file containing the real data.
     """
+
     name: str
     path: Path
 
@@ -62,7 +63,7 @@ class StateManager:
     def __init__(self, actions: List[Action], app: Application):
         self.selected_controller = None
         self.selected_binds = None
-        self.recent_binds_for_controller: dict[Path, Path] = {} 
+        self.recent_binds_for_controller: dict[Path, Path] = {}
         self.selected_midi_in = None
         self.selected_midi_out = None
         self.actions = actions
@@ -82,13 +83,13 @@ class StateManager:
         controllers = Controller.load_all_from(Config.CONTROLLER_DIRS)
         assert len(controllers) > 0, "Builtin controllers missing"
         return [SelectedItem(c.name, path) for c, path in controllers]
-    
+
     def get_available_binds(self) -> list[SelectedItem]:
         """Returns names of all binds sets suitable for current controller and app."""
 
         if self.selected_controller is None:
             return []
-        
+
         all_binds = Binds.load_all_from(Config.BINDS_DIRS)
         assert len(all_binds) > 0, "Builtin binds missing"
         return [
@@ -113,11 +114,14 @@ class StateManager:
         if binds_file is None:
             self.selected_binds = None
         else:
-            self.selected_binds = SelectedItem(Binds.load_from(binds_file).name, binds_file)
+            self.selected_binds = SelectedItem(
+                Binds.load_from(binds_file).name, binds_file
+            )
 
         if self.selected_controller is not None:
-            self.recent_binds_for_controller[self.selected_controller.path] = \
-              self.selected_binds.path if self.selected_binds is not None else None
+            self.recent_binds_for_controller[self.selected_controller.path] = (
+                self.selected_binds.path if self.selected_binds is not None else None
+            )
 
     def select_controller(self, controller_file: Optional[Path]) -> None:
         """Updates currently selected controller schema.
@@ -128,7 +132,9 @@ class StateManager:
             self.selected_controller = None
             return
 
-        self.selected_controller = SelectedItem(Controller.load_from(controller_file).name, controller_file)
+        self.selected_controller = SelectedItem(
+            Controller.load_from(controller_file).name, controller_file
+        )
 
     def select_midi_in(self, port_name: Optional[str]) -> None:
         """Updates currently selected MIDI input port name.
@@ -203,13 +209,17 @@ class StateManager:
 
     def save_state(self):
         AppState(
-            selected_controller_path=self.selected_controller.path if self.selected_controller else None,
-            selected_binds_path=self.selected_binds.path if self.selected_binds else None,
+            selected_controller_path=self.selected_controller.path
+            if self.selected_controller
+            else None,
+            selected_binds_path=self.selected_binds.path
+            if self.selected_binds
+            else None,
             selected_midi_in=self.selected_midi_in,
             selected_midi_out=self.selected_midi_out,
-            recent_binds_for_controller=self.recent_binds_for_controller
+            recent_binds_for_controller=self.recent_binds_for_controller,
         ).save_to(Config.APP_STATE_FILE)
-        
+
     def load_state(self):
         if not Config.APP_STATE_FILE.exists():
             return

@@ -20,7 +20,11 @@ from qtpy.QtWidgets import (
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
 from midi_app_controller.gui.binds_editor import BindsEditor
-from midi_app_controller.gui.utils import DynamicQComboBox, is_subpath, reveal_in_explorer
+from midi_app_controller.gui.utils import (
+    DynamicQComboBox,
+    is_subpath,
+    reveal_in_explorer,
+)
 from midi_app_controller.state.state_manager import SelectedItem, StateManager
 from midi_app_controller.config import Config
 
@@ -93,7 +97,9 @@ class MidiStatus(QWidget):
         def select_controller(controller: Optional[SelectedItem]) -> None:
             controller_path = None if controller is None else controller.path
             state.select_controller(controller_path)
-            state.select_binds(state.recent_binds_for_controller.get(controller_path, None))
+            state.select_binds(
+                state.recent_binds_for_controller.get(controller_path, None)
+            )
             self.refresh()
 
         selected_controller = state.selected_controller
@@ -101,12 +107,14 @@ class MidiStatus(QWidget):
             selected_controller,
             state.get_available_controllers,
             select_controller,
-            get_item_label=lambda x: x.name
+            get_item_label=lambda x: x.name,
         )
 
         self.show_controllers_file_button = QPushButton("Reveal in explorer")
-        self.show_controllers_file_button.clicked.connect(lambda: reveal_in_explorer(state.selected_controller.path))
-        
+        self.show_controllers_file_button.clicked.connect(
+            lambda: reveal_in_explorer(state.selected_controller.path)
+        )
+
         def select_binds(binds: Optional[SelectedItem]) -> None:
             state.select_binds(None if binds is None else binds.path)
             self.refresh()
@@ -117,11 +125,13 @@ class MidiStatus(QWidget):
             selected_binds,
             get_items=state.get_available_binds,
             select_item=select_binds,
-            get_item_label=lambda x: x.name
+            get_item_label=lambda x: x.name,
         )
 
         self.show_binds_file_button = QPushButton("Reveal in explorer")
-        self.show_binds_file_button.clicked.connect(lambda: reveal_in_explorer(state.selected_binds.path))
+        self.show_binds_file_button.clicked.connect(
+            lambda: reveal_in_explorer(state.selected_binds.path)
+        )
 
         # Edit, start and stop buttons.
         self.edit_binds_button = QPushButton("Edit binds")
@@ -132,7 +142,7 @@ class MidiStatus(QWidget):
 
         self.delete_binds_button = QPushButton("Delete config file")
         self.delete_binds_button.clicked.connect(self._delete_binds)
-        
+
         # MIDI input and output selection.
         self.current_midi_in = DynamicQComboBox(
             state.selected_midi_in,
@@ -151,7 +161,6 @@ class MidiStatus(QWidget):
         status_layout = QHBoxLayout()
         status_layout.addWidget(QLabel("Status"))
         status_layout.addWidget(self.status)
-
 
         self.start_handling_button = QPushButton("Start handling")
         self.start_handling_button.clicked.connect(state.start_handling)
@@ -188,8 +197,10 @@ class MidiStatus(QWidget):
 
         self.current_controller.refresh_items()
         self.current_controller.set_current(state.selected_controller)
-        self.show_controllers_file_button.setEnabled(state.selected_controller is not None)
-        
+        self.show_controllers_file_button.setEnabled(
+            state.selected_controller is not None
+        )
+
         self.current_binds.refresh_items()
         self.current_binds.set_current(state.selected_binds)
         self.show_binds_file_button.setEnabled(state.selected_binds is not None)
@@ -208,14 +219,16 @@ class MidiStatus(QWidget):
         layout.addWidget(QLabel(label))
         layout.addWidget(widget)
         return layout
-    
+
     def _copy_binds(self):
         """Copies the currently selected binds to a new file, and selects that file."""
         assert state.selected_binds is not None, "No binds selected"
-        
+
         binds = Binds.load_from(state.selected_binds.path)
         binds.name += f" ({datetime.datetime.now().isoformat().replace(':', '-')} copy)"
-        new_file = binds.save_copy_to(state.selected_binds.path.with_stem(binds.name), Config.BINDS_USER_DIR)
+        new_file = binds.save_copy_to(
+            state.selected_binds.path.with_stem(binds.name), Config.BINDS_USER_DIR
+        )
         state.select_binds(new_file)
         self.refresh()
 
@@ -224,7 +237,7 @@ class MidiStatus(QWidget):
         assert state.selected_binds is not None, "No binds selected"
         if is_subpath(Config.BINDS_READONLY_DIR, state.selected_binds.path):
             raise PermissionError("This config file is read-only")
-        
+
         state.selected_binds.path.unlink()
         state.select_binds(None)
         self.refresh()
@@ -250,11 +263,13 @@ class MidiStatus(QWidget):
             if is_subpath(Config.BINDS_READONLY_DIR, selected_binds.path):
                 if new_binds.name == binds.name:
                     new_binds.name = new_binds.name + " (Copy)"
-                new_file = new_binds.save_copy_to(selected_binds.path.with_stem(new_binds.name), Config.BINDS_USER_DIR)
+                new_file = new_binds.save_copy_to(
+                    selected_binds.path.with_stem(new_binds.name), Config.BINDS_USER_DIR
+                )
                 state.select_binds(new_file)
                 self.refresh()
             else:
-              new_binds.save_to(selected_binds.path)
+                new_binds.save_to(selected_binds.path)
 
         # Show the dialog.
         editor_dialog = BindsEditor(
