@@ -4,7 +4,6 @@ import appdirs
 from pathlib import Path
 
 
-
 class Config:
     """Class that stores configuration."""
 
