@@ -118,7 +118,7 @@ class KnobBinds(QWidget):
 
     Attributes
     ----------
-    commands : List[CommandRule]
+    actions_ : List[CommandRule]
         List of all actions available to bind and an empty string (used when
         no action is bound).
     knob_combos : Tuple[int, ActionsQComboBox, ActionsQComboBox]
@@ -130,9 +130,9 @@ class KnobBinds(QWidget):
 
     def __init__(
         self,
-        knobs: List[ControllerElement],
-        knob_binds: List[KnobBind],
-        commands: List[CommandRule],
+        knobs: list[ControllerElement],
+        knob_binds: list[KnobBind],
+        actions: list[CommandRule],
     ):
         """Creates KnobBinds widget.
 
@@ -142,12 +142,12 @@ class KnobBinds(QWidget):
             List of all available knobs.
         knob_binds : List[KnobBind]
             List of current binds.
-        commands : List[CommandRule]
+        actions : List[CommandRule]
             List of all actions available to bind.
         """
         super().__init__()
 
-        self.commands = commands
+        self.actions_ = actions
         self.knob_combos = []
         self.binds_dict = {b.knob_id: b for b in knob_binds}
 
@@ -192,8 +192,8 @@ class KnobBinds(QWidget):
             action_decrease = None
 
         # ActionsQComboBox for action selection.
-        increase_action_combo = ActionsQComboBox(self.commands, action_increase, self)
-        decrease_action_combo = ActionsQComboBox(self.commands, action_decrease, self)
+        increase_action_combo = ActionsQComboBox(self.actions_, action_increase, self)
+        decrease_action_combo = ActionsQComboBox(self.actions_, action_decrease, self)
         self.knob_combos.append((knob_id, increase_action_combo, decrease_action_combo))
 
         # Layout.
@@ -243,7 +243,7 @@ class BindsEditor(QDialog):
         self,
         controller: Controller,
         binds: Binds,
-        commands: List[CommandRule],
+        actions: List[CommandRule],
         save_binds: Callable[[List[KnobBind], List[ButtonBind]], None],
     ):
         """Creates BindsEditor widget.
@@ -254,7 +254,7 @@ class BindsEditor(QDialog):
             Controller for which the binds are created.
         binds : Binds
             Current binds that the widget will be initialized with.
-        commands : List[CommandRule]
+        actions : List[CommandRule]
             List of all actions available to bind.
         save_binds : Callable[[List[KnobBind], List[ButtonBind]], None]
             Function called after "Save and exit" button is clicked.
@@ -290,12 +290,12 @@ class BindsEditor(QDialog):
         self.knobs_widget = KnobBinds(
             controller.knobs,
             binds.knob_binds,
-            commands,
+            actions,
         )
         self.buttons_widget = ButtonBinds(
             controller.buttons,
             binds.button_binds,
-            commands,
+            actions,
         )
 
         # Layout.

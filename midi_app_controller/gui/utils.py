@@ -51,7 +51,7 @@ class ActionsQComboBox(QComboBox):
 
     def __init__(
         self,
-        commands: List[CommandRule],
+        actions: List[CommandRule],
         default_action_id: Optional[str],
         parent: QWidget = None,
     ):
@@ -59,7 +59,7 @@ class ActionsQComboBox(QComboBox):
 
         Parameters
         ---------
-        commands: List[CommandRule]
+        actions: List[CommandRule]
             List of available actions.
         default_action_id : Optional[str]
             Optional default action used to initialize the widget.
@@ -71,8 +71,8 @@ class ActionsQComboBox(QComboBox):
         # Add items.
         self.addItem(None)  # Empty item
         self.setCurrentIndex(0)
-        for command in commands:
-            self.addItem(command.id, command)
+        for action in actions:
+            self.addItem(action.id, action)
 
         # Find and select the default action.
         for i in range(self.count()):
