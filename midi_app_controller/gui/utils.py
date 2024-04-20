@@ -160,4 +160,4 @@ def reveal_in_explorer(file: Path):
     elif platform.system() == "Darwin":
         subprocess.Popen(["open", "-R", str(file)])
     else:
-        raise NotImplementedError("Only Linux and Windows are supported")
+        raise NotImplementedError("Only Linux, Windows, and macOS are supported")
