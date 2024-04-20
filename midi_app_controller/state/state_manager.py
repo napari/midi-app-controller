@@ -98,14 +98,16 @@ class StateManager:
     def get_available_midi_out(self) -> List[str]:
         """Returns names of all MIDI output ports."""
         return self._midi_out.get_ports()
-    
+
     def get_actions(self) -> List[CommandRule]:
         """Returns a list of all actions currently registered in app model (and available in the command pallette)."""
         return sorted(
             list(
                 set(
                     item.command
-                    for item in self._app.menus.get_menu(MenusRegistry.COMMAND_PALETTE_ID)
+                    for item in self._app.menus.get_menu(
+                        MenusRegistry.COMMAND_PALETTE_ID
+                    )
                     if isinstance(item, MenuItem)
                 )
             ),
