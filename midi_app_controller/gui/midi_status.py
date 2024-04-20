@@ -221,16 +221,18 @@ class MidiStatus(QWidget):
         layout.addWidget(QLabel(label))
         layout.addWidget(widget)
         return layout
-    
+
     @staticmethod
     def _get_copy_name(current_name: str) -> str:
         """Finds a good name for a copy of a file.
-         
+
         Currently adds "({timestamp} copy)" to the end of the name, or replaces the timestamp with current time if already present.
         """
         if m := re.fullmatch(r"(.*) \([0-9. -]* copy\)", current_name):
             current_name = m.group(1)
-        timestamp = datetime.datetime.now().isoformat().replace(':', '-').replace('T', ' ')
+        timestamp = (
+            datetime.datetime.now().isoformat().replace(":", "-").replace("T", " ")
+        )
         return f"{current_name} ({timestamp} copy)"
 
     def _copy_binds(self):
