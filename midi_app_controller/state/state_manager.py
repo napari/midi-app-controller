@@ -208,12 +208,12 @@ class StateManager:
 
     def save_state(self):
         AppState(
-            selected_controller_path=self.selected_controller.path
-            if self.selected_controller
-            else None,
-            selected_binds_path=self.selected_binds.path
-            if self.selected_binds
-            else None,
+            selected_controller_path=(
+                self.selected_controller.path if self.selected_controller else None
+            ),
+            selected_binds_path=(
+                self.selected_binds.path if self.selected_binds else None
+            ),
             selected_midi_in=self.selected_midi_in,
             selected_midi_out=self.selected_midi_out,
             recent_binds_for_controller=self.recent_binds_for_controller,
