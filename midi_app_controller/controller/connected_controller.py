@@ -34,7 +34,7 @@ class ConnectedController:
     butons_mutex : QMutex
         Mutex for worker threads.
     flashing_buttons : set[int]
-        Set of the button ids, that are currently flashing.
+        Set with ids of buttons that are currently flashing.
     knobs_mutex : QMutex
         Mutex for worker threads.
     flashing_knobs : set[int]

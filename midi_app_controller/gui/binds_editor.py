@@ -150,20 +150,18 @@ class ButtonBinds(QWidget):
         light_up_button.setCursor(Qt.PointingHandCursor)
         light_up_button.clicked.connect(lambda: self._light_up_button(button_id))
 
-        sizes = [2, 2, 6, 10]
-        elems = [
-            button_label,
-            light_up_button,
-            QWidget(),
-            action_combo,
+        elems_and_sizes = [
+            (button_label, 2),
+            (light_up_button, 2),
+            (QWidget(), 6),
+            (action_combo, 10),
         ]
 
         if controller_disconnected:
-            sizes = [2, 8, 10]
-            del elems[1]
+            del elems_and_sizes[1]
 
         layout = QHBoxLayout()
-        for elem, size in zip(elems, sizes):
+        for elem, size in elems_and_sizes:
             layout.addWidget(elem, size)
 
         return layout
@@ -290,21 +288,19 @@ class KnobBinds(QWidget):
         light_up_knob.setCursor(Qt.PointingHandCursor)
         light_up_knob.clicked.connect(lambda: self._light_up_knob(knob_id))
 
-        sizes = [1, 1, 3, 5, 5]
-        elems = [
-            QLabel(knob_name),
-            light_up_knob,
-            QWidget(),
-            increase_action_combo,
-            decrease_action_combo,
+        elems_and_sizes = [
+            (QLabel(knob_name), 1),
+            (light_up_knob, 1),
+            (QWidget(), 3),
+            (increase_action_combo, 5),
+            (decrease_action_combo, 5),
         ]
 
         if controller_disconnected:
-            sizes = [1, 4, 5, 5]
-            del elems[1]
+            del elems_and_sizes[1]
 
         layout = QHBoxLayout()
-        for elem, size in zip(elems, sizes):
+        for elem, size in elems_and_sizes:
             layout.addWidget(elem, size)
 
         return layout
