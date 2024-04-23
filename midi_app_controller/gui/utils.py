@@ -28,7 +28,7 @@ class DynamicQComboBox(QComboBox):
         current_item : Optional[T]
             Optional default item.
         get_items : Callable[[], List[T]]
-            Function that fetches list of current items. An option corresponding to "None" will be added anyway.
+            Function that fetches the list of current items. An option corresponding to "None" will be added anyway.
         select_item : Callable[[T], None]
             Function that should be called when the user chooses an option.
         get_item_label : Callable[[T], str]
@@ -50,7 +50,7 @@ class DynamicQComboBox(QComboBox):
     ):
         """Sets the currently selected item.
 
-        Does not select the item if the item is not in the list returned by get_items().
+        Does not select the item if it's not in the list returned by get_items().
         If provided, _items is used instead of calling get_items().
         """
         items = _items if _items is not None else self.get_items()
