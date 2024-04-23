@@ -105,7 +105,7 @@ class StateManager:
         """Updates currently selected binds.
 
         Does not have any immediate effect except updating the value and
-        finding path to the config file if the name is not None.
+        finding the path to the config file if the name is not None.
         """
         if name is None:
             self.selected_binds = None
@@ -122,7 +122,7 @@ class StateManager:
         """Updates currently selected controller schema.
 
         Does not have any immediate effect except updating the value and
-        finding path to the config file if the name is not None.
+        finding the path to the config file if the name is not None.
         """
         if name is None:
             self.selected_controller = None
