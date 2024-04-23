@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 
 from pydantic import BaseModel
 import yaml
@@ -60,7 +60,7 @@ class YamlBaseModel(BaseModel):
             yaml.safe_dump(self.dict(), f, default_flow_style=False)
 
 
-def find_duplicate(values: list[any]) -> Optional[any]:
+def find_duplicate(values: list[Any]) -> Optional[Any]:
     """Checks if there are any duplicates in the list and returns the first one.
 
     Parameters
@@ -70,7 +70,7 @@ def find_duplicate(values: list[any]) -> Optional[any]:
 
     Returns
     -------
-    any
+    Any
         The first duplicate if it exists.
     None
         If there are no duplicates.

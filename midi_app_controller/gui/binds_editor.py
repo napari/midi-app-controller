@@ -1,4 +1,6 @@
 # TODO Move style somewhere else in the future to make this class independent from napari.
+from typing import Callable
+
 from napari.qt import get_current_stylesheet
 from app_model.types import Action
 from qtpy.QtWidgets import (
@@ -225,7 +227,7 @@ class BindsEditor(QDialog):
 
     Attributes
     ----------
-    save_binds : callable[[list[KnobBind], list[ButtonBind]], None]
+    save_binds : Callable[[list[KnobBind], list[ButtonBind]], None]
         Function called after "Save and exit" button is clicked.
     knobs_radio : QRadioButton
         Button that allows to switch binds view to knobs.
@@ -242,7 +244,7 @@ class BindsEditor(QDialog):
         controller: Controller,
         binds: Binds,
         actions: list[Action],
-        save_binds: callable[[list[KnobBind], list[ButtonBind]], None],
+        save_binds: Callable[[list[KnobBind], list[ButtonBind]], None],
     ):
         """Creates BindsEditor widget.
 
@@ -254,7 +256,7 @@ class BindsEditor(QDialog):
             Current binds that the widget will be initialized with.
         actions : list[Action]
             List of all actions available to bind.
-        save_binds : callable[[list[KnobBind], list[ButtonBind]], None]
+        save_binds : Callable[[list[KnobBind], list[ButtonBind]], None]
             Function called after "Save and exit" button is clicked.
         """
         super().__init__()

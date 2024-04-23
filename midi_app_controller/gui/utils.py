@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Callable
 
 from app_model.types import Action
 from qtpy.QtCore import Qt
@@ -11,8 +11,8 @@ class DynamicQComboBox(QComboBox):
     def __init__(
         self,
         current_item: Optional[str],
-        get_items: callable[[], list[str]],
-        select_item: callable[[str], None],
+        get_items: Callable[[], list[str]],
+        select_item: Callable[[str], None],
         parent: QWidget = None,
     ):
         """Creates DynamicQComboBox widget.
@@ -21,9 +21,9 @@ class DynamicQComboBox(QComboBox):
         ---------
         current_item : Optional[str]
             Optional default item.
-        get_items : callable[[], list[str]]
+        get_items : Callable[[], list[str]]
             Functions that fetches list of current items.
-        select_item : callable[[str], None]
+        select_item : Callable[[str], None]
             Function that should be called when `textActivated` is emitted.
         parent : QWidget
             Parent widget.
