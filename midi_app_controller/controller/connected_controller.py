@@ -1,7 +1,9 @@
 import logging
 import time
+from typing import Callable
 
 import rtmidi
+from qtpy.QtCore import QMutex, QMutexLocker
 
 from midi_app_controller.models.controller import Controller
 from midi_app_controller.actions.actions_handler import ActionsHandler
@@ -27,8 +29,16 @@ class ConnectedController:
         A list containing all valid button ids on a handled controller.
     knob_ids : list[int]
         A list containing all valid knob ids on a handled controller.
-    knob_engagement: Dict[int, int]
+    knob_engagement : Dict[int, int]
         A dictionary that keeps the value of every knob.
+    butons_mutex : QMutex
+        Mutex for worker threads.
+    flashing_buttons : set[int]
+        Set with ids of buttons that are currently flashing.
+    knobs_mutex : QMutex
+        Mutex for worker threads.
+    flashing_knobs : set[int]
+        Set of the knob ids, that are currently flashing.
     """
 
     def __init__(
@@ -63,6 +73,12 @@ class ConnectedController:
         # Set default values for buttons and knobs.
         self.init_buttons()
         self.init_knobs()
+
+        self.flashing_knobs = set()
+        self.flashing_buttons = set()
+
+        self.knobs_mutex = QMutex()
+        self.buttons_mutex = QMutex()
 
         # Set callback for getting data from controller.
         self.midi_in.set_callback(self.midi_callback)
@@ -172,6 +188,37 @@ class ConnectedController:
         except ValueError as err:
             logging.error(f"Value Error: {err}")
 
+    @staticmethod
+    def check_set_and_run(
+        func: Callable[[], None], id: int, mutex: QMutex, id_set: set[int]
+    ) -> None:
+        """Checks if the provided set contains `id`.
+        It executes `func` if it doesn't and does nothing otherwise.
+
+        Parameters
+        ----------
+        func : Callable[[], None]
+            Function to execute.
+        id : int
+            Id for which we check provided set.
+        mutex : QMutex
+            Mutex for ensuring that checking `id` presence is
+            mutually exclusive.
+        id_set : set[int]
+            Set containing ids.
+        """
+        already_flashing = False
+        with QMutexLocker(mutex):
+            if id in id_set:
+                already_flashing = True
+            else:
+                id_set.add(id)
+
+        if not already_flashing:
+            func()
+            with QMutexLocker(mutex):
+                id_set.remove(id)
+
     def flash_knob(self, id: int) -> None:
         """Flashes the LEDs corresponding to a knob on a MIDI controller.
 
@@ -180,13 +227,31 @@ class ConnectedController:
         id : int
             Id of the knob.
         """
-        sleep_seconds = 0.3
+        current_value = self.knob_engagement[id]
+        sleep_seconds = 0.04
+        intervals = 14
+        min_max_diff = self.controller.knob_value_max - self.controller.knob_value_min
 
-        for _ in range(3):
-            self.change_knob_value(id, self.controller.knob_value_min)
-            time.sleep(sleep_seconds)
-            self.change_knob_value(id, self.controller.knob_value_max)
-            time.sleep(sleep_seconds)
+        def light_up_func():
+            for value in range(
+                self.controller.knob_value_min,
+                self.controller.knob_value_max,
+                min_max_diff // intervals,
+            ):
+                self.change_knob_value(id, value)
+                time.sleep(sleep_seconds)
+
+            for value in range(
+                self.controller.knob_value_max,
+                self.controller.knob_value_min,
+                -min_max_diff // intervals,
+            ):
+                self.change_knob_value(id, value)
+                time.sleep(sleep_seconds)
+
+            self.change_knob_value(id, current_value)
+
+        self.check_set_and_run(light_up_func, id, self.knobs_mutex, self.flashing_knobs)
 
     def flash_button(self, id: int) -> None:
         """Flashes the button LED on a MIDI controller.
@@ -196,11 +261,18 @@ class ConnectedController:
         id : int
             Id of the button.
         """
-        for _ in range(3):
-            self.turn_on_button_led(id)
-            time.sleep(0.3)
-            self.turn_off_button_led(id)
-            time.sleep(0.3)
+        sleep_seconds = 0.3
+
+        def light_up_func():
+            for _ in range(3):
+                self.turn_on_button_led(id)
+                time.sleep(sleep_seconds)
+                self.turn_off_button_led(id)
+                time.sleep(sleep_seconds)
+
+        self.check_set_and_run(
+            light_up_func, id, self.buttons_mutex, self.flashing_buttons
+        )
 
     def build_message(
         self,

@@ -8,8 +8,8 @@ from ..utils import find_duplicate, YamlBaseModel
 
 
 class TempYamlModel(YamlBaseModel):
-    key1: str
     key2: str
+    key1: str
     key3: list[str]
     key4: Optional[int]
 
@@ -20,13 +20,13 @@ class OtherTempYamlModel(YamlBaseModel):
 
 @pytest.fixture
 def yaml_data():
-    return {"key1": "value1", "key2": "value2", "key3": ["a", "b"], "key4": None}
+    return {"key2": "value2", "key1": "value1", "key3": ["a", "b"], "key4": None}
 
 
 @pytest.fixture
 def yaml_str(yaml_data):
-    dumped = yaml.safe_dump(yaml_data, default_flow_style=False)
-    assert dumped == "key1: value1\nkey2: value2\nkey3:\n- a\n- b\nkey4: null\n"
+    dumped = yaml.safe_dump(yaml_data, default_flow_style=False, sort_keys=False)
+    assert dumped == "key2: value2\nkey1: value1\nkey3:\n- a\n- b\nkey4: null\n"
     return dumped
 
 

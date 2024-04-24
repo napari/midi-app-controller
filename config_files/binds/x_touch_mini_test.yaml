@@ -1,16 +1,16 @@
+name: XTM_binds
 app_name: napari
-button_binds:
-- action_id: napari:window:view:toggle_viewer_axes
-  button_id: 8
-- action_id: napari:layer:toggle_visibility
-  button_id: 9
 controller_name: X_TOUCH_MINI
 description: xtouchmini_test
+button_binds:
+- button_id: 8
+  action_id: napari:window:view:toggle_viewer_axes
+- button_id: 9
+  action_id: napari:layer:toggle_visibility
 knob_binds:
-- action_id_decrease: napari:layer:toggle_visibility
+- knob_id: 1
   action_id_increase: napari:layer:toggle_visibility
-  knob_id: 1
-- action_id_decrease: napari:layer:duplicate
+  action_id_decrease: napari:layer:toggle_visibility
+- knob_id: 2
   action_id_increase: napari:layer:duplicate
-  knob_id: 2
-name: XTM_binds
+  action_id_decrease: napari:layer:duplicate

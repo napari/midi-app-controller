@@ -1,7 +1,8 @@
 # TODO Move style somewhere else in the future to make this class independent from napari.
-from typing import Callable
+from typing import Callable, Optional
 
 from napari.qt import get_current_stylesheet
+from qtpy.QtCore import Qt, QThread
 from app_model.types import Action
 from qtpy.QtWidgets import (
     QWidget,
@@ -12,11 +13,31 @@ from qtpy.QtWidgets import (
     QRadioButton,
     QDialog,
     QScrollArea,
+    QGridLayout,
 )
 
 from midi_app_controller.gui.utils import ActionsQComboBox
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller, ControllerElement
+from midi_app_controller.controller.connected_controller import ConnectedController
+
+
+class LightUpQThread(QThread):
+    """Worker thread responsible for lighting up a controller element.
+
+    Attributes
+    ----------
+    func : Callable[[], None]
+        Function for lighting up the element.
+    """
+
+    def __init__(self, func: Callable[[], None]):
+        super().__init__()
+        self.func = func
+
+    def run(self):
+        """Runs the lighting up function."""
+        self.func()
 
 
 class ButtonBinds(QWidget):
@@ -31,6 +52,8 @@ class ButtonBinds(QWidget):
         List of all pairs (button id, ActionsQComboBox used to set action).
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's button by its id.
+    thread_list : List[QThread]
+        List of worker threads responsible for lighting up buttons.
     """
 
     def __init__(
@@ -38,6 +61,7 @@ class ButtonBinds(QWidget):
         buttons: list[ControllerElement],
         button_binds: list[ButtonBind],
         actions: list[Action],
+        connected_controller: Optional[ConnectedController],
     ):
         """Creates ButtonBinds widget.
 
@@ -49,8 +73,12 @@ class ButtonBinds(QWidget):
             List of current binds.
         actions : list[Action]
             List of all actions available to bind.
+        connected_controller : ConnectedController
+            Object representing currently connected MIDI controller.
         """
         super().__init__()
+
+        self.connected_controller = connected_controller
 
         self.actions = actions
         self.button_combos = []
@@ -81,7 +109,22 @@ class ButtonBinds(QWidget):
 
         self.setLayout(layout)
 
-    def _create_button_layout(self, button_id: int, button_name: str) -> QHBoxLayout:
+        self.thread_list = []
+
+    def _light_up_button(self, button_id: int):
+        """Creates a QThread responsible for lighting up a knob."""
+        if self.connected_controller is None:
+            raise Exception("No controller connected.")
+
+        def light_up_func():
+            self.connected_controller.flash_button(button_id)
+
+        thread = LightUpQThread(light_up_func)
+
+        self.thread_list.append(thread)
+        thread.start()
+
+    def _create_button_layout(self, button_id: int, button_name: str) -> QGridLayout:
         """Creates layout for a button.
 
         The layout consists of button name and action selector. An entry is
@@ -97,9 +140,29 @@ class ButtonBinds(QWidget):
         action_combo = ActionsQComboBox(self.actions, action, self)
         self.button_combos.append((button_id, action_combo))
 
+        # Button label
+        button_label = QLabel(button_name)
+
+        # Button for lighting up the controller element
+        controller_disconnected = self.connected_controller is None
+        light_up_button = QPushButton("Light up")
+        light_up_button.setToolTip(f"Lights up the '{button_name}'")
+        light_up_button.setCursor(Qt.PointingHandCursor)
+        light_up_button.clicked.connect(lambda: self._light_up_button(button_id))
+
+        elems_and_sizes = [
+            (button_label, 2),
+            (light_up_button, 2),
+            (QWidget(), 6),
+            (action_combo, 10),
+        ]
+
+        if controller_disconnected:
+            del elems_and_sizes[1]
+
         layout = QHBoxLayout()
-        layout.addWidget(QLabel(button_name))
-        layout.addWidget(action_combo)
+        for elem, size in elems_and_sizes:
+            layout.addWidget(elem, size)
 
         return layout
 
@@ -126,6 +189,8 @@ class KnobBinds(QWidget):
         ActionsQComboBox used to set decrease action).
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's knob by its id.
+    thread_list : list[QThread]
+        List of worker threads responsible for lighting up knobs.
     """
 
     def __init__(
@@ -133,6 +198,7 @@ class KnobBinds(QWidget):
         knobs: list[ControllerElement],
         knob_binds: list[KnobBind],
         actions: list[Action],
+        connected_controller: Optional[ConnectedController],
     ):
         """Creates KnobBinds widget.
 
@@ -144,8 +210,12 @@ class KnobBinds(QWidget):
             List of current binds.
         actions : list[str]
             List of all actions available to bind.
+        connected_controller : ConnectedController
+            Object representing currently connected MIDI controller.
         """
         super().__init__()
+
+        self.connected_controller = connected_controller
 
         self.actions = actions
         self.knob_combos = []
@@ -177,6 +247,21 @@ class KnobBinds(QWidget):
 
         self.setLayout(layout)
 
+        self.thread_list = []
+
+    def _light_up_knob(self, knob_id: int):
+        """Creates a QThread responsible for lighting up a knob."""
+        if self.connected_controller is None:
+            raise Exception("No controller connected.")
+
+        def light_up_func():
+            self.connected_controller.flash_knob(knob_id)
+
+        thread = LightUpQThread(light_up_func)
+
+        self.thread_list.append(thread)
+        thread.start()
+
     def _create_knob_layout(self, knob_id: int, knob_name: str) -> QHBoxLayout:
         """Creates layout for a knob.
 
@@ -196,11 +281,27 @@ class KnobBinds(QWidget):
         decrease_action_combo = ActionsQComboBox(self.actions, action_decrease, self)
         self.knob_combos.append((knob_id, increase_action_combo, decrease_action_combo))
 
-        # Layout.
+        # Button for lighting up the controller element
+        controller_disconnected = self.connected_controller is None
+        light_up_knob = QPushButton("Light up")
+        light_up_knob.setToolTip(f"Lights up the '{knob_name}'")
+        light_up_knob.setCursor(Qt.PointingHandCursor)
+        light_up_knob.clicked.connect(lambda: self._light_up_knob(knob_id))
+
+        elems_and_sizes = [
+            (QLabel(knob_name), 1),
+            (light_up_knob, 1),
+            (QWidget(), 3),
+            (increase_action_combo, 5),
+            (decrease_action_combo, 5),
+        ]
+
+        if controller_disconnected:
+            del elems_and_sizes[1]
+
         layout = QHBoxLayout()
-        layout.addWidget(QLabel(knob_name))
-        layout.addWidget(increase_action_combo)
-        layout.addWidget(decrease_action_combo)
+        for elem, size in elems_and_sizes:
+            layout.addWidget(elem, size)
 
         return layout
 
@@ -245,6 +346,7 @@ class BindsEditor(QDialog):
         binds: Binds,
         actions: list[Action],
         save_binds: Callable[[list[KnobBind], list[ButtonBind]], None],
+        connected_controller: Optional[ConnectedController],
     ):
         """Creates BindsEditor widget.
 
@@ -291,17 +393,25 @@ class BindsEditor(QDialog):
             controller.knobs,
             binds.knob_binds,
             actions,
+            connected_controller,
         )
         self.buttons_widget = ButtonBinds(
             controller.buttons,
             binds.button_binds,
             actions,
+            connected_controller,
         )
 
         # Layout.
         layout = QVBoxLayout()
         layout.addLayout(radio_layout)
         layout.addLayout(buttons_layout)
+
+        if connected_controller is None:
+            layout.addWidget(
+                QLabel("Start handling a controller to enable 'Light up' buttons.")
+            )
+
         layout.addWidget(self.knobs_widget)
         layout.addWidget(self.buttons_widget)
 
@@ -310,7 +420,7 @@ class BindsEditor(QDialog):
         self.knobs_radio.setChecked(True)
         self.setMinimumSize(830, 650)
 
-    def _switch_editors(self, checked):
+    def _switch_editors(self, checked: bool):
         """Switches binds editor view for knobs/buttons based on checked radio."""
         if not checked:
             return
@@ -334,7 +444,16 @@ class BindsEditor(QDialog):
         knob_binds = self.knobs_widget.get_binds()
         button_binds = self.buttons_widget.get_binds()
         self.save_binds(knob_binds, button_binds)
+        self._wait_for_worker_threads()
         self._exit()
+
+    def _wait_for_worker_threads(self):
+        """Waits for the threads responsible for lighting up the controller elements."""
+        for thread in self.buttons_widget.thread_list:
+            thread.wait()
+
+        for thread in self.knobs_widget.thread_list:
+            thread.wait()
 
     def _exit(self):
         """Closes the widget."""

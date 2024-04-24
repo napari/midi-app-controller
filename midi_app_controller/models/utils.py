@@ -57,7 +57,12 @@ class YamlBaseModel(BaseModel):
             YAML file path.
         """
         with open(path, "w") as f:
-            yaml.safe_dump(self.dict(), f, default_flow_style=False)
+            yaml.safe_dump(
+                self.dict(),
+                f,
+                default_flow_style=False,  # collections always serialized in the block style
+                sort_keys=False,  # keys in the order of declaration
+            )
 
 
 def find_duplicate(values: list[Any]) -> Optional[Any]:

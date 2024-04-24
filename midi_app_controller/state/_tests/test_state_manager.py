@@ -135,7 +135,7 @@ def test_select_midi_out(mock_midi_in_out, state_manager, name):
 def test_stop_handling(mock_midi_in_out, state_manager):
     mock_midi_in, mock_midi_out = mock_midi_in_out
 
-    state_manager._connected_controller = Mock()
+    state_manager.connected_controller = Mock()
     state_manager.stop_handling()
 
     mock_midi_in.cancel_callback.assert_called_once()
