@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from typing import Optional, Any
 
 from pydantic import BaseModel
 import yaml
@@ -26,7 +26,7 @@ class YamlBaseModel(BaseModel):
             return cls(**data)
 
     @classmethod
-    def load_all_from(cls, directory: Path) -> List[Tuple["YamlBaseModel", Path]]:
+    def load_all_from(cls, directory: Path) -> list[tuple["YamlBaseModel", Path]]:
         """Creates models initialized with data from all YAML files in directory.
 
         Parameters
@@ -36,7 +36,7 @@ class YamlBaseModel(BaseModel):
 
         Returns
         -------
-        List[Tuple[cls, Path]]
+        list[tuple[cls, Path]]
             List of created models with paths to corresponding YAML files.
         """
         return [
@@ -65,7 +65,7 @@ class YamlBaseModel(BaseModel):
             )
 
 
-def find_duplicate(values: List[Any]) -> Optional[Any]:
+def find_duplicate(values: list[Any]) -> Optional[Any]:
     """Checks if there are any duplicates in the list and returns the first one.
 
     Parameters

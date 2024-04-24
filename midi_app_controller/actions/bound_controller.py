@@ -1,5 +1,5 @@
 from app_model.types import Action
-from typing import Dict, List, Optional
+from typing import Optional
 from pydantic import BaseModel, Field
 
 from midi_app_controller.models.binds import Binds
@@ -44,20 +44,20 @@ class BoundController(BaseModel):
     knob_value_max : int
         The maximum value sent by the controller when a knob is rotated.
         Should be in the range [0, 127].
-    buttons : Dict[int, ButtonActions]
+    buttons : dict[int, ButtonActions]
         All actions for a button with given id.
-    knobs : Dict[int, KnobActions]
+    knobs : dict[int, KnobActions]
         All actions for a knob with given id.
     """
 
     knob_value_min: int = Field(ge=0, le=127)
     knob_value_max: int = Field(ge=0, le=127)
-    buttons: Dict[int, ButtonActions]
-    knobs: Dict[int, KnobActions]
+    buttons: dict[int, ButtonActions]
+    knobs: dict[int, KnobActions]
 
     @classmethod
     def create(
-        cls, *, binds: Binds, controller: Controller, actions: List[Action]
+        cls, *, binds: Binds, controller: Controller, actions: list[Action]
     ) -> "BoundController":
         """Creates an instance of `BoundController`.
 
@@ -71,7 +71,7 @@ class BoundController(BaseModel):
             Information about binds.
         controller : Controller
             Information about the controller the binds are for.
-        actions : List[Action]
+        actions : list[Action]
             List of actions available in the application the binds are for.
 
         Returns

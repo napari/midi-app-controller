@@ -1,4 +1,3 @@
-from typing import List
 from pathlib import Path
 
 import rtmidi
@@ -44,7 +43,7 @@ class StateManager:
         Name of currently selected MIDI input.
     selected_midi_out : Optional[str]
         Name of currently selected MIDI output.
-    actions : List[Action]
+    actions : list[Action]
         List of app_model actions that are available in the app.
     _app_name : str
         Name of the app we want to handle. Used to filter binds files.
@@ -58,7 +57,7 @@ class StateManager:
         MIDI output client interface.
     """
 
-    def __init__(self, actions: List[Action], app: Application):
+    def __init__(self, actions: list[Action], app: Application):
         self.selected_controller = None
         self.selected_binds = None
         self.selected_midi_in = None
@@ -74,7 +73,7 @@ class StateManager:
         """Checks if any controller is being handled now."""
         return self.connected_controller is not None
 
-    def get_available_binds(self) -> List[str]:
+    def get_available_binds(self) -> list[str]:
         """Returns names of all binds sets suitable for current controller and app."""
         # TODO Extract the loading logic to a separate file that will handle storage.
         if self.selected_controller is None:
@@ -87,17 +86,17 @@ class StateManager:
             and b.controller_name == self.selected_controller.name
         ]
 
-    def get_available_controllers(self) -> List[str]:
+    def get_available_controllers(self) -> list[str]:
         """Returns names of all controller schemas."""
         # TODO Extract the loading logic to a separate file that will handle storage.
         controllers = Controller.load_all_from(Config.CONTROLLERS_DIRECTORY)
         return [c.name for c, _ in controllers]
 
-    def get_available_midi_in(self) -> List[str]:
+    def get_available_midi_in(self) -> list[str]:
         """Returns names of all MIDI input ports."""
         return self._midi_in.get_ports()
 
-    def get_available_midi_out(self) -> List[str]:
+    def get_available_midi_out(self) -> list[str]:
         """Returns names of all MIDI output ports."""
         return self._midi_out.get_ports()
 

@@ -1,6 +1,6 @@
-from typing import Callable, List, Optional
-
 # TODO Move style somewhere else in the future to make this class independent from napari.
+from typing import Callable, Optional
+
 from napari.qt import get_current_stylesheet
 from qtpy.QtCore import Qt, QThread
 from app_model.types import Action
@@ -45,7 +45,7 @@ class ButtonBinds(QWidget):
 
     Attributes
     ----------
-    actions : List[Action]
+    actions : list[Action]
         List of all actions available to bind and an empty string (used when
         no action is bound).
     button_combos : Tuple[int, ActionsQComboBox]
@@ -58,20 +58,20 @@ class ButtonBinds(QWidget):
 
     def __init__(
         self,
-        buttons: List[ControllerElement],
-        button_binds: List[ButtonBind],
-        actions: List[Action],
+        buttons: list[ControllerElement],
+        button_binds: list[ButtonBind],
+        actions: list[Action],
         connected_controller: Optional[ConnectedController],
     ):
         """Creates ButtonBinds widget.
 
         Parameters
         ----------
-        buttons : List[ControllerElement]
+        buttons : list[ControllerElement]
             List of all available buttons.
-        button_binds : List[ButtonBind]
+        button_binds : list[ButtonBind]
             List of current binds.
-        actions : List[Action]
+        actions : list[Action]
             List of all actions available to bind.
         connected_controller : ConnectedController
             Object representing currently connected MIDI controller.
@@ -166,7 +166,7 @@ class ButtonBinds(QWidget):
 
         return layout
 
-    def get_binds(self) -> List[ButtonBind]:
+    def get_binds(self) -> list[ButtonBind]:
         """Returns list of all binds currently set in this widget."""
         result = []
         for button_id, combo in self.button_combos:
@@ -181,7 +181,7 @@ class KnobBinds(QWidget):
 
     Attributes
     ----------
-    actions : List[Action]
+    actions : list[Action]
         List of all actions available to bind and an empty string (used when
         no action is bound).
     knob_combos : Tuple[int, ActionsQComboBox, ActionsQComboBox]
@@ -189,26 +189,26 @@ class KnobBinds(QWidget):
         ActionsQComboBox used to set decrease action).
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's knob by its id.
-    thread_list : List[QThread]
+    thread_list : list[QThread]
         List of worker threads responsible for lighting up knobs.
     """
 
     def __init__(
         self,
-        knobs: List[ControllerElement],
-        knob_binds: List[KnobBind],
-        actions: List[Action],
+        knobs: list[ControllerElement],
+        knob_binds: list[KnobBind],
+        actions: list[Action],
         connected_controller: Optional[ConnectedController],
     ):
         """Creates KnobBinds widget.
 
         Parameters
         ----------
-        knobs : List[ControllerElement]
+        knobs : list[ControllerElement]
             List of all available knobs.
-        knob_binds : List[KnobBind]
+        knob_binds : list[KnobBind]
             List of current binds.
-        actions : List[str]
+        actions : list[str]
             List of all actions available to bind.
         connected_controller : ConnectedController
             Object representing currently connected MIDI controller.
@@ -305,7 +305,7 @@ class KnobBinds(QWidget):
 
         return layout
 
-    def get_binds(self) -> List[KnobBind]:
+    def get_binds(self) -> list[KnobBind]:
         """Returns list of all binds currently set in this widget."""
         result = []
         for knob_id, increase_action_combo, decrease_action_combo in self.knob_combos:
@@ -328,7 +328,7 @@ class BindsEditor(QDialog):
 
     Attributes
     ----------
-    save_binds : Callable[[List[KnobBind], List[ButtonBind]], None]
+    save_binds : Callable[[list[KnobBind], list[ButtonBind]], None]
         Function called after "Save and exit" button is clicked.
     knobs_radio : QRadioButton
         Button that allows to switch binds view to knobs.
@@ -344,8 +344,8 @@ class BindsEditor(QDialog):
         self,
         controller: Controller,
         binds: Binds,
-        actions: List[Action],
-        save_binds: Callable[[List[KnobBind], List[ButtonBind]], None],
+        actions: list[Action],
+        save_binds: Callable[[list[KnobBind], list[ButtonBind]], None],
         connected_controller: Optional[ConnectedController],
     ):
         """Creates BindsEditor widget.
@@ -356,9 +356,9 @@ class BindsEditor(QDialog):
             Controller for which the binds are created.
         binds : Binds
             Current binds that the widget will be initialized with.
-        actions : List[Action]
+        actions : list[Action]
             List of all actions available to bind.
-        save_binds : Callable[[List[KnobBind], List[ButtonBind]], None]
+        save_binds : Callable[[list[KnobBind], list[ButtonBind]], None]
             Function called after "Save and exit" button is clicked.
         """
         super().__init__()

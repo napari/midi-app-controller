@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from pydantic import BaseModel, Field, root_validator
 
 from .utils import YamlBaseModel, find_duplicate
@@ -48,9 +48,9 @@ class Binds(YamlBaseModel):
         For which app are the binds intended. Cannot be empty.
     controller_name : str
         For which controller are the binds intended. Cannot be empty.
-    button_binds : List[ButtonBind]
+    button_binds : list[ButtonBind]
         A list of bound buttons.
-    knob_binds : List[KnobBind]
+    knob_binds : list[KnobBind]
         A list of bound knobs.
     """
 
@@ -58,8 +58,8 @@ class Binds(YamlBaseModel):
     app_name: str = Field(min_length=1)
     controller_name: str = Field(min_length=1)
     description: Optional[str]
-    button_binds: List[ButtonBind]
-    knob_binds: List[KnobBind]
+    button_binds: list[ButtonBind]
+    knob_binds: list[KnobBind]
 
     @root_validator
     @classmethod
