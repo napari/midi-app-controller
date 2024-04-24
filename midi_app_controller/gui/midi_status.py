@@ -189,6 +189,8 @@ class MidiStatus(QWidget):
             binds.button_binds = button_binds
             binds.save_to(selected_binds.path)
 
+        if state_manager.connected_controller is not None:
+            state_manager.connected_controller.pause_synchronization()
         # Show the dialog.
         editor_dialog = BindsEditor(
             controller,
@@ -199,6 +201,8 @@ class MidiStatus(QWidget):
             state_manager.connected_controller,
         )
         editor_dialog.exec_()
+        if state_manager.connected_controller is not None:
+            state_manager.connected_controller.resume_synchronization()
 
 
 def main():

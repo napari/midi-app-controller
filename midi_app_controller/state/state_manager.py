@@ -45,12 +45,12 @@ class StateManager:
         Name of currently selected MIDI output.
     actions : list[Action]
         List of app_model actions that are available in the app.
-    _app_name : str
-        Name of the app we want to handle. Used to filter binds files.
-    _app : Application
+    app : Application
         Used to execute actions.
     connected_controller : ConnectedController
         Object that handles MIDI input and output.
+    _app_name : str
+        Name of the app we want to handle. Used to filter binds files.
     _midi_in : rtmidi.MidiIn
         MIDI input client interface.
     _midi_out : rtmidi.MidiOut
@@ -63,9 +63,9 @@ class StateManager:
         self.selected_midi_in = None
         self.selected_midi_out = None
         self.actions = actions
-        self._app_name = app.name
-        self._app = app
+        self.app = app
         self.connected_controller = None
+        self._app_name = app.name
         self._midi_in = rtmidi.MidiIn()
         self._midi_out = rtmidi.MidiOut()
 
@@ -142,10 +142,11 @@ class StateManager:
 
     def stop_handling(self) -> None:
         """Stops handling any MIDI signals."""
-        self._midi_in.cancel_callback()
-        self.connected_controller = None
-        self._midi_in.close_port()
-        self._midi_out.close_port()
+        if self.connected_controller is not None:
+            self.connected_controller.stop()
+            self._midi_in.close_port()
+            self._midi_out.close_port()
+            self.connected_controller = None
 
     def start_handling(self) -> None:
         """Starts handling MIDI input using current values of binds, controller, etc.
@@ -180,7 +181,8 @@ class StateManager:
             actions=self.actions,
         )
         actions_handler = ActionsHandler(
-            bound_controller=bound_controller, app=self._app
+            bound_controller=bound_controller,
+            app=self.app,
         )
 
         # Open ports.

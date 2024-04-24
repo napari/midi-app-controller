@@ -1,6 +1,7 @@
 import logging
 import time
 from typing import Callable
+from threading import Thread
 
 import rtmidi
 from qtpy.QtCore import QMutex, QMutexLocker
@@ -39,6 +40,12 @@ class ConnectedController:
         Mutex for worker threads.
     flashing_knobs : set[int]
         Set of the knob ids, that are currently flashing.
+    stopped : bool
+        Indicates if the `stop`function was called.
+    synchronization_paused : bool
+        Indicates if the action values synchronization was paused.
+    synchronize_buttons_thread : Thread
+        Thread that checks values of the actions associated with buttons.
     """
 
     def __init__(
@@ -74,6 +81,7 @@ class ConnectedController:
         self.init_buttons()
         self.init_knobs()
 
+        # Flashing elements.
         self.flashing_knobs = set()
         self.flashing_buttons = set()
 
@@ -82,6 +90,21 @@ class ConnectedController:
 
         # Set callback for getting data from controller.
         self.midi_in.set_callback(self.midi_callback)
+
+        # Threads.
+        self.stopped = False
+        self.synchronization_paused = False
+        self.synchronize_buttons_thread = Thread(target=self.synchronize_buttons)
+        self.synchronize_buttons_thread.start()
+
+    def stop(self) -> None:
+        """Stops all threads and callbacks.
+
+        After calling this method, the object can be safely discarded.
+        """
+        self.stopped = True
+        self.midi_in.cancel_callback()
+        self.synchronize_buttons_thread.join()
 
     def midi_callback(self, event: tuple[list[int], float], data=None) -> None:
         """Callback function for MIDI input, specified by rtmidi package.
@@ -103,11 +126,35 @@ class ConnectedController:
 
         self.handle_midi_message(command, channel, data_bytes)
 
+    def pause_synchronization(self) -> None:
+        """Pauses synchronization of button values."""
+        self.synchronization_paused = True
+
+    def resume_synchronization(self) -> None:
+        """Resumes synchronization of button values."""
+        self.synchronization_paused = False
+
+    def synchronize_buttons(self) -> None:
+        """Synchronizes button values on controller with values from app.
+
+        For example, if user executes an action assosciated with a button
+        directly in a GUI rather than on the MIDI controller, then this
+        function will handle it.
+        """
+        while not self.stopped:
+            if not self.synchronization_paused:
+                for id in self.button_ids:
+                    is_toggled = self.actions_handler.is_button_toggled(id)
+                    if is_toggled is not None:
+                        if is_toggled:
+                            self.turn_on_button_led(id)
+                        else:
+                            self.turn_off_button_led(id)
+            time.sleep(0.2)
+
     def init_buttons(self) -> None:
         """Initializes the buttons on the controller, setting them
         to the 'off' value.
-
-        Adds button entries to `button_engagement` dictionary.
         """
         for id in self.button_ids:
             self.turn_off_button_led(id)
@@ -130,11 +177,7 @@ class ConnectedController:
         data : list[int]
             Standard MIDI message.
         """
-        id = data[0]
-
-        self.actions_handler.handle_button_action(
-            button_id=id,
-        )
+        pass
 
     def handle_button_disengagement(self, data: list[int]) -> None:
         """Runs the action bound to the button release, specified in
@@ -145,7 +188,11 @@ class ConnectedController:
         data : list[int]
             Standard MIDI message.
         """
-        pass  # TODO: for now we're not handling button disengagement
+        id = data[0]
+
+        self.actions_handler.handle_button_action(
+            button_id=id,
+        )
 
     def handle_knob_message(self, data: list[int]) -> None:
         """Runs the action bound to the knob turn, specified in
