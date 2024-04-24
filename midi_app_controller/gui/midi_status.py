@@ -7,6 +7,8 @@ from napari._app_model import get_app
 from napari._app_model.actions._help_actions import HELP_ACTIONS
 from napari._app_model.actions._layer_actions import LAYER_ACTIONS
 from napari._app_model.actions._view_actions import VIEW_ACTIONS
+from napari.layers.labels._labels_constants import Mode
+from napari.viewer import Viewer
 from qtpy.QtWidgets import (
     QApplication,
     QWidget,
@@ -23,6 +25,7 @@ from midi_app_controller.gui.utils import DynamicQComboBox
 from midi_app_controller.state.state_manager import StateManager
 
 
+# TODO Move the actions somewhere else.
 def decrease_opacity(ll: LayerList):
     for lay in ll.selection:
         lay.opacity = max(0, lay.opacity - 0.01)
@@ -33,8 +36,58 @@ def increase_opacity(ll: LayerList):
         lay.opacity = min(1, lay.opacity + 0.01)
 
 
-# TODO Added only to allow testing slider actions until they are added to napari.
-SLIDER_ACTIONS = [
+# TODO Errors when the layer is not Labels. Maybe use isinstance?
+def decrease_brush_size(ll: LayerList):
+    for lay in ll.selection:
+        lay.brush_size = max(1, lay.brush_size - 1)
+
+
+def increase_brush_size(ll: LayerList):
+    for lay in ll.selection:
+        lay.brush_size = min(40, lay.brush_size + 1)
+
+
+def activate_labels_pan_zoom_mode(ll: LayerList):
+    for lay in ll.selection:
+        lay.mode = Mode.PAN_ZOOM
+
+
+def activate_labels_paint_mode(ll: LayerList):
+    for lay in ll.selection:
+        lay.mode = Mode.PAINT
+
+
+def activate_labels_fill_mode(ll: LayerList):
+    for lay in ll.selection:
+        lay.mode = Mode.FILL
+
+
+def activate_labels_erase_mode(ll: LayerList):
+    for lay in ll.selection:
+        lay.mode = Mode.ERASE
+
+
+def next_label(ll: LayerList):
+    for lay in ll.selection:
+        lay.selected_label += 1
+
+
+def prev_label(ll: LayerList):
+    for lay in ll.selection:
+        lay.selected_label -= 1
+
+
+def zoom_out(viewer: Viewer):
+    # TODO multiply? substract? what constant?
+    viewer.camera.zoom *= 0.9
+
+
+def zoom_in(viewer: Viewer):
+    viewer.camera.zoom *= 1.1
+
+
+# TODO Add "toggled".
+CUSTOM_ACTIONS = [
     Action(
         id="napari:layer:increase_opacity",
         title="Increase opacity",
@@ -45,12 +98,62 @@ SLIDER_ACTIONS = [
         title="Decrease opacity",
         callback=decrease_opacity,
     ),
+    Action(
+        id="napari:layer:increase_brush_size",
+        title="Increase brush size",
+        callback=increase_brush_size,
+    ),
+    Action(
+        id="napari:layer:decrease_brush_size",
+        title="Decrease brush size",
+        callback=decrease_brush_size,
+    ),
+    Action(
+        id="napari:layer:pan_zoom_mode",
+        title="Pan/zoom",
+        callback=activate_labels_pan_zoom_mode,
+    ),
+    Action(
+        id="napari:layer:paint_mode",
+        title="Activate the paint brush",
+        callback=activate_labels_paint_mode,
+    ),
+    Action(
+        id="napari:layer:pan_fill_mode",
+        title="Activate the fill bucket",
+        callback=activate_labels_fill_mode,
+    ),
+    Action(
+        id="napari:layer:pan_erase_mode",
+        title="Activate the label eraser",
+        callback=activate_labels_erase_mode,
+    ),
+    Action(
+        id="napari:layer:next_label",
+        title="Next label",
+        callback=next_label,
+    ),
+    Action(
+        id="napari:layer:previous_label",
+        title="Previous label",
+        callback=prev_label,
+    ),
+    Action(
+        id="napari:viewer:zoom_out",
+        title="Zoom out",
+        callback=zoom_out,
+    ),
+    Action(
+        id="napari:viewer:zoom_in",
+        title="Zoom in",
+        callback=zoom_in,
+    ),
 ]
-for action in SLIDER_ACTIONS:
+for action in CUSTOM_ACTIONS:
     get_app().register_action(action)
 
 # TODO Get actions directly from app-model when it's supported.
-NAPARI_ACTIONS = HELP_ACTIONS + LAYER_ACTIONS + VIEW_ACTIONS + SLIDER_ACTIONS
+NAPARI_ACTIONS = HELP_ACTIONS + LAYER_ACTIONS + VIEW_ACTIONS + CUSTOM_ACTIONS
 
 state_manager = StateManager(NAPARI_ACTIONS, get_app())
 
