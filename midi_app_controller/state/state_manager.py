@@ -3,7 +3,8 @@ from pathlib import Path
 
 import rtmidi
 from app_model import Application
-from app_model.types import Action
+from app_model.types import CommandRule, MenuItem
+from app_model.registries import MenusRegistry
 
 from midi_app_controller.gui.utils import is_subpath
 from midi_app_controller.models.app_state import AppState
@@ -47,8 +48,6 @@ class StateManager:
         Name of currently selected MIDI input.
     selected_midi_out : Optional[str]
         Name of currently selected MIDI output.
-    actions : list[Action]
-        List of app_model actions that are available in the app.
     _app_name : str
         Name of the app we want to handle. Used to filter binds files.
     _app : Application
@@ -61,13 +60,12 @@ class StateManager:
         MIDI output client interface.
     """
 
-    def __init__(self, actions: list[Action], app: Application):
+    def __init__(self, app: Application):
         self.selected_controller = None
         self.selected_binds = None
         self.recent_binds_for_controller: dict[Path, Path] = {}
         self.selected_midi_in = None
         self.selected_midi_out = None
-        self.actions = actions
         self._app_name = app.name
         self._app = app
         self.connected_controller = None
@@ -106,6 +104,21 @@ class StateManager:
     def get_available_midi_out(self) -> list[str]:
         """Returns names of all MIDI output ports."""
         return self._midi_out.get_ports()
+
+    def get_actions(self) -> list[CommandRule]:
+        """Returns a list of all actions currently registered in app model (and available in the command pallette)."""
+        return sorted(
+            list(
+                set(
+                    item.command
+                    for item in self._app.menus.get_menu(
+                        MenusRegistry.COMMAND_PALETTE_ID
+                    )
+                    if isinstance(item, MenuItem)
+                )
+            ),
+            key=lambda command: command.id,
+        )
 
     def select_binds(self, binds_file: Optional[Path]) -> None:
         """Updates currently selected binds.
@@ -188,7 +201,7 @@ class StateManager:
         bound_controller = BoundController.create(
             binds=binds,
             controller=controller,
-            actions=self.actions,
+            actions=self.get_actions(),
         )
         actions_handler = ActionsHandler(
             bound_controller=bound_controller, app=self._app

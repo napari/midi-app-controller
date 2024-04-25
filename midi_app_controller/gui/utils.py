@@ -3,7 +3,7 @@ import subprocess
 from typing import Callable, Optional, TypeVar
 from pathlib import Path
 
-from app_model.types import Action
+from app_model.types import CommandRule
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QComboBox, QWidget
 
@@ -84,7 +84,7 @@ class ActionsQComboBox(QComboBox):
 
     def __init__(
         self,
-        actions: list[Action],
+        actions: list[CommandRule],
         default_action_id: Optional[str],
         parent: QWidget = None,
     ):
@@ -92,7 +92,7 @@ class ActionsQComboBox(QComboBox):
 
         Parameters
         ---------
-        actions : list[Action]
+        actions: list[CommandRule]
             List of available actions.
         default_action_id : Optional[str]
             Optional default action used to initialize the widget.

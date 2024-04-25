@@ -5,10 +5,10 @@ from typing import Optional
 
 from app_model.types import Action
 from napari.components import LayerList
+
+# TODO: This will be made public in some future napari version
 from napari._app_model import get_app
-from napari._app_model.actions._help_actions import HELP_ACTIONS
-from napari._app_model.actions._layer_actions import LAYER_ACTIONS
-from napari._app_model.actions._view_actions import VIEW_ACTIONS
+
 from qtpy.QtWidgets import (
     QApplication,
     QWidget,
@@ -57,10 +57,8 @@ SLIDER_ACTIONS = [
 for action in SLIDER_ACTIONS:
     get_app().register_action(action)
 
-# TODO Get actions directly from app-model when it's supported.
-NAPARI_ACTIONS = HELP_ACTIONS + LAYER_ACTIONS + VIEW_ACTIONS + SLIDER_ACTIONS
 
-state = StateManager(NAPARI_ACTIONS, get_app())
+state = StateManager(get_app())
 state.load_state()
 
 
@@ -309,8 +307,7 @@ class MidiStatus(QWidget):
         editor_dialog = BindsEditor(
             controller,
             binds,
-            # TODO Get actions directly from app-model when it's supported.
-            state.actions,
+            state.get_actions(),
             save,
             state.connected_controller,
         )
