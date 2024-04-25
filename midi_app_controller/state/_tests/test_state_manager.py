@@ -120,14 +120,14 @@ def test_get_available_midi_out(mock_midi_in_out, state_manager, ports):
     assert state_manager.get_available_midi_out() == ports
 
 
-@pytest.mark.parametrize("name", ["abc", "", "x" * 100])
+@pytest.mark.parametrize("name", ["abc", "", "x" * 100, None])
 def test_select_midi_in(mock_midi_in_out, state_manager, name):
     state_manager.select_midi_in(name)
 
     assert state_manager.selected_midi_in == name
 
 
-@pytest.mark.parametrize("name", ["abc", "", "x" * 100])
+@pytest.mark.parametrize("name", ["abc", "", "x" * 100, None])
 def test_select_midi_out(mock_midi_in_out, state_manager, name):
     state_manager.select_midi_out(name)
 
@@ -141,8 +141,8 @@ def test_stop_handling(mock_midi_in_out, state_manager):
     state_manager.stop_handling()
 
     mock_midi_in.cancel_callback.assert_called_once()
-    # mock_midi_in.close_port.assert_called_once()
-    # mock_midi_out.close_port.assert_called_once()
+    mock_midi_in.close_port.assert_called_once()
+    mock_midi_out.close_port.assert_called_once()
     assert not state_manager.is_running()
 
 
