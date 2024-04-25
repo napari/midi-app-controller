@@ -14,6 +14,7 @@ from qtpy.QtWidgets import (
     QDialog,
     QScrollArea,
     QGridLayout,
+    QLineEdit,
 )
 
 from midi_app_controller.gui.utils import ActionsQComboBox
@@ -52,7 +53,7 @@ class ButtonBinds(QWidget):
         List of all pairs (button id, ActionsQComboBox used to set action).
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's button by its id.
-    thread_list : List[QThread]
+    thread_list : list[QThread]
         List of worker threads responsible for lighting up buttons.
     """
 
@@ -345,7 +346,7 @@ class BindsEditor(QDialog):
         controller: Controller,
         binds: Binds,
         actions: list[Action],
-        save_binds: Callable[[list[KnobBind], list[ButtonBind]], None],
+        save_binds: Callable[[Binds], None],
         connected_controller: Optional[ConnectedController],
     ):
         """Creates BindsEditor widget.
@@ -358,12 +359,15 @@ class BindsEditor(QDialog):
             Current binds that the widget will be initialized with.
         actions : list[Action]
             List of all actions available to bind.
-        save_binds : Callable[[list[KnobBind], list[ButtonBind]], None]
+        save_binds : Callable[[Binds], None]
             Function called after "Save and exit" button is clicked.
         """
         super().__init__()
 
+        self.binds = binds.copy(deep=True)
         self.save_binds = save_binds
+
+        self.name_edit = QLineEdit(binds.name)
 
         # Save/exit buttons.
         toggle_names_mode_button = QPushButton("Toggle names mode")
@@ -404,6 +408,7 @@ class BindsEditor(QDialog):
 
         # Layout.
         layout = QVBoxLayout()
+        layout.addWidget(self.name_edit)
         layout.addLayout(radio_layout)
         layout.addLayout(buttons_layout)
 
@@ -441,9 +446,11 @@ class BindsEditor(QDialog):
 
     def _save_and_exit(self):
         """Saves the binds and closes the widget."""
-        knob_binds = self.knobs_widget.get_binds()
-        button_binds = self.buttons_widget.get_binds()
-        self.save_binds(knob_binds, button_binds)
+        self.binds.knob_binds = self.knobs_widget.get_binds()
+        self.binds.button_binds = self.buttons_widget.get_binds()
+        self.binds.name = self.name_edit.text()
+
+        self.save_binds(self.binds)
         self._wait_for_worker_threads()
         self._exit()
 
