@@ -163,6 +163,10 @@ class MidiStatus(QWidget):
         status_layout.addWidget(QLabel("Status"))
         status_layout.addWidget(self.status)
 
+        # Edit, start and stop buttons.
+        self.edit_binds_button = QPushButton("Edit binds")
+        self.edit_binds_button.clicked.connect(self._edit_binds)
+
         self.start_handling_button = QPushButton("Start handling")
         self.start_handling_button.clicked.connect(
             lambda: (state.save_state(), state.start_handling())
@@ -238,7 +242,7 @@ class MidiStatus(QWidget):
         )
         return f"{current_name} ({timestamp} copy)"
 
-    def _copy_binds(self):
+    def _copy_binds(self) -> None:
         """Copies the currently selected binds to a new file, and selects that file."""
         assert state.selected_binds is not None, "No binds selected"
 
@@ -250,7 +254,7 @@ class MidiStatus(QWidget):
         state.select_binds(new_file)
         self.refresh()
 
-    def _delete_binds(self):
+    def _delete_binds(self) -> None:
         """Deletes the file with currently selected binds setup."""
         assert state.selected_binds is not None, "No binds selected"
         if not is_subpath(Config.BINDS_USER_DIR, state.selected_binds.path):
@@ -308,6 +312,7 @@ class MidiStatus(QWidget):
             # TODO Get actions directly from app-model when it's supported.
             state.actions,
             save,
+            state.connected_controller,
         )
         editor_dialog.exec_()
 

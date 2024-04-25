@@ -1,4 +1,4 @@
-from typing import List, NamedTuple, Optional
+from typing import NamedTuple, Optional
 from pathlib import Path
 
 import rtmidi
@@ -47,13 +47,13 @@ class StateManager:
         Name of currently selected MIDI input.
     selected_midi_out : Optional[str]
         Name of currently selected MIDI output.
-    actions : List[Action]
+    actions : list[Action]
         List of app_model actions that are available in the app.
     _app_name : str
         Name of the app we want to handle. Used to filter binds files.
     _app : Application
         Used to execute actions.
-    _connected_controller : ConnectedController
+    connected_controller : ConnectedController
         Object that handles MIDI input and output.
     _midi_in : rtmidi.MidiIn
         MIDI input client interface.
@@ -61,7 +61,7 @@ class StateManager:
         MIDI output client interface.
     """
 
-    def __init__(self, actions: List[Action], app: Application):
+    def __init__(self, actions: list[Action], app: Application):
         self.selected_controller = None
         self.selected_binds = None
         self.recent_binds_for_controller: dict[Path, Path] = {}
@@ -70,13 +70,13 @@ class StateManager:
         self.actions = actions
         self._app_name = app.name
         self._app = app
-        self._connected_controller = None
+        self.connected_controller = None
         self._midi_in = rtmidi.MidiIn()
         self._midi_out = rtmidi.MidiOut()
 
     def is_running(self) -> bool:
         """Checks if any controller is being handled now."""
-        return self._connected_controller is not None
+        return self.connected_controller is not None
 
     def get_available_controllers(self) -> list[SelectedItem]:
         """Returns names of all controller schemas."""
@@ -99,11 +99,11 @@ class StateManager:
             if b.controller_name == self.selected_controller.name
         ]
 
-    def get_available_midi_in(self) -> List[str]:
+    def get_available_midi_in(self) -> list[str]:
         """Returns names of all MIDI input ports."""
         return self._midi_in.get_ports()
 
-    def get_available_midi_out(self) -> List[str]:
+    def get_available_midi_out(self) -> list[str]:
         """Returns names of all MIDI output ports."""
         return self._midi_out.get_ports()
 
@@ -154,7 +154,7 @@ class StateManager:
     def stop_handling(self) -> None:
         """Stops handling any MIDI signals."""
         self._midi_in.cancel_callback()
-        self._connected_controller = None
+        self.connected_controller = None
         self._midi_in.close_port()
         self._midi_out.close_port()
 
@@ -199,7 +199,7 @@ class StateManager:
         self._midi_out.open_port(midi_out_port)
 
         # Start handling MIDI messages.
-        self._connected_controller = ConnectedController(
+        self.connected_controller = ConnectedController(
             actions_handler=actions_handler,
             controller=controller,
             midi_in=self._midi_in,

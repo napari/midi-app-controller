@@ -1,6 +1,6 @@
 import platform
 import subprocess
-from typing import Callable, List, Optional, TypeVar
+from typing import Callable, Optional, TypeVar
 from pathlib import Path
 
 from app_model.types import Action
@@ -27,7 +27,7 @@ class DynamicQComboBox(QComboBox):
         ---------
         current_item : Optional[T]
             Optional default item.
-        get_items : Callable[[], List[T]]
+        get_items : Callable[[], list[T]]
             Function that fetches the list of current items. An option corresponding to "None" will be added anyway.
         select_item : Callable[[T], None]
             Function that should be called when the user chooses an option.
@@ -46,7 +46,7 @@ class DynamicQComboBox(QComboBox):
         self.set_current(current_item)
 
     def set_current(
-        self, item: Optional[T], _items: Optional[List[Optional[T]]] = None
+        self, item: Optional[T], _items: Optional[list[Optional[T]]] = None
     ):
         """Sets the currently selected item.
 
@@ -84,7 +84,7 @@ class ActionsQComboBox(QComboBox):
 
     def __init__(
         self,
-        actions: List[Action],
+        actions: list[Action],
         default_action_id: Optional[str],
         parent: QWidget = None,
     ):
@@ -92,7 +92,7 @@ class ActionsQComboBox(QComboBox):
 
         Parameters
         ---------
-        actions : List[Action]
+        actions : list[Action]
             List of available actions.
         default_action_id : Optional[str]
             Optional default action used to initialize the widget.

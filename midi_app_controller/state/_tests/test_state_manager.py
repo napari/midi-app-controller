@@ -1,5 +1,4 @@
 from unittest.mock import Mock, patch
-from typing import List
 
 from app_model import Application
 from app_model.types import Action
@@ -11,7 +10,7 @@ from ..state_manager import StateManager, SelectedItem
 
 
 @pytest.fixture
-def actions() -> List[Action]:
+def actions() -> list[Action]:
     return [
         Action(
             id="Action1",
@@ -136,7 +135,7 @@ def test_select_midi_out(mock_midi_in_out, state_manager, name):
 def test_stop_handling(mock_midi_in_out, state_manager):
     mock_midi_in, mock_midi_out = mock_midi_in_out
 
-    state_manager._connected_controller = Mock()
+    state_manager.connected_controller = Mock()
     state_manager.stop_handling()
 
     mock_midi_in.cancel_callback.assert_called_once()

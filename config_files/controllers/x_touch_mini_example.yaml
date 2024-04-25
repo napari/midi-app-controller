@@ -1,6 +1,8 @@
 name: X_TOUCH_MINI
 button_value_off: 0
 button_value_on: 127
+knob_value_min: 0
+knob_value_max: 127
 buttons:
 - id: 8
   name: Button1A
@@ -18,8 +20,6 @@ buttons:
   name: Button7A
 - id: 15
   name: Button8A
-knob_value_min: 0
-knob_value_max: 127
 knobs:
 - id: 1
   name: Knob1A

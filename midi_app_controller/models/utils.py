@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from typing import Any, Optional, Tuple
 import uuid
 
 from pydantic import BaseModel
@@ -40,18 +40,18 @@ class YamlBaseModel(BaseModel):
 
     @classmethod
     def load_all_from(
-        cls, directories: List[Path]
-    ) -> List[Tuple["YamlBaseModel", Path]]:
+        cls, directories: list[Path]
+    ) -> list[Tuple["YamlBaseModel", Path]]:
         """Creates models initialized with data from all YAML files in multiple directories.
 
         Parameters
         ----------
-        directories : List[Path]
+        directories : list[Path]
             List of paths to directories with YAML files inside.
 
         Returns
         -------
-        List[Tuple[cls, Path]]
+        list[tuple[cls, Path]]
             List of created models with paths to corresponding YAML files.
         """
         return [
@@ -83,7 +83,12 @@ class YamlBaseModel(BaseModel):
         path.parent.mkdir(parents=True, exist_ok=True)
 
         with path.open("w") as f:
-            yaml.safe_dump(self.dict(), f, default_flow_style=False)
+            yaml.safe_dump(
+                self.dict(),
+                f,
+                default_flow_style=False,  # collections always serialized in the block style
+                sort_keys=False,  # keys in the order of declaration
+            )
 
     def save_copy_to(self, path: Path, new_dir: Path) -> Path:
         """Copy YAML to a new file avoiding file name collisions."""
@@ -94,7 +99,7 @@ class YamlBaseModel(BaseModel):
         return new_path
 
 
-def find_duplicate(values: List[Any]) -> Optional[Any]:
+def find_duplicate(values: list[Any]) -> Optional[Any]:
     """Checks if there are any duplicates in the list and returns the first one.
 
     Parameters

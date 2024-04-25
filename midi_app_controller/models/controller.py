@@ -1,4 +1,3 @@
-from typing import List
 from pydantic import BaseModel, Field, root_validator, validator
 
 from .utils import YamlBaseModel, find_duplicate
@@ -40,9 +39,9 @@ class Controller(YamlBaseModel):
     knob_value_max : int
         The maximum value sent by the controller when a knob is rotated.
         Should be in the range [0, 127].
-    buttons : List[ControllerElement]
+    buttons : list[ControllerElement]
         List of available buttons on the controller.
-    knobs : List[ControllerElement]
+    knobs : list[ControllerElement]
         List of available knobs on the controller.
     """
 
@@ -51,8 +50,8 @@ class Controller(YamlBaseModel):
     button_value_on: int = Field(ge=0, le=127)
     knob_value_min: int = Field(ge=0, le=127)
     knob_value_max: int = Field(ge=0, le=127)
-    buttons: List[ControllerElement]
-    knobs: List[ControllerElement]
+    buttons: list[ControllerElement]
+    knobs: list[ControllerElement]
 
     @root_validator
     @classmethod
@@ -74,8 +73,8 @@ class Controller(YamlBaseModel):
     @validator("buttons", "knobs")
     @classmethod
     def check_duplicate_names(
-        cls, v: List[ControllerElement]
-    ) -> List[ControllerElement]:
+        cls, v: list[ControllerElement]
+    ) -> list[ControllerElement]:
         """Ensures that no two elements of same kind have the same name."""
         names = [elem.name for elem in v]
 

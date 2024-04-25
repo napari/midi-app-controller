@@ -1,5 +1,4 @@
 import pytest
-from typing import List
 from app_model.types import Action
 
 from ..bound_controller import BoundController, ButtonActions, KnobActions
@@ -41,7 +40,7 @@ def controller() -> Controller:
 
 
 @pytest.fixture
-def actions() -> List[Action]:
+def actions() -> list[Action]:
     return [
         Action(
             id="Action1",
