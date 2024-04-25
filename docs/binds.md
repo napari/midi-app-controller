@@ -5,9 +5,9 @@ Ids of the elements should match the ones specified in the controller's schema.
 
 ## All available fields
 - `name`: The name of the binds set. Cannot be empty. Must be unique among all binds sets.
-- `description`: Additional information that the user may provide. Is optional.
 - `app_name`: For which app are the binds intended. Cannot be empty.
-- `controller_name`: For which controller are the binds intended.
+- `controller_name`: For which controller are the binds intended. Cannot be empty.
+- `description`: Additional information that the user may provide. Is optional.
 - `button_binds`: List of bound buttons. Each of them consists of:
   - `button_id`: The id of the button. Should be in the range `[0, 127]`.
   - `action_id`: The id of an action to be executed when the button is pressed.
@@ -19,9 +19,9 @@ Ids of the elements should match the ones specified in the controller's schema.
 ## Example
 ```yaml
 name: "MyBinds"
-description: "Optional description"
 app_name: "MyApp"
 controller_name: "MyController"
+description: "Optional description"
 button_binds:
   - button_id: 1
     action_id: "action_1"
