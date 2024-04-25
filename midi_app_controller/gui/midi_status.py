@@ -86,6 +86,14 @@ def zoom_in(viewer: Viewer):
     viewer.camera.zoom *= 1.1
 
 
+def dim_right(viewer: Viewer):
+    viewer.dims._increment_dims_right()
+
+
+def dim_left(viewer: Viewer):
+    viewer.dims._increment_dims_left()
+
+
 # TODO Add "toggled".
 CUSTOM_ACTIONS = [
     Action(
@@ -147,6 +155,16 @@ CUSTOM_ACTIONS = [
         id="napari:viewer:zoom_in",
         title="Zoom in",
         callback=zoom_in,
+    ),
+    Action(
+        id="napari:viewer:dim_left",
+        title="Dimension left",
+        callback=dim_left,
+    ),
+    Action(
+        id="napari:viewer:dim_right",
+        title="Dimension right",
+        callback=dim_right,
     ),
 ]
 for action in CUSTOM_ACTIONS:
