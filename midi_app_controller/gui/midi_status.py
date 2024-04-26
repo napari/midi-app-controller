@@ -3,13 +3,8 @@ import re
 import sys
 from typing import Optional
 
-from app_model.types import Action
-from napari.components import LayerList
-
 # TODO: This will be made public in some future napari version
 from napari._app_model import get_app
-from napari.layers.labels._labels_constants import Mode
-from napari.viewer import Viewer
 from qtpy.QtWidgets import (
     QApplication,
     QWidget,
@@ -30,152 +25,10 @@ from midi_app_controller.gui.utils import (
 )
 from midi_app_controller.state.state_manager import SelectedItem, StateManager
 from midi_app_controller.config import Config
+from midi_app_controller.actions.napari_actions import register_custom_napari_actions
 
 
-# TODO Move the actions somewhere else.
-def decrease_opacity(ll: LayerList):
-    for lay in ll.selection:
-        lay.opacity = max(0, lay.opacity - 0.01)
-
-
-def increase_opacity(ll: LayerList):
-    for lay in ll.selection:
-        lay.opacity = min(1, lay.opacity + 0.01)
-
-
-# TODO Errors when the layer is not Labels. Maybe use isinstance?
-def decrease_brush_size(ll: LayerList):
-    for lay in ll.selection:
-        lay.brush_size = max(1, lay.brush_size - 1)
-
-
-def increase_brush_size(ll: LayerList):
-    for lay in ll.selection:
-        lay.brush_size = min(40, lay.brush_size + 1)
-
-
-def activate_labels_pan_zoom_mode(ll: LayerList):
-    for lay in ll.selection:
-        lay.mode = Mode.PAN_ZOOM
-
-
-def activate_labels_paint_mode(ll: LayerList):
-    for lay in ll.selection:
-        lay.mode = Mode.PAINT
-
-
-def activate_labels_fill_mode(ll: LayerList):
-    for lay in ll.selection:
-        lay.mode = Mode.FILL
-
-
-def activate_labels_erase_mode(ll: LayerList):
-    for lay in ll.selection:
-        lay.mode = Mode.ERASE
-
-
-def next_label(ll: LayerList):
-    for lay in ll.selection:
-        lay.selected_label += 1
-
-
-def prev_label(ll: LayerList):
-    for lay in ll.selection:
-        lay.selected_label -= 1
-
-
-def zoom_out(viewer: Viewer):
-    # TODO multiply? substract? what constant?
-    viewer.camera.zoom *= 0.9
-
-
-def zoom_in(viewer: Viewer):
-    viewer.camera.zoom *= 1.1
-
-
-def dim_right(viewer: Viewer):
-    viewer.dims._increment_dims_right()
-
-
-def dim_left(viewer: Viewer):
-    viewer.dims._increment_dims_left()
-
-
-# TODO Add "toggled".
-CUSTOM_ACTIONS = [
-    Action(
-        id="napari:layer:increase_opacity",
-        title="Increase opacity",
-        callback=increase_opacity,
-    ),
-    Action(
-        id="napari:layer:decrease_opacity",
-        title="Decrease opacity",
-        callback=decrease_opacity,
-    ),
-    Action(
-        id="napari:layer:increase_brush_size",
-        title="Increase brush size",
-        callback=increase_brush_size,
-    ),
-    Action(
-        id="napari:layer:decrease_brush_size",
-        title="Decrease brush size",
-        callback=decrease_brush_size,
-    ),
-    Action(
-        id="napari:layer:pan_zoom_mode",
-        title="Pan/zoom",
-        callback=activate_labels_pan_zoom_mode,
-    ),
-    Action(
-        id="napari:layer:paint_mode",
-        title="Activate the paint brush",
-        callback=activate_labels_paint_mode,
-    ),
-    Action(
-        id="napari:layer:pan_fill_mode",
-        title="Activate the fill bucket",
-        callback=activate_labels_fill_mode,
-    ),
-    Action(
-        id="napari:layer:pan_erase_mode",
-        title="Activate the label eraser",
-        callback=activate_labels_erase_mode,
-    ),
-    Action(
-        id="napari:layer:next_label",
-        title="Next label",
-        callback=next_label,
-    ),
-    Action(
-        id="napari:layer:previous_label",
-        title="Previous label",
-        callback=prev_label,
-    ),
-    Action(
-        id="napari:viewer:zoom_out",
-        title="Zoom out",
-        callback=zoom_out,
-    ),
-    Action(
-        id="napari:viewer:zoom_in",
-        title="Zoom in",
-        callback=zoom_in,
-    ),
-    Action(
-        id="napari:viewer:dim_left",
-        title="Dimension left",
-        callback=dim_left,
-    ),
-    Action(
-        id="napari:viewer:dim_right",
-        title="Dimension right",
-        callback=dim_right,
-    ),
-]
-for action in CUSTOM_ACTIONS:
-    get_app().register_action(action)
+register_custom_napari_actions(get_app())
 
 state = StateManager(get_app())
 state.load_state()
