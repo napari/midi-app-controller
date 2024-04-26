@@ -1,5 +1,5 @@
 from unittest.mock import Mock, patch
-from typing import List
+import uuid
 
 from app_model import Application
 from app_model.types import Action
@@ -11,7 +11,7 @@ from ..state_manager import StateManager, SelectedItem
 
 
 @pytest.fixture
-def actions() -> List[Action]:
+def actions() -> list[Action]:
     return [
         Action(
             id="Action1",
@@ -71,9 +71,10 @@ def controller() -> Controller:
 
 @pytest.fixture
 def state_manager(actions) -> StateManager:
-    actions = actions
-    app = Application.get_or_create("app123")
-    return StateManager(actions, app)
+    app = Application("app123" + str(uuid.uuid4()))
+    for action in actions:
+        app.register_action(action)
+    return StateManager(app)
 
 
 @pytest.fixture
@@ -119,14 +120,14 @@ def test_get_available_midi_out(mock_midi_in_out, state_manager, ports):
     assert state_manager.get_available_midi_out() == ports
 
 
-@pytest.mark.parametrize("name", ["abc", "", "x" * 100])
+@pytest.mark.parametrize("name", ["abc", "", "x" * 100, None])
 def test_select_midi_in(mock_midi_in_out, state_manager, name):
     state_manager.select_midi_in(name)
 
     assert state_manager.selected_midi_in == name
 
 
-@pytest.mark.parametrize("name", ["abc", "", "x" * 100])
+@pytest.mark.parametrize("name", ["abc", "", "x" * 100, None])
 def test_select_midi_out(mock_midi_in_out, state_manager, name):
     state_manager.select_midi_out(name)
 
@@ -136,12 +137,12 @@ def test_select_midi_out(mock_midi_in_out, state_manager, name):
 def test_stop_handling(mock_midi_in_out, state_manager):
     mock_midi_in, mock_midi_out = mock_midi_in_out
 
-    state_manager._connected_controller = Mock()
+    state_manager.connected_controller = Mock()
     state_manager.stop_handling()
 
     mock_midi_in.cancel_callback.assert_called_once()
-    # mock_midi_in.close_port.assert_called_once()
-    # mock_midi_out.close_port.assert_called_once()
+    mock_midi_in.close_port.assert_called_once()
+    mock_midi_out.close_port.assert_called_once()
     assert not state_manager.is_running()
 
 
