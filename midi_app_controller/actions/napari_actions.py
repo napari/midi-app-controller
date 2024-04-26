@@ -34,9 +34,8 @@ def increase_brush_size(ll: LayerList) -> None:
 
 
 def activate_labels_mode(mode: Mode) -> Callable[[LayerList], None]:
-    """Activates the `mode` of `Labels` layer."""
-
     def activate(ll: LayerList) -> None:
+        """Activates the `mode` of `Labels` layer."""
         for layer in ll.selection:
             if isinstance(layer, Labels):
                 layer.mode = mode
@@ -45,9 +44,8 @@ def activate_labels_mode(mode: Mode) -> Callable[[LayerList], None]:
 
 
 def toggled_labels_mode(mode: Mode) -> Callable[[LayerList], Optional[bool]]:
-    """Checks is the `mode` of `Labels` layer is currently activated."""
-
     def toggled(ll: LayerList) -> Optional[bool]:
+        """Checks is the `mode` of `Labels` layer is currently activated."""
         for layer in ll.selection:
             if isinstance(layer, Labels):
                 return layer.mode == mode
