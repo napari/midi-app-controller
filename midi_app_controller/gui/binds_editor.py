@@ -3,7 +3,7 @@ from typing import Callable, Optional
 
 from napari.qt import get_current_stylesheet
 from qtpy.QtCore import Qt, QThread
-from app_model.types import Action
+from app_model.types import CommandRule
 from qtpy.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -14,6 +14,7 @@ from qtpy.QtWidgets import (
     QDialog,
     QScrollArea,
     QGridLayout,
+    QLineEdit,
 )
 
 from midi_app_controller.gui.utils import ActionsQComboBox
@@ -45,14 +46,14 @@ class ButtonBinds(QWidget):
 
     Attributes
     ----------
-    actions : list[Action]
+    actions_ : list[CommandRule]
         List of all actions available to bind and an empty string (used when
         no action is bound).
     button_combos : Tuple[int, ActionsQComboBox]
         List of all pairs (button id, ActionsQComboBox used to set action).
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's button by its id.
-    thread_list : List[QThread]
+    thread_list : list[QThread]
         List of worker threads responsible for lighting up buttons.
     """
 
@@ -60,7 +61,7 @@ class ButtonBinds(QWidget):
         self,
         buttons: list[ControllerElement],
         button_binds: list[ButtonBind],
-        actions: list[Action],
+        actions: list[CommandRule],
         connected_controller: Optional[ConnectedController],
     ):
         """Creates ButtonBinds widget.
@@ -71,7 +72,7 @@ class ButtonBinds(QWidget):
             List of all available buttons.
         button_binds : list[ButtonBind]
             List of current binds.
-        actions : list[Action]
+        actions : list[CommandRule]
             List of all actions available to bind.
         connected_controller : ConnectedController
             Object representing currently connected MIDI controller.
@@ -80,7 +81,7 @@ class ButtonBinds(QWidget):
 
         self.connected_controller = connected_controller
 
-        self.actions = actions
+        self.actions_ = actions
         self.button_combos = []
         self.binds_dict = {b.button_id: b for b in button_binds}
 
@@ -137,7 +138,7 @@ class ButtonBinds(QWidget):
             action = None
 
         # ActionsQComboBox for action selection.
-        action_combo = ActionsQComboBox(self.actions, action, self)
+        action_combo = ActionsQComboBox(self.actions_, action, self)
         self.button_combos.append((button_id, action_combo))
 
         # Button label
@@ -181,7 +182,7 @@ class KnobBinds(QWidget):
 
     Attributes
     ----------
-    actions : list[Action]
+    actions_ : list[CommandRule]
         List of all actions available to bind and an empty string (used when
         no action is bound).
     knob_combos : Tuple[int, ActionsQComboBox, ActionsQComboBox]
@@ -197,7 +198,7 @@ class KnobBinds(QWidget):
         self,
         knobs: list[ControllerElement],
         knob_binds: list[KnobBind],
-        actions: list[Action],
+        actions: list[CommandRule],
         connected_controller: Optional[ConnectedController],
     ):
         """Creates KnobBinds widget.
@@ -208,7 +209,7 @@ class KnobBinds(QWidget):
             List of all available knobs.
         knob_binds : list[KnobBind]
             List of current binds.
-        actions : list[str]
+        actions : list[CommandRule]
             List of all actions available to bind.
         connected_controller : ConnectedController
             Object representing currently connected MIDI controller.
@@ -217,7 +218,7 @@ class KnobBinds(QWidget):
 
         self.connected_controller = connected_controller
 
-        self.actions = actions
+        self.actions_ = actions
         self.knob_combos = []
         self.binds_dict = {b.knob_id: b for b in knob_binds}
 
@@ -277,8 +278,8 @@ class KnobBinds(QWidget):
             action_decrease = None
 
         # ActionsQComboBox for action selection.
-        increase_action_combo = ActionsQComboBox(self.actions, action_increase, self)
-        decrease_action_combo = ActionsQComboBox(self.actions, action_decrease, self)
+        increase_action_combo = ActionsQComboBox(self.actions_, action_increase, self)
+        decrease_action_combo = ActionsQComboBox(self.actions_, action_decrease, self)
         self.knob_combos.append((knob_id, increase_action_combo, decrease_action_combo))
 
         # Button for lighting up the controller element
@@ -344,8 +345,8 @@ class BindsEditor(QDialog):
         self,
         controller: Controller,
         binds: Binds,
-        actions: list[Action],
-        save_binds: Callable[[list[KnobBind], list[ButtonBind]], None],
+        actions: list[CommandRule],
+        save_binds: Callable[[Binds], None],
         connected_controller: Optional[ConnectedController],
     ):
         """Creates BindsEditor widget.
@@ -356,14 +357,17 @@ class BindsEditor(QDialog):
             Controller for which the binds are created.
         binds : Binds
             Current binds that the widget will be initialized with.
-        actions : list[Action]
+        actions : list[CommandRule]
             List of all actions available to bind.
-        save_binds : Callable[[list[KnobBind], list[ButtonBind]], None]
+        save_binds : Callable[[Binds], None]
             Function called after "Save and exit" button is clicked.
         """
         super().__init__()
 
+        self.binds = binds.copy(deep=True)
         self.save_binds = save_binds
+
+        self.name_edit = QLineEdit(binds.name)
 
         # Save/exit buttons.
         toggle_names_mode_button = QPushButton("Toggle names mode")
@@ -404,6 +408,7 @@ class BindsEditor(QDialog):
 
         # Layout.
         layout = QVBoxLayout()
+        layout.addWidget(self.name_edit)
         layout.addLayout(radio_layout)
         layout.addLayout(buttons_layout)
 
@@ -441,9 +446,11 @@ class BindsEditor(QDialog):
 
     def _save_and_exit(self):
         """Saves the binds and closes the widget."""
-        knob_binds = self.knobs_widget.get_binds()
-        button_binds = self.buttons_widget.get_binds()
-        self.save_binds(knob_binds, button_binds)
+        self.binds.knob_binds = self.knobs_widget.get_binds()
+        self.binds.button_binds = self.buttons_widget.get_binds()
+        self.binds.name = self.name_edit.text()
+
+        self.save_binds(self.binds)
         self._wait_for_worker_threads()
         self._exit()
 
