@@ -111,7 +111,7 @@ class StateManager:
             list(
                 set(
                     item.command
-                    for item in self._app.menus.get_menu(
+                    for item in self.app.menus.get_menu(
                         MenusRegistry.COMMAND_PALETTE_ID
                     )
                     if isinstance(item, MenuItem)
