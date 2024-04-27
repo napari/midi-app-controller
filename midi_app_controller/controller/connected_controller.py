@@ -26,11 +26,11 @@ class ConnectedController:
         Midi input client interface from python-rtmidi package.
     midi_out: rtmidi.MidiOut
         Midi output client interface from python-rtmidi package.
-    button_ids : list[int]
-        A list containing all valid button ids on a handled controller.
-    knob_ids : list[int]
-        A list containing all valid knob ids on a handled controller.
-    knob_engagement : Dict[int, int]
+    button_ids : frozenset[int]
+        Set of all button ids on the controller.
+    knob_ids : frozenset[int]
+        Set of all knob ids on the controller.
+    knob_engagement : dict[int, int]
         A dictionary that keeps the value of every knob.
     butons_mutex : QMutex
         Mutex for worker threads.
@@ -42,10 +42,13 @@ class ConnectedController:
         Set of the knob ids, that are currently flashing.
     stopped : bool
         Indicates if the `stop`function was called.
-    synchronization_paused : bool
-        Indicates if the action values synchronization was paused.
+    paused : bool
+        Indicates if the synchronization and messages handling is paused.
     synchronize_buttons_thread : Thread
         Thread that checks values of the actions associated with buttons.
+    force_synchronize : dict[int, bool]
+        Dictionary that indicates if there was a message from a button with
+        given id, but the value associated with it wasn't synchronized yet.
     """
 
     def __init__(
@@ -73,8 +76,8 @@ class ConnectedController:
         self.actions_handler = actions_handler
         self.midi_out = midi_out
         self.midi_in = midi_in
-        self.button_ids = [element.id for element in controller.buttons]
-        self.knob_ids = [element.id for element in controller.knobs]
+        self.button_ids = frozenset(element.id for element in controller.buttons)
+        self.knob_ids = frozenset(element.id for element in controller.knobs)
         self.knob_engagement = {}
 
         # Set default values for buttons and knobs.
@@ -93,7 +96,8 @@ class ConnectedController:
 
         # Threads.
         self.stopped = False
-        self.synchronization_paused = False
+        self.paused = False
+        self.force_synchronize = {id: True for id in self.button_ids}
         self.synchronize_buttons_thread = Thread(target=self.synchronize_buttons)
         self.synchronize_buttons_thread.start()
 
@@ -114,6 +118,9 @@ class ConnectedController:
         event : tuple[list[int], float]
             Pair of (MIDI message, delta time).
         """
+        if self.paused:
+            return
+
         message, _ = event
 
         command = message[0] & 0xF0
@@ -126,13 +133,13 @@ class ConnectedController:
 
         self.handle_midi_message(command, channel, data_bytes)
 
-    def pause_synchronization(self) -> None:
-        """Pauses synchronization of button values."""
-        self.synchronization_paused = True
+    def pause(self) -> None:
+        """Pauses synchronization and messages handling."""
+        self.paused = True
 
-    def resume_synchronization(self) -> None:
-        """Resumes synchronization of button values."""
-        self.synchronization_paused = False
+    def resume(self) -> None:
+        """Resumes synchronization and messages handling."""
+        self.paused = False
 
     def synchronize_buttons(self) -> None:
         """Synchronizes button values on controller with values from app.
@@ -141,16 +148,33 @@ class ConnectedController:
         directly in a GUI rather than on the MIDI controller, then this
         function will handle it.
         """
+        SLEEP_SECONDS = 0.2
+        N = 5 // SLEEP_SECONDS
+
+        state = {id: (False, 0) for id in self.button_ids}
+        # (previous value, iters since the last message was sent to the controller)
+        # We don't want to send the same value every iteration. But at the same
+        # time we also want to be sure that the values on controller are really
+        # synchronized. So a current value is always sent every `N` iterations.
+
         while not self.stopped:
-            if not self.synchronization_paused:
-                for id in self.button_ids:
-                    is_toggled = self.actions_handler.is_button_toggled(id)
-                    if is_toggled is not None:
-                        if is_toggled:
-                            self.turn_on_button_led(id)
-                        else:
-                            self.turn_off_button_led(id)
-            time.sleep(0.2)
+            if self.paused:
+                continue
+
+            for id in self.button_ids:
+                is_toggled = self.actions_handler.is_button_toggled(id) or False
+                was_toggled, iters = state[id]
+                sync = self.force_synchronize[id]
+                if is_toggled != was_toggled or iters > N or sync:
+                    iters = 0
+                    self.force_synchronize[id] = False
+                    if is_toggled:
+                        self.turn_on_button_led(id)
+                    else:
+                        self.turn_off_button_led(id)
+                state[id] = (is_toggled, iters + 1)
+
+            time.sleep(SLEEP_SECONDS)
 
     def init_buttons(self) -> None:
         """Initializes the buttons on the controller, setting them
@@ -169,8 +193,8 @@ class ConnectedController:
             self.change_knob_value(id, self.controller.knob_value_min)
             self.knob_engagement[id] = self.controller.knob_value_min
 
-    def handle_button_engagement(self, data) -> None:
-        """Runs the action bound to the button, specified in `actions_handler`.
+    def handle_button_engagement(self, data: list[int]) -> None:
+        """Curently does nothing.
 
         Parameters
         ----------
@@ -180,8 +204,7 @@ class ConnectedController:
         pass
 
     def handle_button_disengagement(self, data: list[int]) -> None:
-        """Runs the action bound to the button release, specified in
-        `actions_handler`.
+        """Runs the action bound to the button.
 
         Parameters
         ----------
@@ -189,10 +212,7 @@ class ConnectedController:
             Standard MIDI message.
         """
         id = data[0]
-
-        self.actions_handler.handle_button_action(
-            button_id=id,
-        )
+        self.actions_handler.handle_button_action(id)
 
     def handle_knob_message(self, data: list[int]) -> None:
         """Runs the action bound to the knob turn, specified in
@@ -425,6 +445,7 @@ class ConnectedController:
             id in self.button_ids
             and command == ControllerConstants.BUTTON_DISENGAGED_COMMAND
         ):
+            self.force_synchronize[id] = True
             self.handle_button_disengagement(data)
         else:
             logging.debug(
