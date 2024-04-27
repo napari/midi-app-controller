@@ -140,6 +140,8 @@ class ConnectedController:
     def resume(self) -> None:
         """Resumes synchronization and messages handling."""
         self.paused = False
+        for id in self.button_ids:
+            self.force_synchronize[id] = True
 
     def synchronize_buttons(self) -> None:
         """Synchronizes button values on controller with values from app.
