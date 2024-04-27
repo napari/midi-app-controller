@@ -168,9 +168,9 @@ class StateManager:
         """Stops handling any MIDI signals."""
         if self.connected_controller is not None:
             self.connected_controller.stop()
-            self._midi_in.close_port()
-            self._midi_out.close_port()
-            self.connected_controller = None
+        self._midi_in.close_port()
+        self._midi_out.close_port()
+        self.connected_controller = None
 
     def start_handling(self) -> None:
         """Starts handling MIDI input using current values of binds, controller, etc.

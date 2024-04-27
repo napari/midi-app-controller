@@ -320,7 +320,7 @@ class MidiStatus(QWidget):
         )
         editor_dialog.exec_()
 
-        # Restore the controller to work
+        # Restore the controller to work.
         if state.connected_controller is not None:
             state.connected_controller.resume()
 

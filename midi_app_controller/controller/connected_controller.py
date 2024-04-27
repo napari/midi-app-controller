@@ -41,7 +41,7 @@ class ConnectedController:
     flashing_knobs : set[int]
         Set of the knob ids, that are currently flashing.
     stopped : bool
-        Indicates if the `stop`function was called.
+        Indicates if the `stop` method was called.
     paused : bool
         Indicates if the synchronization and messages handling is paused.
     synchronize_buttons_thread : Thread
