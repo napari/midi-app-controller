@@ -305,12 +305,6 @@ class MidiStatus(QWidget):
             else:
                 new_binds.save_to(selected_binds.path)
 
-        # Pause values synchronization (which conflicts with the "Light up"
-        # feature) and handling MIDI messages.
-        if state.connected_controller is not None:
-            state.connected_controller.pause()
-
-        # Show the dialog.
         editor_dialog = BindsEditor(
             controller,
             binds,
@@ -318,6 +312,16 @@ class MidiStatus(QWidget):
             save,
             state.connected_controller,
         )
+
+        # Pause values synchronization (which conflicts with the "Light up"
+        # feature) and handling MIDI messages. Enables elements highlighting.
+        if state.connected_controller is not None:
+            state.connected_controller.pause(
+                editor_dialog.buttons_widget.highlight_button,
+                editor_dialog.knobs_widget.highlight_knob,
+            )
+
+        # Show the dialog
         editor_dialog.exec_()
 
         # Restore the controller to work.
