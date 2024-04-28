@@ -8,6 +8,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QComboBox, QWidget
 
 HIGHLIGHT_STYLE_SHEET = "background-color: SeaGreen"
+HIGHLIGHT_DURATION_MS = 1000
 T = TypeVar("T")
 
 

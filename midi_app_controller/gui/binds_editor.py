@@ -18,7 +18,11 @@ from qtpy.QtWidgets import (
     QLineEdit,
 )
 
-from midi_app_controller.gui.utils import ActionsQComboBox, HIGHLIGHT_STYLE_SHEET
+from midi_app_controller.gui.utils import (
+    ActionsQComboBox,
+    HIGHLIGHT_STYLE_SHEET,
+    HIGHLIGHT_DURATION_MS,
+)
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller, ControllerElement
 from midi_app_controller.controller.connected_controller import ConnectedController
@@ -190,15 +194,22 @@ class ButtonBinds(QWidget):
                 result.append(ButtonBind(button_id=button_id, action_id=action))
         return result
 
-    @ensure_main_thread(await_return=True)
+    @ensure_main_thread(
+        await_return=True
+    )  # QTimer can only be used in the main thread.
     def highlight_button(self, button_id: int) -> None:
+        """Highlights combos associated with `button_id`.
+
+        Starts a timer that unhighlights the combos after `HIGHLIGHT_DURATION_MS`.
+        """
         if (combo := self.button_combos.get(button_id)) is None:
             return
         combo.setStyleSheet(HIGHLIGHT_STYLE_SHEET)
 
-        self.highlight_timers[button_id].start(1000)
+        self.highlight_timers[button_id].start(HIGHLIGHT_DURATION_MS)
 
     def stop_highlighting_button(self, button_id: int) -> None:
+        """Unhighlights combos associated with `knob_id`."""
         if (combo := self.button_combos.get(button_id)) is None:
             return
         combo.setStyleSheet("")
@@ -366,16 +377,23 @@ class KnobBinds(QWidget):
                 )
         return result
 
-    @ensure_main_thread(await_return=True)
+    @ensure_main_thread(
+        await_return=True
+    )  # QTimer can only be used in the main thread.
     def highlight_knob(self, knob_id: int) -> None:
+        """Highlights combos associated with `knob_id`.
+
+        Starts a timer that unhighlights the combos after `HIGHLIGHT_DURATION_MS`.
+        """
         if (combos := self.knob_combos.get(knob_id)) is None:
             return
         combos[0].setStyleSheet(HIGHLIGHT_STYLE_SHEET)
         combos[1].setStyleSheet(HIGHLIGHT_STYLE_SHEET)
 
-        self.highlight_timers[knob_id].start(1000)
+        self.highlight_timers[knob_id].start(HIGHLIGHT_DURATION_MS)
 
     def stop_highlighting_knob(self, knob_id: int) -> None:
+        """Unhighlights combos associated with `knob_id`."""
         if (combos := self.knob_combos.get(knob_id)) is None:
             return
         combos[0].setStyleSheet("")
