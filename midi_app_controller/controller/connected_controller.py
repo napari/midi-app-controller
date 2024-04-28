@@ -160,6 +160,7 @@ class ConnectedController:
         # synchronized. So a current value is always sent every `N` iterations.
 
         while not self.stopped:
+            time.sleep(SLEEP_SECONDS)
             if self.paused:
                 continue
 
@@ -175,8 +176,6 @@ class ConnectedController:
                     else:
                         self.turn_off_button_led(id)
                 state[id] = (is_toggled, iters + 1)
-
-            time.sleep(SLEEP_SECONDS)
 
     def init_buttons(self) -> None:
         """Initializes the buttons on the controller, setting them
