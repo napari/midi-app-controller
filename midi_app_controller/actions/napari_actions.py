@@ -128,7 +128,7 @@ CUSTOM_ACTIONS = [
     ),
     Action(
         id="napari:layer:pan_zoom_mode",
-        title="Activate the paint brush mode pan/zoom",
+        title="Activate the pan/zoom mode",
         callback=activate_labels_mode(Mode.PAN_ZOOM),
         toggled=ToggleRule(get_current=toggled_labels_mode(Mode.PAN_ZOOM)),
     ),
