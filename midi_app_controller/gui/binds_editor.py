@@ -154,10 +154,10 @@ class ButtonBinds(QWidget):
 
         # Layout.
         elems_and_sizes = [
-            (QLabel(button_name), 2),
-            (light_up_button, 2),
-            (QWidget(), 6),
-            (action_combo, 10),
+            (QLabel(button_name), 4),
+            (light_up_button, 1),
+            (QWidget(), 1),
+            (action_combo, 14),
         ]
 
         layout = QHBoxLayout()
@@ -294,11 +294,11 @@ class KnobBinds(QWidget):
 
         # Layout.
         elems_and_sizes = [
-            (QLabel(knob_name), 1),
+            (QLabel(knob_name), 4),
             (light_up_knob, 1),
-            (QWidget(), 3),
-            (increase_action_combo, 5),
-            (decrease_action_combo, 5),
+            (QWidget(), 1),
+            (increase_action_combo, 7),
+            (decrease_action_combo, 7),
         ]
 
         layout = QHBoxLayout()
