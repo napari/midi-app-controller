@@ -70,7 +70,7 @@ def zoom_out(viewer: Viewer) -> None:
 
 
 def zoom_in(viewer: Viewer) -> None:
-    viewer.camera.zoom *= 1.05
+    viewer.camera.zoom /= 0.95
 
 
 def dimension_left(viewer: Viewer) -> None:
