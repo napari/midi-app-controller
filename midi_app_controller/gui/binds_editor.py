@@ -87,8 +87,8 @@ class ButtonBinds(QWidget):
 
         # Description row.
         description_layout = QHBoxLayout()
-        description_layout.addWidget(QLabel("Name:"))
-        description_layout.addWidget(QLabel("Action when clicked:"))
+        description_layout.addWidget(QLabel("Name:"), 6)
+        description_layout.addWidget(QLabel("Action when clicked:"), 14)
 
         # All buttons available to bind.
         button_list = QWidget()
@@ -223,9 +223,9 @@ class KnobBinds(QWidget):
 
         # Description row.
         description_layout = QHBoxLayout()
-        description_layout.addWidget(QLabel("Name:"))
-        description_layout.addWidget(QLabel("Action when increased:"))
-        description_layout.addWidget(QLabel("Action when decreased:"))
+        description_layout.addWidget(QLabel("Name:"), 6)
+        description_layout.addWidget(QLabel("Action when increased:"), 7)
+        description_layout.addWidget(QLabel("Action when decreased:"), 7)
 
         # All knobs available to bind.
         knob_list = QWidget()
