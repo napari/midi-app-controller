@@ -2,7 +2,7 @@
 from typing import Callable, Optional
 
 from napari.qt import get_current_stylesheet
-from qtpy.QtCore import Qt, QThread
+from qtpy.QtCore import QThread
 from app_model.types import CommandRule
 from qtpy.QtWidgets import (
     QWidget,
@@ -141,25 +141,24 @@ class ButtonBinds(QWidget):
         action_combo = ActionsQComboBox(self.actions_, action, self)
         self.button_combos.append((button_id, action_combo))
 
-        # Button label
-        button_label = QLabel(button_name)
-
-        # Button for lighting up the controller element
-        controller_disconnected = self.connected_controller is None
+        # Button for lighting up the controller element.
+        is_controller_connected = self.connected_controller is not None
         light_up_button = QPushButton("Light up")
-        light_up_button.setToolTip(f"Lights up the '{button_name}'")
-        light_up_button.setCursor(Qt.PointingHandCursor)
+        light_up_button.setToolTip(
+            None
+            if is_controller_connected
+            else "Start handling a controller to enable this feature."
+        )
+        light_up_button.setEnabled(is_controller_connected)
         light_up_button.clicked.connect(lambda: self._light_up_button(button_id))
 
+        # Layout.
         elems_and_sizes = [
-            (button_label, 2),
+            (QLabel(button_name), 2),
             (light_up_button, 2),
             (QWidget(), 6),
             (action_combo, 10),
         ]
-
-        if controller_disconnected:
-            del elems_and_sizes[1]
 
         layout = QHBoxLayout()
         for elem, size in elems_and_sizes:
@@ -282,13 +281,18 @@ class KnobBinds(QWidget):
         decrease_action_combo = ActionsQComboBox(self.actions_, action_decrease, self)
         self.knob_combos.append((knob_id, increase_action_combo, decrease_action_combo))
 
-        # Button for lighting up the controller element
-        controller_disconnected = self.connected_controller is None
+        # Button for lighting up the controller element.
+        is_controller_connected = self.connected_controller is not None
         light_up_knob = QPushButton("Light up")
-        light_up_knob.setToolTip(f"Lights up the '{knob_name}'")
-        light_up_knob.setCursor(Qt.PointingHandCursor)
+        light_up_knob.setToolTip(
+            None
+            if is_controller_connected
+            else "Start handling a controller to enable this feature."
+        )
+        light_up_knob.setEnabled(is_controller_connected)
         light_up_knob.clicked.connect(lambda: self._light_up_knob(knob_id))
 
+        # Layout.
         elems_and_sizes = [
             (QLabel(knob_name), 1),
             (light_up_knob, 1),
@@ -296,9 +300,6 @@ class KnobBinds(QWidget):
             (increase_action_combo, 5),
             (decrease_action_combo, 5),
         ]
-
-        if controller_disconnected:
-            del elems_and_sizes[1]
 
         layout = QHBoxLayout()
         for elem, size in elems_and_sizes:
