@@ -29,7 +29,7 @@ napari
 
 ## Setup
 
-Launch the plugin from the _Plugins_ menu. 
+Launch the plugin from the _Plugins_ menu.
 
 ![](img/plugins-menu.png)
 

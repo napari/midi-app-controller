@@ -19,7 +19,7 @@ Built-in schemas are available in [config_files/controllers](https://github.com/
       show_root_heading: true
       show_bases: false
       members: [""]
-      
+
 ## Example of a valid schema
 
 ```yaml
