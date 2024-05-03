@@ -45,9 +45,11 @@ class ConnectedController:
     paused : bool
         Indicates if the synchronization and standard handling is paused.
     paused_button_callback : Optional[Callable[[int], None]]
-        Function to be called with button id when `paused` and message is received.
+        Function to be called with button id as an argument when `paused` and
+        a message is received.
     paused_knob_callback : Optional[Callable[[int], None]]
-        Function to be called when knob id when `paused` and message is received.
+        Function to be called with knob id as an argument when `paused` and
+        a message is received.
     synchronize_buttons_thread : Thread
         Thread that checks values of the actions associated with buttons.
     force_synchronize : dict[int, bool]

@@ -55,7 +55,7 @@ class ButtonBinds(QWidget):
         List of all actions available to bind and an empty string (used when
         no action is bound).
     button_combos : dict[int, ActionsQComboBox]
-        List of all pairs (button id, ActionsQComboBox used to set action).
+        Dictionary mapping button ids to ActionsQComboBoxes used to set action.
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's button by its id.
     stop : bool
@@ -228,9 +228,9 @@ class KnobBinds(QWidget):
     actions_ : list[CommandRule]
         List of all actions available to bind and an empty string (used when
         no action is bound).
-    knob_combos : dict[int, Tuple[ActionsQComboBox, ActionsQComboBox]]
-        List of all triples (knob id, ActionsQComboBox used to set increase action,
-        ActionsQComboBox used to set decrease action).
+    knob_combos : dict[int, tuple[ActionsQComboBox, ActionsQComboBox]]
+        Dictionary mapping knob ids to ActionsQComboBoxes used to set
+        increase and deacrease action.
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's knob by its id.
     stop : bool
@@ -368,12 +368,11 @@ class KnobBinds(QWidget):
         return layout
 
     def get_binds(self) -> list[KnobBind]:
-        """Returns list of all binds currently set in this widget."""
+        """Returns a list of all binds currently set in this widget."""
         result = []
         for (
             knob_id,
-            increase_action_combo,
-            decrease_action_combo,
+            (increase_action_combo, decrease_action_combo),
         ) in self.knob_combos.items():
             increase_action = increase_action_combo.get_selected_action_id()
             decrease_action = decrease_action_combo.get_selected_action_id()
@@ -504,14 +503,14 @@ class BindsEditor(QDialog):
             layout.addWidget(
                 QLabel(
                     "Tip: Start handling a controller to allow lighting up "
-                    "elements on a controller and highlighting them here."
+                    "buttons and knobs on a controller and highlighting them here."
                 )
             )
         else:
             layout.addWidget(
                 QLabel(
-                    "Tip: You can interact with controller elements to "
-                    "highlight them here."
+                    "Tip: You can interact with buttons and knobs on the MIDI "
+                    "controller to highlight them here."
                 )
             )
 
@@ -536,9 +535,9 @@ class BindsEditor(QDialog):
 
     def _toggle_names_mode(self):
         """Toggles actions names mode: titles or ids."""
-        for _, combo in self.buttons_widget.button_combos.items():
+        for combo in self.buttons_widget.button_combos.values():
             combo.toggle_names_mode()
-        for _, combo1, combo2 in self.knobs_widget.knob_combos.items():
+        for combo1, combo2 in self.knobs_widget.knob_combos.values():
             combo1.toggle_names_mode()
             combo2.toggle_names_mode()
 
@@ -557,7 +556,6 @@ class BindsEditor(QDialog):
         """Waits for the threads responsible for lighting up the controller elements."""
         for thread in self.buttons_widget.thread_list:
             thread.wait()
-
         for thread in self.knobs_widget.thread_list:
             thread.wait()
 
@@ -565,7 +563,6 @@ class BindsEditor(QDialog):
         """Cancels timers responsible for unhighlighting elements."""
         for timer in self.buttons_widget.highlight_timers.values():
             timer.stop()
-
         for timer in self.knobs_widget.highlight_timers.values():
             timer.stop()
 
