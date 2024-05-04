@@ -154,7 +154,7 @@ def reveal_in_explorer(file: Path):
     """
     assert file.is_file(), "Not a valid file"
     if platform.system() == "Windows":
-        subprocess.Popen(f'explorer, /select,"{file}"')
+        subprocess.Popen(["explorer", f'/select,"{file}"'])
     elif platform.system() == "Linux":
         subprocess.Popen(["xdg-open", str(file.parent)])
     elif platform.system() == "Darwin":
