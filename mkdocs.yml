@@ -35,6 +35,9 @@ nav:
 
 plugins:
   - search
+  - macros:
+      include_dir: .
+      module_name: docs/macros
   - mkdocstrings:
       default_handler: python
       handlers:
