@@ -4,7 +4,7 @@ All created binds and settings for a specific app and controller are stored as `
 
 All ids of the elements should match the ones specified in the controller's schema.
 
-Built-in schemas are available in [config_files/binds](https://github.com/midi-app-controller/midi-app-controller/tree/main/config_files/binds) at GitHub.
+Built-in schemas are available in [config_files/binds](https://github.com/midi-app-controller/midi-app-controller/tree/main/config_files/binds) on GitHub.
 
 ::: midi_app_controller.models.binds.Binds
     options:

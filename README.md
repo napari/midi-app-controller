@@ -11,7 +11,7 @@ Documentation at https://midi-app-controller.readthedocs.io/en/latest/.
 
 ## Usage (napari)
 
-MIDI App Controller is a package designed to integrate MIDI controllers with Python Qt apps using app-model. As of now, it is used most commonly with [napari](napari.org), a viewer for multi-dimensional images. We will show how to use MIDI App Controller with napari but getting started with other applications should look very similar.
+MIDI App Controller is a package designed to integrate MIDI controllers with Python Qt apps using app-model. As of now, it is used most commonly with [napari](https://napari.org), a viewer for multi-dimensional images. We will show how to use MIDI App Controller with napari but getting started with other applications should look very similar.
 
 ### Installation
 
@@ -19,9 +19,9 @@ To install MIDI App Controller in your environment (where Python and napari are 
 
 (TODO: This doesn't work as the package is not yet published)
 
-```
+<!-- ```
 pip install midi-app-controller
-```
+``` -->
 
 napari will automatically detect the package and install the plugin next time it starts.
 

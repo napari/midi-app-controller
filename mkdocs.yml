@@ -29,6 +29,7 @@ theme:
 nav:
   - index.md
   - Manual:
+    - config_files.md
     - controllers.md
     - binds.md
   - api_reference.md

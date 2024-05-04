@@ -6,7 +6,7 @@ Support for any model of a MIDI controller can be added by creating its schema, 
 
 The YAML file should contain all fields from the Controller class. See [example](#example-of-a-valid-schema).
 
-Built-in schemas are available in [config_files/controllers](https://github.com/midi-app-controller/midi-app-controller/tree/main/config_files/controllers) at GitHub.
+Built-in schemas are available in [config_files/controllers](https://github.com/midi-app-controller/midi-app-controller/tree/main/config_files/controllers) on GitHub.
 
 ::: midi_app_controller.models.controller.Controller
     options:
