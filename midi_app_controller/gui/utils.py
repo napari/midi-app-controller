@@ -141,8 +141,8 @@ class ActionsQComboBox(QComboBox):
 
 def is_subpath(path: Path, subpath: Path) -> bool:
     """Checks if one path represents a file/directory inside the other directory."""
-    path_str = str(subpath.resolve().absolute())
-    subpath_str = str(path.resolve().absolute())
+    path_str = str(path.resolve().absolute())
+    subpath_str = str(subpath.resolve().absolute())
     return path_str.startswith(subpath_str)
 
 
