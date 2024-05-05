@@ -242,14 +242,22 @@ class StateManager:
         # want to use them. So we make sure that all file paths are ok for us
         # to use.
         controller_file = state.selected_controller_path
-        if not any(is_subpath(d, controller_file) for d in Config.CONTROLLER_DIRS):
+        if controller_file is None:
+            return
+
+        if not any(
+            d and is_subpath(d, controller_file) for d in Config.CONTROLLER_DIRS
+        ):
             return
         binds_files = [
             state.selected_binds_path,
             *state.recent_binds_for_controller.values(),
         ]
         for file in binds_files:
-            if not any(is_subpath(d, file) for d in Config.BINDS_DIRS):
+            if file is None:
+                continue
+
+            if not any(d and is_subpath(d, file) for d in Config.BINDS_DIRS):
                 return
 
         self.select_controller(state.selected_controller_path)

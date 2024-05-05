@@ -382,20 +382,19 @@ class BindsEditor(QDialog):
         self.binds = binds.copy(deep=True)
         self.save_binds = save_binds
 
-        name_label = QLabel("Name:")
         self.name_edit = QLineEdit(binds.name)
         name_layout = QHBoxLayout()
-        name_layout.addWidget(name_label)
+        name_layout.addWidget(QLabel("Name:"))
         name_layout.addWidget(self.name_edit)
 
         self.show_action_names_checkbox_button = QCheckBox("Show action names")
-        self.show_action_names_checkbox_button.setChecked(False)
+        self.show_action_names_checkbox_button.setChecked(True)
         self.show_action_names_checkbox_button.stateChanged.connect(
             self._toggle_names_mode
         )
 
         self.show_action_names_checkbox_knob = QCheckBox("Show action names")
-        self.show_action_names_checkbox_knob.setChecked(False)
+        self.show_action_names_checkbox_knob.setChecked(True)
         self.show_action_names_checkbox_knob.stateChanged.connect(
             self._toggle_names_mode
         )
@@ -404,7 +403,7 @@ class BindsEditor(QDialog):
         save_and_exit_button = QPushButton("Save")
         save_and_exit_button.clicked.connect(self._save_and_exit)
         exit_button = QPushButton("Cancel")
-        exit_button.clicked.connect(self.close)
+        exit_button.clicked.connect(self._exit)
         save_and_exit_button_width = save_and_exit_button.sizeHint().width()
         exit_button_width = exit_button.sizeHint().width()
         button_width = max(save_and_exit_button_width, exit_button_width)
@@ -415,8 +414,8 @@ class BindsEditor(QDialog):
         buttons_layout = QHBoxLayout()
         spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         buttons_layout.addItem(spacer)
-        buttons_layout.addWidget(save_and_exit_button)
         buttons_layout.addWidget(exit_button)
+        buttons_layout.addWidget(save_and_exit_button)
 
         self.tab_widget = QTabWidget()
 
@@ -438,7 +437,7 @@ class BindsEditor(QDialog):
         self.tab_widget.addTab(self.buttons_widget, "Buttons")
         self.tab_widget.setDocumentMode(True)
         self.tab_widget.tabBar().setExpanding(True)
-        self.tab_widget.currentChanged.connect(self.updateCheckBox)
+        self.tab_widget.currentChanged.connect(self.update_action_names_checkboxes)
 
         # Layout.
         layout = QVBoxLayout()
@@ -483,7 +482,7 @@ class BindsEditor(QDialog):
         for thread in self.knobs_widget.thread_list:
             thread.wait()
 
-    def updateCheckBox(self):
+    def update_action_names_checkboxes(self):
         """Updates the checkboxes to be in sync."""
         if self.tab_widget.currentIndex() == 0:
             self.show_action_names_checkbox_knob.setChecked(
