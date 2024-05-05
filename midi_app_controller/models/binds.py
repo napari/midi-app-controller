@@ -1,5 +1,6 @@
 from typing import Optional
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel, Field
+from pydantic_compat import model_validator
 
 from .utils import YamlBaseModel, find_duplicate
 
@@ -61,12 +62,12 @@ class Binds(YamlBaseModel):
     button_binds: list[ButtonBind]
     knob_binds: list[KnobBind]
 
-    @root_validator
+    @model_validator(mode="after")
     @classmethod
     def check_duplicate_ids(cls, values):
         """Ensures that every element has different id."""
-        button_ids = [bind.button_id for bind in values.get("button_binds")]
-        knob_ids = [bind.knob_id for bind in values.get("knob_binds")]
+        button_ids = [bind.button_id for bind in values.button_binds]
+        knob_ids = [bind.knob_id for bind in values.knob_binds]
 
         duplicate = find_duplicate(button_ids + knob_ids)
         if duplicate is not None:

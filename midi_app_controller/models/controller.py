@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import validator, BaseModel, Field
+from pydantic_compat import model_validator
 
 from .utils import YamlBaseModel, find_duplicate
 
@@ -53,12 +54,12 @@ class Controller(YamlBaseModel):
     buttons: list[ControllerElement]
     knobs: list[ControllerElement]
 
-    @root_validator
+    @model_validator(mode="after")
     @classmethod
     def check_duplicate_ids(cls, values):
         """Ensures that every button and every knob has a different id."""
-        button_ids = [elem.id for elem in values.get("buttons")]
-        knob_ids = [elem.id for elem in values.get("knobs")]
+        button_ids = [elem.id for elem in values.buttons]
+        knob_ids = [elem.id for elem in values.knobs]
 
         duplicate = find_duplicate(button_ids)
         if duplicate is not None:
@@ -84,18 +85,18 @@ class Controller(YamlBaseModel):
 
         return v
 
-    @root_validator
+    @model_validator(mode="after")
     @classmethod
     def check_button_values(cls, values):
         """Ensures that the 'off' and 'on' values for buttons are different."""
-        if values.get("button_value_off") == values.get("button_value_on"):
+        if values.button_value_off == values.button_value_on:
             raise ValueError("button_value_off and button_value_on are equal")
         return values
 
-    @root_validator
+    @model_validator(mode="after")
     @classmethod
     def check_knob_values(cls, values):
         """Ensures that the minimum value of knobs is smaller than the maximum value."""
-        if values.get("knob_value_min") >= values.get("knob_value_max"):
+        if values.knob_value_min >= values.knob_value_max:
             raise ValueError("knob_value_min must be smaller than knob_value_max")
         return values

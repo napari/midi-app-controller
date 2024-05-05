@@ -401,9 +401,9 @@ class BindsEditor(QDialog):
         )
 
         # Save/exit buttons.
-        save_and_exit_button = QPushButton("Save and exit")
+        save_and_exit_button = QPushButton("Save")
         save_and_exit_button.clicked.connect(self._save_and_exit)
-        exit_button = QPushButton("Exit")
+        exit_button = QPushButton("Cancel")
         exit_button.clicked.connect(self.close)
         save_and_exit_button_width = save_and_exit_button.sizeHint().width()
         exit_button_width = exit_button.sizeHint().width()
@@ -444,13 +444,13 @@ class BindsEditor(QDialog):
         layout = QVBoxLayout()
         layout.addLayout(name_layout)
         layout.addWidget(self.tab_widget)
-        layout.addLayout(buttons_layout)
 
         if connected_controller is None:
             layout.addWidget(
                 QLabel("Start handling a controller to enable 'Light up' buttons.")
             )
 
+        layout.addLayout(buttons_layout)
         self.setLayout(layout)
         self.setStyleSheet(get_current_stylesheet())
         self.setMinimumSize(830, 650)
