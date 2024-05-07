@@ -69,13 +69,6 @@ def bound_controller() -> BoundController:
     )
 
 
-def test_is_button_toggled(bound_controller):
-    actions_handler = ActionsHandler(bound_controller=bound_controller, app=Mock())
-
-    with pytest.raises(NotImplementedError):
-        actions_handler.is_button_toggled(0)
-
-
 def test_get_knob_value(bound_controller):
     actions_handler = ActionsHandler(bound_controller=bound_controller, app=Mock())
 
