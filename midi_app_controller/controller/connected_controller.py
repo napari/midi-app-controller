@@ -284,6 +284,31 @@ class ConnectedController:
         status_byte = command ^ (channel - 1)
         return [status_byte, data[0], data[1]]
 
+    def get_channel(self, id: int, is_button: bool) -> int:
+        """Computes the proper channel for the message to be sent to.
+
+        Parameters
+        ----------
+        id : int
+            Id of the element.
+        is_button : bool
+            Value that determines whether the element is a button
+            or a knob.
+        """
+        if is_button:
+            item_list = self.controller.buttons
+        else:
+            item_list = self.controller.knobs
+
+        for controller_element in item_list:
+            if (
+                controller_element.id == id
+                and controller_element.default_channel is not None
+            ):
+                return controller_element.default_channel
+
+        return self.controller.default_channel
+
     def change_knob_value(self, id: int, new_value: int) -> None:
         """Sends the MIDI message, responsible for changing
         a value assigned to a knob.
@@ -295,8 +320,7 @@ class ConnectedController:
         new_value : int
             Value to set the knob to.
         """
-        # For now we, only use single channel
-        channel = 11
+        channel = self.get_channel(id, False)
 
         data = self.build_message(
             ControllerConstants.CONTROL_CHANGE_COMMAND,
@@ -315,8 +339,9 @@ class ConnectedController:
         id : int
             Button id.
         """
-        # For now we, only use single channel
-        channel = 11
+        channel = self.get_channel(id, True)
+
+        print(f"Sending data on {channel} channel")
 
         data = self.build_message(
             ControllerConstants.BUTTON_ENGAGED_COMMAND,
@@ -335,8 +360,7 @@ class ConnectedController:
         id : int
             Button id.
         """
-        # For now we, only use single channel
-        channel = 11
+        channel = self.get_channel(id, True)
 
         data = self.build_message(
             ControllerConstants.BUTTON_DISENGAGED_COMMAND,
