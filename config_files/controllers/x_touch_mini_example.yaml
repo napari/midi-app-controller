@@ -7,7 +7,6 @@ default_channel: 11
 buttons:
 - id: 8
   name: Button1A
-  default_channel: 12
 - id: 9
   name: Button2A
 - id: 10
