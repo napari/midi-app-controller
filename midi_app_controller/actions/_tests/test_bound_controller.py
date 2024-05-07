@@ -33,6 +33,7 @@ def controller() -> Controller:
         "button_value_on": 100,
         "knob_value_min": 33,
         "knob_value_max": 55,
+        "default_channel": 4,
         "buttons": [{"id": 0, "name": "Button1"}, {"id": 1, "name": "Button2"}],
         "knobs": [{"id": 2, "name": "Knob1"}, {"id": 3, "name": "Knob2"}],
     }
