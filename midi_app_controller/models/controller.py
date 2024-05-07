@@ -18,7 +18,6 @@ class ControllerElement(BaseModel):
 
     id: int = Field(ge=0, le=127)
     name: str = Field(min_length=1)
-    default_channel: int = Field(None, ge=1, le=16)
 
 
 class Controller(YamlBaseModel):
