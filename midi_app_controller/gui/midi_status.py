@@ -231,7 +231,8 @@ class MidiStatus(QWidget):
     def _get_copy_name(current_name: str) -> str:
         """Finds a good name for a copy of a file.
 
-        Currently adds "({timestamp} copy)" to the end of the name, or replaces the timestamp with current time if already present.
+        Currently adds "({timestamp} copy)" to the end of the name, or replaces
+        the timestamp with current time if already present.
         """
         if m := re.fullmatch(r"(.*) \([0-9. -]* copy\)", current_name):
             current_name = m.group(1)
@@ -296,12 +297,18 @@ class MidiStatus(QWidget):
                 if new_binds.name == binds.name:
                     new_binds.name = self._get_copy_name(new_binds.name)
                 new_file = new_binds.save_copy_to(
-                    selected_binds.path.with_stem(new_binds.name), Config.BINDS_USER_DIR
+                    selected_binds.path.with_stem(new_binds.name),
+                    Config.BINDS_USER_DIR,
                 )
                 state.select_binds(new_file)
                 self.refresh()
             else:
                 new_binds.save_to(selected_binds.path)
+
+        # Pause values synchronization (which conflicts with the "Light up"
+        # feature) and handling MIDI messages.
+        if state.connected_controller is not None:
+            state.connected_controller.pause()
 
         # Show the dialog.
         editor_dialog = BindsEditor(
@@ -312,6 +319,10 @@ class MidiStatus(QWidget):
             state.connected_controller,
         )
         editor_dialog.exec_()
+
+        # Restore the controller to work.
+        if state.connected_controller is not None:
+            state.connected_controller.resume()
 
 
 def main():
