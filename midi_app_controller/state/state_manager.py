@@ -245,8 +245,7 @@ class StateManager:
         if controller_file is None:
             return
 
-        if not any(is_subpath(d, controller_file) for d in Config.CONTROLLER_DIRS
-        ):
+        if not any(is_subpath(d, controller_file) for d in Config.CONTROLLER_DIRS):
             return
         binds_files = [
             state.selected_binds_path,
