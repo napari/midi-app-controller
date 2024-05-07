@@ -1,6 +1,4 @@
-from pydantic import validator, BaseModel, Field
-from pydantic_compat import model_validator
-
+from pydantic import field_validator, BaseModel, Field, model_validator
 from .utils import YamlBaseModel, find_duplicate
 
 
@@ -71,7 +69,7 @@ class Controller(YamlBaseModel):
 
         return values
 
-    @validator("buttons", "knobs")
+    @field_validator("buttons", "knobs", mode="after")
     @classmethod
     def check_duplicate_names(
         cls, v: list[ControllerElement]

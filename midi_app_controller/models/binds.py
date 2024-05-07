@@ -1,6 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, Field
-from pydantic_compat import model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from .utils import YamlBaseModel, find_duplicate
 

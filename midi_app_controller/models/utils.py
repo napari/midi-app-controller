@@ -84,7 +84,7 @@ class YamlBaseModel(BaseModel):
 
         with path.open("w") as f:
             yaml.safe_dump(
-                self.dict(),
+                self.model_dump(),
                 f,
                 default_flow_style=False,  # collections always serialized in the block style
                 sort_keys=False,  # keys in the order of declaration

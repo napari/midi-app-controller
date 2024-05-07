@@ -42,7 +42,7 @@ def test_load_from(yaml_file, yaml_data):
     model = TempYamlModel.load_from(yaml_file)
 
     assert isinstance(model, TempYamlModel)
-    assert model.dict() == yaml_data
+    assert model.model_dump() == yaml_data
 
 
 def test_load_from_when_invalid_data(yaml_file, yaml_data):
