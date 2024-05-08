@@ -234,7 +234,7 @@ class ConnectedController:
             Standard MIDI message.
         """
         id = data[0]
-        
+
         if self.paused:
             if self.paused_button_callback is not None:
                 self.paused_button_callback(id)
