@@ -1,7 +1,7 @@
 # TODO Move style somewhere else in the future to make this class independent from napari.
 from typing import Callable, Optional
 
-from PyQt5.QtWidgets import QTabWidget, QCheckBox, QSpacerItem, QSizePolicy
+from qtpy.QtWidgets import QTabWidget, QCheckBox, QSpacerItem, QSizePolicy
 from napari.qt import get_current_stylesheet
 from qtpy.QtCore import Qt, QThread
 from app_model.types import CommandRule
