@@ -20,7 +20,7 @@ def controller_data() -> dict:
 def test_valid_controller(controller_data):
     controller = Controller(**controller_data)
 
-    assert controller.dict() == controller_data
+    assert controller.model_dump() == controller_data
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,7 @@
 # TODO Move style somewhere else in the future to make this class independent from napari.
 from typing import Callable, Optional
 
+from qtpy.QtWidgets import QTabWidget, QCheckBox, QSpacerItem, QSizePolicy
 from napari.qt import get_current_stylesheet
 from app_model.types import CommandRule
 from superqt.utils import ensure_main_thread
@@ -11,7 +12,6 @@ from qtpy.QtWidgets import (
     QPushButton,
     QLabel,
     QHBoxLayout,
-    QRadioButton,
     QDialog,
     QScrollArea,
     QGridLayout,
@@ -72,6 +72,7 @@ class ButtonBinds(QWidget):
         button_binds: list[ButtonBind],
         actions: list[CommandRule],
         connected_controller: Optional[ConnectedController],
+        show_action_names_checkbox: QCheckBox,
     ):
         """Creates ButtonBinds widget.
 
@@ -85,6 +86,8 @@ class ButtonBinds(QWidget):
             List of all actions available to bind.
         connected_controller : ConnectedController
             Object representing currently connected MIDI controller.
+        show_action_names_checkbox : QCheckBox
+            Checkbox that toggles between action names and ids.
         """
         super().__init__()
 
@@ -96,8 +99,8 @@ class ButtonBinds(QWidget):
 
         # Description row.
         description_layout = QHBoxLayout()
-        description_layout.addWidget(QLabel("Name:"))
-        description_layout.addWidget(QLabel("Action when clicked:"))
+        description_layout.addWidget(QLabel("Button:"), 8)
+        description_layout.addWidget(QLabel("Action when clicked:"), 10)
 
         # All buttons available to bind.
         button_list = QWidget()
@@ -113,6 +116,7 @@ class ButtonBinds(QWidget):
 
         # Layout.
         layout = QVBoxLayout()
+        layout.addWidget(show_action_names_checkbox)
         layout.addLayout(description_layout)
         layout.addWidget(scroll)
         layout.addStretch()
@@ -247,6 +251,7 @@ class KnobBinds(QWidget):
         knob_binds: list[KnobBind],
         actions: list[CommandRule],
         connected_controller: Optional[ConnectedController],
+        show_action_names_checkbox: QCheckBox,
     ):
         """Creates KnobBinds widget.
 
@@ -260,6 +265,8 @@ class KnobBinds(QWidget):
             List of all actions available to bind.
         connected_controller : ConnectedController
             Object representing currently connected MIDI controller.
+        show_action_names_checkbox : QCheckBox
+            Checkbox that toggles between action names and ids.
         """
         super().__init__()
 
@@ -272,9 +279,9 @@ class KnobBinds(QWidget):
 
         # Description row.
         description_layout = QHBoxLayout()
-        description_layout.addWidget(QLabel("Name:"))
-        description_layout.addWidget(QLabel("Action when increased:"))
-        description_layout.addWidget(QLabel("Action when decreased:"))
+        description_layout.addWidget(QLabel("Knob:"), 2)
+        description_layout.addWidget(QLabel("Action when increased:"), 5)
+        description_layout.addWidget(QLabel("Action when decreased:"), 5)
 
         # All knobs available to bind.
         knob_list = QWidget()
@@ -290,6 +297,7 @@ class KnobBinds(QWidget):
 
         # Layout.
         layout = QVBoxLayout()
+        layout.addWidget(show_action_names_checkbox)
         layout.addLayout(description_layout)
         layout.addWidget(scroll)
         layout.addStretch()
@@ -422,10 +430,16 @@ class BindsEditor(QDialog):
         Button that allows to switch binds view to knobs.
     buttons_radio : QRadioButton
         Button that allows to switch binds view to buttons.
+    tab_widget : QTabWidget
+        Tab widget for switching between knobs and buttons configurations.
     knobs_widget : KnobBinds
         Widget with binds editor for knobs.
     buttons_widget : ButtonBinds
         Widget with binds editor for buttons.
+    show_action_names_checkbox_button : QCheckBox
+        Checkbox that toggles between action names and ids for buttons.
+    show_action_names_checkbox_knob : QCheckBox
+        Checkbox that toggles between action names and ids for knobs.
     """
 
     def __init__(
@@ -451,53 +465,71 @@ class BindsEditor(QDialog):
         """
         super().__init__()
 
+        self.setWindowTitle("Edit Binds")
         self.binds = binds.copy(deep=True)
         self.save_binds = save_binds
 
         self.name_edit = QLineEdit(binds.name)
+        name_layout = QHBoxLayout()
+        name_layout.addWidget(QLabel("Name:"))
+        name_layout.addWidget(self.name_edit)
+
+        self.show_action_names_checkbox_button = QCheckBox("Show action names")
+        self.show_action_names_checkbox_button.setChecked(True)
+        self.show_action_names_checkbox_button.stateChanged.connect(
+            self._toggle_names_mode
+        )
+
+        self.show_action_names_checkbox_knob = QCheckBox("Show action names")
+        self.show_action_names_checkbox_knob.setChecked(True)
+        self.show_action_names_checkbox_knob.stateChanged.connect(
+            self._toggle_names_mode
+        )
 
         # Save/exit buttons.
-        toggle_names_mode_button = QPushButton("Toggle names mode")
-        toggle_names_mode_button.clicked.connect(self._toggle_names_mode)
-        save_and_exit_button = QPushButton("Save and exit")
+        save_and_exit_button = QPushButton("Save")
         save_and_exit_button.clicked.connect(self._save_and_exit)
-        exit_button = QPushButton("Exit")
+        exit_button = QPushButton("Cancel")
         exit_button.clicked.connect(self._exit)
+        save_and_exit_button_width = save_and_exit_button.sizeHint().width()
+        exit_button_width = exit_button.sizeHint().width()
+        button_width = max(save_and_exit_button_width, exit_button_width)
+
+        save_and_exit_button.setFixedWidth(button_width)
+        exit_button.setFixedWidth(button_width)
 
         buttons_layout = QHBoxLayout()
-        buttons_layout.addWidget(toggle_names_mode_button)
-        buttons_layout.addWidget(save_and_exit_button)
+        spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        buttons_layout.addItem(spacer)
         buttons_layout.addWidget(exit_button)
+        buttons_layout.addWidget(save_and_exit_button)
 
-        # Radio buttons for switching knobs/buttons view.
-        self.knobs_radio = QRadioButton("Knobs")
-        self.buttons_radio = QRadioButton("Buttons")
-        self.knobs_radio.toggled.connect(self._switch_editors)
-        self.buttons_radio.toggled.connect(self._switch_editors)
+        self.tab_widget = QTabWidget()
 
-        radio_layout = QHBoxLayout()
-        radio_layout.addWidget(self.knobs_radio)
-        radio_layout.addWidget(self.buttons_radio)
-
-        # Bind editors.
         self.knobs_widget = KnobBinds(
             controller.knobs,
             binds.knob_binds,
             actions,
             connected_controller,
+            self.show_action_names_checkbox_knob,
         )
         self.buttons_widget = ButtonBinds(
             controller.buttons,
             binds.button_binds,
             actions,
             connected_controller,
+            self.show_action_names_checkbox_button,
         )
+        self.tab_widget.addTab(self.knobs_widget, "Knobs")
+        self.tab_widget.addTab(self.buttons_widget, "Buttons")
+        self.tab_widget.setDocumentMode(True)
+        self.tab_widget.tabBar().setExpanding(True)
+        self.tab_widget.currentChanged.connect(self.update_action_names_checkboxes)
 
         # Layout.
         layout = QVBoxLayout()
-        layout.addWidget(self.name_edit)
-        layout.addLayout(radio_layout)
-        layout.addLayout(buttons_layout)
+        layout.addLayout(name_layout)
+        layout.addWidget(self.tab_widget)
 
         if connected_controller is None:
             layout.addWidget(
@@ -514,32 +546,20 @@ class BindsEditor(QDialog):
                 )
             )
 
-        layout.addWidget(self.knobs_widget)
-        layout.addWidget(self.buttons_widget)
-
+        layout.addLayout(buttons_layout)
         self.setLayout(layout)
         self.setStyleSheet(get_current_stylesheet())
-        self.knobs_radio.setChecked(True)
         self.setMinimumSize(830, 650)
-
-    def _switch_editors(self, checked: bool):
-        """Switches binds editor view for knobs/buttons based on checked radio."""
-        if not checked:
-            return
-        if self.knobs_radio.isChecked():
-            self.buttons_widget.hide()
-            self.knobs_widget.show()
-        else:
-            self.knobs_widget.hide()
-            self.buttons_widget.show()
 
     def _toggle_names_mode(self):
         """Toggles actions names mode: titles or ids."""
-        for combo in self.buttons_widget.button_combos.values():
-            combo.toggle_names_mode()
-        for combo1, combo2 in self.knobs_widget.knob_combos.values():
-            combo1.toggle_names_mode()
-            combo2.toggle_names_mode()
+        if self.tab_widget.currentIndex() == 1:
+            for combo in self.buttons_widget.button_combos.values():
+                combo.toggle_names_mode()
+        else:
+            for combo1, combo2 in self.knobs_widget.knob_combos.values():
+                combo1.toggle_names_mode()
+                combo2.toggle_names_mode()
 
     def _save_and_exit(self):
         """Saves the binds and closes the widget."""
@@ -558,6 +578,17 @@ class BindsEditor(QDialog):
             thread.wait()
         for thread in self.knobs_widget.thread_list:
             thread.wait()
+
+    def update_action_names_checkboxes(self):
+        """Updates the checkboxes to be in sync."""
+        if self.tab_widget.currentIndex() == 0:
+            self.show_action_names_checkbox_knob.setChecked(
+                self.show_action_names_checkbox_button.isChecked()
+            )
+        else:
+            self.show_action_names_checkbox_button.setChecked(
+                self.show_action_names_checkbox_knob.isChecked()
+            )
 
     def _cancel_timers(self):
         """Cancels timers responsible for unhighlighting elements."""
