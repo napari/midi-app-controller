@@ -126,9 +126,6 @@ class ConnectedController:
         event : tuple[list[int], float]
             Pair of (MIDI message, delta time).
         """
-        if self.paused:
-            return
-
         message, _ = event
 
         command = message[0] & 0xF0
