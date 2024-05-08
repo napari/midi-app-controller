@@ -1,11 +1,11 @@
 import logging
 import time
 from typing import Callable
-from threading import Thread
 
 import rtmidi
 from qtpy.QtCore import QMutex, QMutexLocker
 
+from midi_app_controller.utils import SimpleQThread
 from midi_app_controller.models.controller import Controller
 from midi_app_controller.actions.actions_handler import ActionsHandler
 from .controller_constants import ControllerConstants
@@ -98,7 +98,7 @@ class ConnectedController:
         self.stopped = False
         self.paused = False
         self.force_synchronize = {id: True for id in self.button_ids}
-        self.synchronize_buttons_thread = Thread(target=self.synchronize_buttons)
+        self.synchronize_buttons_thread = SimpleQThread(self.synchronize_buttons)
         self.synchronize_buttons_thread.start()
 
     def stop(self) -> None:
@@ -108,7 +108,7 @@ class ConnectedController:
         """
         self.stopped = True
         self.midi_in.cancel_callback()
-        self.synchronize_buttons_thread.join()
+        self.synchronize_buttons_thread.wait()
 
     def midi_callback(self, event: tuple[list[int], float], data=None) -> None:
         """Callback function for MIDI input, specified by rtmidi package.
@@ -160,22 +160,25 @@ class ConnectedController:
         # synchronized. So a current value is always sent every `N` iterations.
 
         while not self.stopped:
-            time.sleep(SLEEP_SECONDS)
-            if self.paused:
-                continue
+            try:
+                time.sleep(SLEEP_SECONDS)
+                if self.paused:
+                    continue
 
-            for id in self.button_ids:
-                is_toggled = self.actions_handler.is_button_toggled(id) or False
-                was_toggled, iters = state[id]
-                sync = self.force_synchronize[id]
-                if is_toggled != was_toggled or iters > N or sync:
-                    iters = 0
-                    self.force_synchronize[id] = False
-                    if is_toggled:
-                        self.turn_on_button_led(id)
-                    else:
-                        self.turn_off_button_led(id)
-                state[id] = (is_toggled, iters + 1)
+                for id in self.button_ids:
+                    is_toggled = self.actions_handler.is_button_toggled(id) or False
+                    was_toggled, iters = state[id]
+                    sync = self.force_synchronize[id]
+                    if is_toggled != was_toggled or iters > N or sync:
+                        iters = 0
+                        self.force_synchronize[id] = False
+                        if is_toggled:
+                            self.turn_on_button_led(id)
+                        else:
+                            self.turn_off_button_led(id)
+                    state[id] = (is_toggled, iters + 1)
+            except Exception as e:
+                logging.error(f"Error in `synchronize_buttons`: {e}")
 
     def init_buttons(self) -> None:
         """Initializes the buttons on the controller, setting them

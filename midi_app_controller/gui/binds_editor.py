@@ -2,7 +2,7 @@
 from typing import Callable, Optional
 
 from napari.qt import get_current_stylesheet
-from qtpy.QtCore import Qt, QThread
+from qtpy.QtCore import Qt
 from app_model.types import CommandRule
 from qtpy.QtWidgets import (
     QWidget,
@@ -17,28 +17,11 @@ from qtpy.QtWidgets import (
     QLineEdit,
 )
 
+from midi_app_controller.utils import SimpleQThread
 from midi_app_controller.gui.utils import ActionsQComboBox
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller, ControllerElement
 from midi_app_controller.controller.connected_controller import ConnectedController
-
-
-class LightUpQThread(QThread):
-    """Worker thread responsible for lighting up a controller element.
-
-    Attributes
-    ----------
-    func : Callable[[], None]
-        Function for lighting up the element.
-    """
-
-    def __init__(self, func: Callable[[], None]):
-        super().__init__()
-        self.func = func
-
-    def run(self):
-        """Runs the lighting up function."""
-        self.func()
 
 
 class ButtonBinds(QWidget):
@@ -49,7 +32,7 @@ class ButtonBinds(QWidget):
     actions_ : list[CommandRule]
         List of all actions available to bind and an empty string (used when
         no action is bound).
-    button_combos : Tuple[int, ActionsQComboBox]
+    button_combos : tuple[int, ActionsQComboBox]
         List of all pairs (button id, ActionsQComboBox used to set action).
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's button by its id.
@@ -120,7 +103,7 @@ class ButtonBinds(QWidget):
         def light_up_func():
             self.connected_controller.flash_button(button_id)
 
-        thread = LightUpQThread(light_up_func)
+        thread = SimpleQThread(light_up_func)
 
         self.thread_list.append(thread)
         thread.start()
@@ -258,7 +241,7 @@ class KnobBinds(QWidget):
         def light_up_func():
             self.connected_controller.flash_knob(knob_id)
 
-        thread = LightUpQThread(light_up_func)
+        thread = SimpleQThread(light_up_func)
 
         self.thread_list.append(thread)
         thread.start()
