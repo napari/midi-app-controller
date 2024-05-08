@@ -3,8 +3,9 @@ from typing import Callable, Optional
 
 from qtpy.QtWidgets import QTabWidget, QCheckBox, QSpacerItem, QSizePolicy
 from napari.qt import get_current_stylesheet
-from qtpy.QtCore import Qt, QThread
 from app_model.types import CommandRule
+from superqt.utils import ensure_main_thread
+from qtpy.QtCore import Qt, QThread, QTimer
 from qtpy.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -17,7 +18,11 @@ from qtpy.QtWidgets import (
     QLineEdit,
 )
 
-from midi_app_controller.gui.utils import ActionsQComboBox
+from midi_app_controller.gui.utils import (
+    ActionsQComboBox,
+    HIGHLIGHT_STYLE_SHEET,
+    HIGHLIGHT_DURATION_MS,
+)
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller, ControllerElement
 from midi_app_controller.controller.connected_controller import ConnectedController
@@ -49,12 +54,16 @@ class ButtonBinds(QWidget):
     actions_ : list[CommandRule]
         List of all actions available to bind and an empty string (used when
         no action is bound).
-    button_combos : Tuple[int, ActionsQComboBox]
-        List of all pairs (button id, ActionsQComboBox used to set action).
+    button_combos : dict[int, ActionsQComboBox]
+        Dictionary mapping button ids to ActionsQComboBoxes used to set action.
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's button by its id.
+    stop : bool
+        Indicates whether the widget should ignore new light up and highlight requests.
     thread_list : list[QThread]
         List of worker threads responsible for lighting up buttons.
+    highlight_timers : list[QTimer]
+        Timers used to unhighlight buttons.
     """
 
     def __init__(
@@ -83,10 +92,10 @@ class ButtonBinds(QWidget):
         super().__init__()
 
         self.connected_controller = connected_controller
-
         self.actions_ = actions
-        self.button_combos = []
+        self.button_combos = {}
         self.binds_dict = {b.button_id: b for b in button_binds}
+        self.stop = False
 
         # Description row.
         description_layout = QHBoxLayout()
@@ -114,10 +123,23 @@ class ButtonBinds(QWidget):
 
         self.setLayout(layout)
 
+        # Threads.
         self.thread_list = []
 
-    def _light_up_button(self, button_id: int):
+        # Highlighting.
+        self.highlight_timers = {}
+        for button in buttons:
+            timer = QTimer()
+            timer.setSingleShot(True)
+            timer.timeout.connect(
+                lambda button_id=button.id: self.stop_highlighting_button(button_id)
+            )
+            self.highlight_timers[button.id] = timer
+
+    def _light_up_button(self, button_id: int) -> None:
         """Creates a QThread responsible for lighting up a knob."""
+        if self.stop:
+            return
         if self.connected_controller is None:
             raise Exception("No controller connected.")
 
@@ -143,7 +165,7 @@ class ButtonBinds(QWidget):
 
         # ActionsQComboBox for action selection.
         action_combo = ActionsQComboBox(self.actions_, action, self)
-        self.button_combos.append((button_id, action_combo))
+        self.button_combos[button_id] = action_combo
 
         # Button label
         button_label = QLabel(button_name)
@@ -174,11 +196,32 @@ class ButtonBinds(QWidget):
     def get_binds(self) -> list[ButtonBind]:
         """Returns list of all binds currently set in this widget."""
         result = []
-        for button_id, combo in self.button_combos:
+        for button_id, combo in self.button_combos.items():
             action = combo.get_selected_action_id()
             if action is not None:
                 result.append(ButtonBind(button_id=button_id, action_id=action))
         return result
+
+    @ensure_main_thread(
+        await_return=True
+    )  # QTimer can only be used in the main thread.
+    def highlight_button(self, button_id: int) -> None:
+        """Highlights combos associated with `button_id`.
+
+        Starts a timer that unhighlights the combos after `HIGHLIGHT_DURATION_MS`.
+        """
+        if self.stop:
+            return
+
+        combo = self.button_combos[button_id]
+        combo.setStyleSheet(HIGHLIGHT_STYLE_SHEET)
+
+        self.highlight_timers[button_id].start(HIGHLIGHT_DURATION_MS)
+
+    def stop_highlighting_button(self, button_id: int) -> None:
+        """Unhighlights combos associated with `knob_id`."""
+        combo = self.button_combos[button_id]
+        combo.setStyleSheet("")
 
 
 class KnobBinds(QWidget):
@@ -189,13 +232,17 @@ class KnobBinds(QWidget):
     actions_ : list[CommandRule]
         List of all actions available to bind and an empty string (used when
         no action is bound).
-    knob_combos : Tuple[int, ActionsQComboBox, ActionsQComboBox]
-        List of all triples (knob id, ActionsQComboBox used to set increase action,
-        ActionsQComboBox used to set decrease action).
+    knob_combos : dict[int, tuple[ActionsQComboBox, ActionsQComboBox]]
+        Dictionary mapping knob ids to ActionsQComboBoxes used to set
+        increase and deacrease action.
     binds_dict : dict[int, ControllerElement]
         Dictionary that allows to get a controller's knob by its id.
+    stop : bool
+        Indicates whether the widget should ignore new light up and highlight requests.
     thread_list : list[QThread]
         List of worker threads responsible for lighting up knobs.
+    highlight_timers : list[QTimer]
+        Timers used to unhighlight knobs.
     """
 
     def __init__(
@@ -226,8 +273,9 @@ class KnobBinds(QWidget):
         self.connected_controller = connected_controller
 
         self.actions_ = actions
-        self.knob_combos = []
+        self.knob_combos = {}
         self.binds_dict = {b.knob_id: b for b in knob_binds}
+        self.stop = False
 
         # Description row.
         description_layout = QHBoxLayout()
@@ -256,10 +304,23 @@ class KnobBinds(QWidget):
 
         self.setLayout(layout)
 
+        # Threads.
         self.thread_list = []
 
-    def _light_up_knob(self, knob_id: int):
+        # Highlighting.
+        self.highlight_timers = {}
+        for knob in knobs:
+            timer = QTimer()
+            timer.setSingleShot(True)
+            timer.timeout.connect(
+                lambda knob_id=knob.id: self.stop_highlighting_knob(knob_id)
+            )
+            self.highlight_timers[knob.id] = timer
+
+    def _light_up_knob(self, knob_id: int) -> None:
         """Creates a QThread responsible for lighting up a knob."""
+        if self.stop:
+            return
         if self.connected_controller is None:
             raise Exception("No controller connected.")
 
@@ -288,7 +349,7 @@ class KnobBinds(QWidget):
         # ActionsQComboBox for action selection.
         increase_action_combo = ActionsQComboBox(self.actions_, action_increase, self)
         decrease_action_combo = ActionsQComboBox(self.actions_, action_decrease, self)
-        self.knob_combos.append((knob_id, increase_action_combo, decrease_action_combo))
+        self.knob_combos[knob_id] = (increase_action_combo, decrease_action_combo)
 
         # Button for lighting up the controller element
         controller_disconnected = self.connected_controller is None
@@ -315,9 +376,12 @@ class KnobBinds(QWidget):
         return layout
 
     def get_binds(self) -> list[KnobBind]:
-        """Returns list of all binds currently set in this widget."""
+        """Returns a list of all binds currently set in this widget."""
         result = []
-        for knob_id, increase_action_combo, decrease_action_combo in self.knob_combos:
+        for (
+            knob_id,
+            (increase_action_combo, decrease_action_combo),
+        ) in self.knob_combos.items():
             increase_action = increase_action_combo.get_selected_action_id()
             decrease_action = decrease_action_combo.get_selected_action_id()
             if increase_action is not None or decrease_action is not None:
@@ -329,6 +393,29 @@ class KnobBinds(QWidget):
                     )
                 )
         return result
+
+    @ensure_main_thread(
+        await_return=True
+    )  # QTimer can only be used in the main thread.
+    def highlight_knob(self, knob_id: int) -> None:
+        """Highlights combos associated with `knob_id`.
+
+        Starts a timer that unhighlights the combos after `HIGHLIGHT_DURATION_MS`.
+        """
+        if self.stop:
+            return
+
+        combos = self.knob_combos[knob_id]
+        combos[0].setStyleSheet(HIGHLIGHT_STYLE_SHEET)
+        combos[1].setStyleSheet(HIGHLIGHT_STYLE_SHEET)
+
+        self.highlight_timers[knob_id].start(HIGHLIGHT_DURATION_MS)
+
+    def stop_highlighting_knob(self, knob_id: int) -> None:
+        """Unhighlights combos associated with `knob_id`."""
+        combos = self.knob_combos[knob_id]
+        combos[0].setStyleSheet("")
+        combos[1].setStyleSheet("")
 
 
 class BindsEditor(QDialog):
@@ -446,7 +533,17 @@ class BindsEditor(QDialog):
 
         if connected_controller is None:
             layout.addWidget(
-                QLabel("Start handling a controller to enable 'Light up' buttons.")
+                QLabel(
+                    "Tip: Start handling a controller to allow lighting up "
+                    "buttons and knobs on a controller and highlighting them here."
+                )
+            )
+        else:
+            layout.addWidget(
+                QLabel(
+                    "Tip: You can interact with buttons and knobs on the MIDI "
+                    "controller to highlight them here."
+                )
             )
 
         layout.addLayout(buttons_layout)
@@ -457,10 +554,10 @@ class BindsEditor(QDialog):
     def _toggle_names_mode(self):
         """Toggles actions names mode: titles or ids."""
         if self.tab_widget.currentIndex() == 1:
-            for _, combo in self.buttons_widget.button_combos:
+            for combo in self.buttons_widget.button_combos.values():
                 combo.toggle_names_mode()
         else:
-            for _, combo1, combo2 in self.knobs_widget.knob_combos:
+            for combo1, combo2 in self.knobs_widget.knob_combos.values():
                 combo1.toggle_names_mode()
                 combo2.toggle_names_mode()
 
@@ -470,15 +567,15 @@ class BindsEditor(QDialog):
         self.binds.button_binds = self.buttons_widget.get_binds()
         self.binds.name = self.name_edit.text()
 
-        self.save_binds(self.binds)
-        self._wait_for_worker_threads()
-        self._exit()
+        try:
+            self.save_binds(self.binds)
+        finally:
+            self._exit()
 
     def _wait_for_worker_threads(self):
         """Waits for the threads responsible for lighting up the controller elements."""
         for thread in self.buttons_widget.thread_list:
             thread.wait()
-
         for thread in self.knobs_widget.thread_list:
             thread.wait()
 
@@ -493,6 +590,17 @@ class BindsEditor(QDialog):
                 self.show_action_names_checkbox_knob.isChecked()
             )
 
+    def _cancel_timers(self):
+        """Cancels timers responsible for unhighlighting elements."""
+        for timer in self.buttons_widget.highlight_timers.values():
+            timer.stop()
+        for timer in self.knobs_widget.highlight_timers.values():
+            timer.stop()
+
     def _exit(self):
         """Closes the widget."""
+        self.buttons_widget.stop = True
+        self.knobs_widget.stop = True
+        self._wait_for_worker_threads()
+        self._cancel_timers()
         self.close()
