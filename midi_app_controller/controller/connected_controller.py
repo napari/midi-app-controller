@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Callable
+from typing import Callable, Optional
 from threading import Thread
 
 import rtmidi
@@ -43,7 +43,13 @@ class ConnectedController:
     stopped : bool
         Indicates if the `stop` method was called.
     paused : bool
-        Indicates if the synchronization and messages handling is paused.
+        Indicates if the synchronization and standard handling is paused.
+    paused_button_callback : Optional[Callable[[int], None]]
+        Function to be called with button id as an argument when `paused` and
+        a message is received.
+    paused_knob_callback : Optional[Callable[[int], None]]
+        Function to be called with knob id as an argument when `paused` and
+        a message is received.
     synchronize_buttons_thread : Thread
         Thread that checks values of the actions associated with buttons.
     force_synchronize : dict[int, bool]
@@ -97,6 +103,8 @@ class ConnectedController:
         # Threads.
         self.stopped = False
         self.paused = False
+        self.paused_button_callback = None
+        self.paused_knob_callback = None
         self.force_synchronize = {id: True for id in self.button_ids}
         self.synchronize_buttons_thread = Thread(target=self.synchronize_buttons)
         self.synchronize_buttons_thread.start()
@@ -133,15 +141,28 @@ class ConnectedController:
 
         self.handle_midi_message(command, channel, data_bytes)
 
-    def pause(self) -> None:
+    def pause(
+        self,
+        paused_button_callback: Optional[Callable[[int], None]],
+        paused_knob_callback: Optional[Callable[[int], None]],
+    ) -> None:
         """Pauses synchronization and messages handling."""
+        self.paused_button_callback = paused_button_callback
+        self.paused_knob_callback = paused_knob_callback
         self.paused = True
 
     def resume(self) -> None:
         """Resumes synchronization and messages handling."""
-        self.paused = False
+        self.paused_button_callback = None
+        self.paused_knob_callback = None
+
+        # The knobs and buttons might have changed values, eg. due to highlighting.
         for id in self.button_ids:
             self.force_synchronize[id] = True
+        for id in self.knob_ids:
+            self.change_knob_value(id, self.knob_engagement[id])
+
+        self.paused = False
 
     def synchronize_buttons(self) -> None:
         """Synchronizes button values on controller with values from app.
@@ -213,7 +234,12 @@ class ConnectedController:
             Standard MIDI message.
         """
         id = data[0]
-        self.actions_handler.handle_button_action(id)
+
+        if self.paused:
+            if self.paused_button_callback is not None:
+                self.paused_button_callback(id)
+        else:
+            self.actions_handler.handle_button_action(id)
 
     def handle_knob_message(self, data: list[int]) -> None:
         """Runs the action bound to the knob turn, specified in
@@ -226,21 +252,24 @@ class ConnectedController:
         """
         id = data[0]
         velocity = data[1]
-        prev_velocity = self.knob_engagement[id]
 
-        self.knob_engagement[id] = velocity
+        if self.paused:
+            self.paused_knob_callback(id)
+        else:
+            prev_velocity = self.knob_engagement[id]
+            self.knob_engagement[id] = velocity
 
-        if velocity == prev_velocity:
-            if velocity == self.controller.knob_value_min:
-                prev_velocity = self.controller.knob_value_min + 1
-            elif velocity == self.controller.knob_value_max:
-                prev_velocity = self.controller.knob_value_max - 1
+            if velocity == prev_velocity:
+                if velocity == self.controller.knob_value_min:
+                    prev_velocity = self.controller.knob_value_min + 1
+                elif velocity == self.controller.knob_value_max:
+                    prev_velocity = self.controller.knob_value_max - 1
 
-        self.actions_handler.handle_knob_action(
-            knob_id=id,
-            old_value=prev_velocity,
-            new_value=velocity,
-        )
+            self.actions_handler.handle_knob_action(
+                knob_id=id,
+                old_value=prev_velocity,
+                new_value=velocity,
+            )
 
     def send_midi_message(self, data: list[int]) -> None:
         """Sends the specified MIDI message.
