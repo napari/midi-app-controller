@@ -3,12 +3,8 @@ import re
 import sys
 from typing import Optional
 
-from app_model.types import Action
-from napari.components import LayerList
-
 # TODO: This will be made public in some future napari version
 from napari._app_model import get_app
-
 from qtpy.QtWidgets import (
     QApplication,
     QWidget,
@@ -29,34 +25,10 @@ from midi_app_controller.gui.utils import (
 )
 from midi_app_controller.state.state_manager import SelectedItem, StateManager
 from midi_app_controller.config import Config
+from midi_app_controller.actions.napari_actions import register_custom_napari_actions
 
 
-def decrease_opacity(ll: LayerList):
-    for lay in ll.selection:
-        lay.opacity = max(0, lay.opacity - 0.01)
-
-
-def increase_opacity(ll: LayerList):
-    for lay in ll.selection:
-        lay.opacity = min(1, lay.opacity + 0.01)
-
-
-# TODO Added only to allow testing slider actions until they are added to napari.
-SLIDER_ACTIONS = [
-    Action(
-        id="napari:layer:increase_opacity",
-        title="Increase opacity",
-        callback=increase_opacity,
-    ),
-    Action(
-        id="napari:layer:decrease_opacity",
-        title="Decrease opacity",
-        callback=decrease_opacity,
-    ),
-]
-for action in SLIDER_ACTIONS:
-    get_app().register_action(action)
-
+register_custom_napari_actions(get_app())
 
 state = StateManager(get_app())
 state.load_state()
