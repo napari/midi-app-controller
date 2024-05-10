@@ -1,7 +1,8 @@
 import os
-from typing import Iterable
-import appdirs
+from collections.abc import Iterable
 from pathlib import Path
+
+import appdirs
 
 
 class Config:

@@ -1,31 +1,34 @@
-# TODO Move style somewhere else in the future to make this class independent from napari.
+# TODO Move style somewhere else to make this class independent from napari.
 from typing import Callable, Optional
 
-from qtpy.QtWidgets import QTabWidget, QCheckBox, QSpacerItem, QSizePolicy
-from napari.qt import get_current_stylesheet
 from app_model.types import CommandRule
-from superqt.utils import ensure_main_thread
+from napari.qt import get_current_stylesheet
 from qtpy.QtCore import Qt, QThread, QTimer
 from qtpy.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QPushButton,
-    QLabel,
-    QHBoxLayout,
+    QCheckBox,
     QDialog,
-    QScrollArea,
     QGridLayout,
+    QHBoxLayout,
+    QLabel,
     QLineEdit,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QSpacerItem,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
+from superqt.utils import ensure_main_thread
 
-from midi_app_controller.gui.utils import (
-    ActionsQComboBox,
-    HIGHLIGHT_STYLE_SHEET,
-    HIGHLIGHT_DURATION_MS,
-)
-from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
-from midi_app_controller.models.controller import Controller, ControllerElement
 from midi_app_controller.controller.connected_controller import ConnectedController
+from midi_app_controller.gui.utils import (
+    HIGHLIGHT_DURATION_MS,
+    HIGHLIGHT_STYLE_SHEET,
+    ActionsQComboBox,
+)
+from midi_app_controller.models.binds import Binds, ButtonBind, KnobBind
+from midi_app_controller.models.controller import Controller, ControllerElement
 
 
 class LightUpQThread(QThread):

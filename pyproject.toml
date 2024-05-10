@@ -42,3 +42,14 @@ dev = [
 
 [tool.setuptools.packages.find]
 namespaces = false
+
+[tool.ruff.lint]
+select = [
+    "E", "W", # pycodestyle
+    "F", # Pyflakes
+    "UP", # pyupgrade
+    "B", # flake8-bugbear
+    "SIM", # flake8-simplify
+    "I", # isort
+    "C4", # flake8-comprehensions
+]

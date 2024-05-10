@@ -1,19 +1,19 @@
-from typing import NamedTuple, Optional
 from pathlib import Path
+from typing import NamedTuple, Optional
 
 import rtmidi
 from app_model import Application
-from app_model.types import CommandRule, MenuItem
 from app_model.registries import MenusRegistry
+from app_model.types import CommandRule, MenuItem
 
+from midi_app_controller.actions.actions_handler import ActionsHandler
+from midi_app_controller.actions.bound_controller import BoundController
+from midi_app_controller.config import Config
+from midi_app_controller.controller.connected_controller import ConnectedController
 from midi_app_controller.gui.utils import is_subpath
 from midi_app_controller.models.app_state import AppState
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
-from midi_app_controller.actions.bound_controller import BoundController
-from midi_app_controller.actions.actions_handler import ActionsHandler
-from midi_app_controller.controller.connected_controller import ConnectedController
-from midi_app_controller.config import Config
 
 
 class SelectedItem(NamedTuple):
@@ -43,7 +43,8 @@ class StateManager:
     selected_binds : Optional[SelectedItem]
         Currently selected binds set.
     recent_binds_for_controller: dict[Path, Path] = {}
-        Mapping of controller schemas to the binds set most recently used with the schema.
+        Mapping of controller schemas to the binds set most recently used
+        with the schema.
     selected_midi_in : Optional[str]
         Name of currently selected MIDI input.
     selected_midi_out : Optional[str]
@@ -106,24 +107,22 @@ class StateManager:
         return self._midi_out.get_ports()
 
     def get_actions(self) -> list[CommandRule]:
-        """Returns a list of all actions currently registered in app model (and available in the command pallette)."""
+        """Returns a list of all actions currently registered in app model
+        (and available in the command pallette)."""
         return sorted(
-            list(
-                set(
-                    item.command
-                    for item in self.app.menus.get_menu(
-                        MenusRegistry.COMMAND_PALETTE_ID
-                    )
-                    if isinstance(item, MenuItem)
-                )
-            ),
+            {
+                item.command
+                for item in self.app.menus.get_menu(MenusRegistry.COMMAND_PALETTE_ID)
+                if isinstance(item, MenuItem)
+            },
             key=lambda command: command.id,
         )
 
     def select_binds(self, binds_file: Optional[Path]) -> None:
         """Updates currently selected binds.
 
-        Does not have any immediate effect except updating the value and finding the name of the binds set.
+        Does not have any immediate effect except updating the value
+        and finding the name of the binds set.
         """
         if binds_file is None:
             self.selected_binds = None
@@ -140,7 +139,8 @@ class StateManager:
     def select_controller(self, controller_file: Optional[Path]) -> None:
         """Updates currently selected controller schema.
 
-        Does not have any immediate effect except updating the value and finding the name of the binds set.
+        Does not have any immediate effect except updating the value
+        and finding the name of the binds set.
         """
         if controller_file is None:
             self.selected_controller = None

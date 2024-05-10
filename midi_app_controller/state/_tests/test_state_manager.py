@@ -1,13 +1,14 @@
-from unittest.mock import Mock, patch
 import uuid
+from unittest.mock import Mock, patch
 
+import pytest
 from app_model import Application
 from app_model.types import Action
-import pytest
 
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
-from ..state_manager import StateManager, SelectedItem
+
+from ..state_manager import SelectedItem, StateManager
 
 
 @pytest.fixture

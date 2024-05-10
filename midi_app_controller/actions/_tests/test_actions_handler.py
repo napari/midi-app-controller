@@ -6,10 +6,11 @@ patch("superqt.utils.ensure_main_thread", lambda await_return: lambda f: f).star
 import pytest
 from app_model.types import Action
 
-from ..bound_controller import BoundController
-from ..actions_handler import ActionsHandler
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
+
+from ..actions_handler import ActionsHandler
+from ..bound_controller import BoundController
 
 
 @pytest.fixture

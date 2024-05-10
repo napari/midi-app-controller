@@ -1,13 +1,14 @@
 import logging
 import time
-from typing import Callable, Optional
 from threading import Thread
+from typing import Callable, Optional
 
 import rtmidi
 from qtpy.QtCore import QMutex, QMutexLocker
 
-from midi_app_controller.models.controller import Controller
 from midi_app_controller.actions.actions_handler import ActionsHandler
+from midi_app_controller.models.controller import Controller
+
 from .controller_constants import ControllerConstants
 
 

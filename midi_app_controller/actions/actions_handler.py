@@ -7,14 +7,15 @@ from .bound_controller import BoundController
 
 
 class ActionsHandler:
-    """Allows to execute actions and get their state using ids of controller elements."""
+    """Allows to execute actions and get their state using ids of controller
+    elements."""
 
     def __init__(
         self,
         *,
         bound_controller: BoundController,
         app: Application,
-    ) -> None:
+    ):
         """Initializes the handler.
 
         Parameters
@@ -38,7 +39,8 @@ class ActionsHandler:
         """Returns knob's value from the action associated with the knob."""
         raise NotImplementedError  # TODO It's not available in app-model.
 
-    # Without `await_return` closing MIDI ports freezes after handling at least two actions.
+    # Without `await_return` closing MIDI ports freezes after handling
+    # at least two actions.
     @ensure_main_thread(await_return=True)
     def handle_button_action(self, button_id: int) -> None:
         """Executes an action associated with the button if it exists."""
