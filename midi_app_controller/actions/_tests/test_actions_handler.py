@@ -18,6 +18,7 @@ def bound_controller() -> BoundController:
         "name": "TestBinds",
         "app_name": "TestApp",
         "controller_name": "TestController",
+        "description": None,
         "button_binds": [{"button_id": 1, "action_id": "Action1"}],
         "knob_binds": [
             {

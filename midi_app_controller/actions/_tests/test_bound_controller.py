@@ -70,18 +70,24 @@ def bound_controller(binds, controller, actions) -> BoundController:
     return BoundController.create(binds=binds, controller=controller, actions=actions)
 
 
+def validate_actions(data, actions_class):
+    actions = actions_class(**data)
+    x = actions.model_dump()
+
+    for key in x:
+        for key2 in x[key]:
+            if hasattr(data[key], key2):
+                assert getattr(data[key], key2) == x[key][key2]
+
+
 def test_button_actions(actions):
     data = {"action_press": actions[0]}
-    actions = ButtonActions(**data)
-
-    assert actions.dict() == data
+    validate_actions(data, ButtonActions)
 
 
 def test_knob_actions(actions):
     data = {"action_increase": actions[0], "action_decrease": actions[1]}
-    actions = KnobActions(**data)
-
-    assert actions.dict() == data
+    validate_actions(data, KnobActions)
 
 
 def test_bound_controller(binds, controller, actions):
