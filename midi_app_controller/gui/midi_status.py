@@ -236,7 +236,7 @@ class MidiStatus(QWidget):
                 self,
                 "Confirm deletion",
                 "Are you sure you want to delete this config "
-                "file?\n{state.selected_binds.path}",
+                f"file?\n{state.selected_binds.path}",
                 buttons=QMessageBox.Yes | QMessageBox.No,
                 defaultButton=QMessageBox.No,
             )
