@@ -3,12 +3,8 @@ import re
 import sys
 from typing import Optional
 
-from app_model.types import Action
-from napari.components import LayerList
-
 # TODO: This will be made public in some future napari version
 from napari._app_model import get_app
-
 from qtpy.QtWidgets import (
     QApplication,
     QWidget,
@@ -29,34 +25,10 @@ from midi_app_controller.gui.utils import (
 )
 from midi_app_controller.state.state_manager import SelectedItem, StateManager
 from midi_app_controller.config import Config
+from midi_app_controller.actions.napari_actions import register_custom_napari_actions
 
 
-def decrease_opacity(ll: LayerList):
-    for lay in ll.selection:
-        lay.opacity = max(0, lay.opacity - 0.01)
-
-
-def increase_opacity(ll: LayerList):
-    for lay in ll.selection:
-        lay.opacity = min(1, lay.opacity + 0.01)
-
-
-# TODO Added only to allow testing slider actions until they are added to napari.
-SLIDER_ACTIONS = [
-    Action(
-        id="napari:layer:increase_opacity",
-        title="Increase opacity",
-        callback=increase_opacity,
-    ),
-    Action(
-        id="napari:layer:decrease_opacity",
-        title="Decrease opacity",
-        callback=decrease_opacity,
-    ),
-]
-for action in SLIDER_ACTIONS:
-    get_app().register_action(action)
-
+register_custom_napari_actions(get_app())
 
 state = StateManager(get_app())
 state.load_state()
@@ -231,7 +203,8 @@ class MidiStatus(QWidget):
     def _get_copy_name(current_name: str) -> str:
         """Finds a good name for a copy of a file.
 
-        Currently adds "({timestamp} copy)" to the end of the name, or replaces the timestamp with current time if already present.
+        Currently adds "({timestamp} copy)" to the end of the name, or replaces
+        the timestamp with current time if already present.
         """
         if m := re.fullmatch(r"(.*) \([0-9. -]* copy\)", current_name):
             current_name = m.group(1)
@@ -296,14 +269,14 @@ class MidiStatus(QWidget):
                 if new_binds.name == binds.name:
                     new_binds.name = self._get_copy_name(new_binds.name)
                 new_file = new_binds.save_copy_to(
-                    selected_binds.path.with_stem(new_binds.name), Config.BINDS_USER_DIR
+                    selected_binds.path.with_stem(new_binds.name),
+                    Config.BINDS_USER_DIR,
                 )
                 state.select_binds(new_file)
                 self.refresh()
             else:
                 new_binds.save_to(selected_binds.path)
 
-        # Show the dialog.
         editor_dialog = BindsEditor(
             controller,
             binds,
@@ -311,7 +284,21 @@ class MidiStatus(QWidget):
             save,
             state.connected_controller,
         )
+
+        # Pause values synchronization (which conflicts with the "Light up"
+        # feature) and handling MIDI messages. Enables elements highlighting.
+        if state.connected_controller is not None:
+            state.connected_controller.pause(
+                editor_dialog.buttons_widget.highlight_button,
+                editor_dialog.knobs_widget.highlight_knob,
+            )
+
+        # Show the dialog
         editor_dialog.exec_()
+
+        # Restore the controller to work.
+        if state.connected_controller is not None:
+            state.connected_controller.resume()
 
 
 def main():

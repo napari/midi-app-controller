@@ -25,7 +25,7 @@ def binds_data() -> dict:
 def test_valid_binds(binds_data):
     binds = Binds(**binds_data)
 
-    assert binds.dict() == binds_data
+    assert binds.model_dump() == binds_data
 
 
 @pytest.mark.parametrize(
