@@ -125,15 +125,11 @@ def test_bound_controller(binds, controller, actions):
     for bind in binds.knob_binds:
         bound_knob = bound_controller.knobs[bind.knob_id]
         assert (
-            bound_knob.action_increase is None
-            and bind.action_id_increase is None
-            or bound_knob.action_increase.id == bind.action_id_increase
-        )
+            bound_knob.action_increase is None and bind.action_id_increase is None
+        ) or bound_knob.action_increase.id == bind.action_id_increase
         assert (
-            bound_knob.action_decrease is None
-            and bind.action_id_decrease is None
-            or bound_knob.action_decrease.id == bind.action_id_decrease
-        )
+            bound_knob.action_decrease is None and bind.action_id_decrease is None
+        ) or bound_knob.action_decrease.id == bind.action_id_decrease
 
 
 @pytest.mark.parametrize("action_index_to_delete", [0, 1, 2])
