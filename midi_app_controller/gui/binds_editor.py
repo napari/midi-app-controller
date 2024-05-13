@@ -1,11 +1,10 @@
 # TODO Move style somewhere else in the future to make this class independent from napari.
 from typing import Callable, Optional
 
-from qtpy.QtWidgets import QTabWidget, QCheckBox, QSpacerItem, QSizePolicy
 from napari.qt import get_current_stylesheet
 from app_model.types import CommandRule
 from superqt.utils import ensure_main_thread
-from qtpy.QtCore import Qt, QThread, QTimer
+from qtpy.QtCore import QThread, QTimer
 from qtpy.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -16,6 +15,10 @@ from qtpy.QtWidgets import (
     QScrollArea,
     QGridLayout,
     QLineEdit,
+    QTabWidget,
+    QCheckBox,
+    QSpacerItem,
+    QSizePolicy,
 )
 
 from midi_app_controller.gui.utils import (
