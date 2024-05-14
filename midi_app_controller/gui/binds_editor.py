@@ -280,8 +280,8 @@ class KnobBinds(QWidget):
         # Description row.
         description_layout = QHBoxLayout()
         description_layout.addWidget(QLabel("Knob:"), 2)
-        description_layout.addWidget(QLabel("Action when increased:"), 5)
         description_layout.addWidget(QLabel("Action when decreased:"), 5)
+        description_layout.addWidget(QLabel("Action when increased:"), 5)
 
         # All knobs available to bind.
         knob_list = QWidget()
@@ -362,8 +362,8 @@ class KnobBinds(QWidget):
             (QLabel(knob_name), 1),
             (light_up_knob, 1),
             (QWidget(), 3),
-            (increase_action_combo, 5),
             (decrease_action_combo, 5),
+            (increase_action_combo, 5),
         ]
 
         if controller_disconnected:
