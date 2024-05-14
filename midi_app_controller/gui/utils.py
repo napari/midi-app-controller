@@ -7,6 +7,8 @@ from app_model.types import CommandRule
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QComboBox, QWidget
 
+HIGHLIGHT_STYLE_SHEET = "background-color: SeaGreen"
+HIGHLIGHT_DURATION_MS = 1000
 T = TypeVar("T")
 
 
@@ -141,9 +143,9 @@ class ActionsQComboBox(QComboBox):
 
 def is_subpath(path: Path, subpath: Path) -> bool:
     """Checks if one path represents a file/directory inside the other directory."""
-    path_str = str(subpath.resolve().absolute())
-    subpath_str = str(path.resolve().absolute())
-    return path_str.startswith(subpath_str)
+    path_str = str(path.resolve().absolute())
+    subpath_str = str(subpath.resolve().absolute())
+    return subpath_str.startswith(path_str)
 
 
 def reveal_in_explorer(file: Path):

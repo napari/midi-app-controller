@@ -18,6 +18,7 @@ def bound_controller() -> BoundController:
         "name": "TestBinds",
         "app_name": "TestApp",
         "controller_name": "TestController",
+        "description": None,
         "button_binds": [{"button_id": 1, "action_id": "Action1"}],
         "knob_binds": [
             {
@@ -66,13 +67,6 @@ def bound_controller() -> BoundController:
         binds=Binds(**binds_data),
         actions=actions,
     )
-
-
-def test_is_button_toggled(bound_controller):
-    actions_handler = ActionsHandler(bound_controller=bound_controller, app=Mock())
-
-    with pytest.raises(NotImplementedError):
-        actions_handler.is_button_toggled(0)
 
 
 def test_get_knob_value(bound_controller):

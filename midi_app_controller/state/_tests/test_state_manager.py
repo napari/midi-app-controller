@@ -137,10 +137,11 @@ def test_select_midi_out(mock_midi_in_out, state_manager, name):
 def test_stop_handling(mock_midi_in_out, state_manager):
     mock_midi_in, mock_midi_out = mock_midi_in_out
 
-    state_manager.connected_controller = Mock()
+    connected_controller = Mock()
+    state_manager.connected_controller = connected_controller
     state_manager.stop_handling()
 
-    mock_midi_in.cancel_callback.assert_called_once()
+    connected_controller.stop.assert_called_once()
     mock_midi_in.close_port.assert_called_once()
     mock_midi_out.close_port.assert_called_once()
     assert not state_manager.is_running()
@@ -165,3 +166,5 @@ def test_start_handling(
     mock_binds_load.assert_called_once()
     mock_controller_load.assert_called_once()
     assert state_manager.is_running()
+
+    state_manager.stop_handling()
