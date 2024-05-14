@@ -1,22 +1,31 @@
 # Binds
 
-All created binds and settings for a specific app and controller are stored as `YAML` files.
-Ids of the elements should match the ones specified in the controller's schema.
+All created binds and settings for a specific app and controller are stored as `YAML` files. They are usually edited from within the graphical user interface that disallows creating illegal configurations.
 
-## All available fields
-- `name`: The name of the binds set. Cannot be empty. Must be unique among all binds sets.
-- `app_name`: For which app are the binds intended. Cannot be empty.
-- `controller_name`: For which controller are the binds intended. Cannot be empty.
-- `description`: Additional information that the user may provide. Is optional.
-- `button_binds`: List of bound buttons. Each of them consists of:
-  - `button_id`: The id of the button. Should be in the range `[0, 127]`.
-  - `action_id`: The id of an action to be executed when the button is pressed.
-- `knob_binds`: List of bound knobs. Each of them consists of:
-  - `knob_id`: The id of the knob. Should be in the range `[0, 127]`.
-  - `action_id_increase`: The id of an action to be executed when the knob's value increases.
-  - `action_id_decrease`: The id of an action to be executed when the knob's value decreases.
+All ids of the elements should match the ones specified in the controller's schema.
+
+Built-in schemas are available in [config_files/binds](https://github.com/midi-app-controller/midi-app-controller/tree/main/config_files/binds) on GitHub.
+
+::: midi_app_controller.models.binds.Binds
+    options:
+      show_root_heading: true
+      show_bases: false
+      members: [""]
+
+::: midi_app_controller.models.binds.ButtonBind
+    options:
+      show_root_heading: true
+      show_bases: false
+      members: [""]
+
+::: midi_app_controller.models.binds.KnobBind
+    options:
+      show_root_heading: true
+      show_bases: false
+      members: [""]
 
 ## Example
+
 ```yaml
 name: "MyBinds"
 app_name: "MyApp"
