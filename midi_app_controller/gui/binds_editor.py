@@ -1,11 +1,10 @@
-# TODO Move style somewhere else in the future to make this class independent from napari.
 from typing import Callable, Optional
 
-from qtpy.QtWidgets import QTabWidget, QCheckBox, QSpacerItem, QSizePolicy
+# TODO Move style somewhere else in the future to make this class independent from napari.
 from napari.qt import get_current_stylesheet
 from app_model.types import CommandRule
 from superqt.utils import ensure_main_thread
-from qtpy.QtCore import Qt, QThread, QTimer
+from qtpy.QtCore import Qt, QTimer
 from qtpy.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -16,8 +15,13 @@ from qtpy.QtWidgets import (
     QScrollArea,
     QGridLayout,
     QLineEdit,
+    QTabWidget,
+    QCheckBox,
+    QSpacerItem,
+    QSizePolicy,
 )
 
+from midi_app_controller.utils import SimpleQThread
 from midi_app_controller.gui.utils import (
     ActionsQComboBox,
     HIGHLIGHT_STYLE_SHEET,
@@ -26,24 +30,6 @@ from midi_app_controller.gui.utils import (
 from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
 from midi_app_controller.models.controller import Controller, ControllerElement
 from midi_app_controller.controller.connected_controller import ConnectedController
-
-
-class LightUpQThread(QThread):
-    """Worker thread responsible for lighting up a controller element.
-
-    Attributes
-    ----------
-    func : Callable[[], None]
-        Function for lighting up the element.
-    """
-
-    def __init__(self, func: Callable[[], None]):
-        super().__init__()
-        self.func = func
-
-    def run(self):
-        """Runs the lighting up function."""
-        self.func()
 
 
 class ButtonBinds(QWidget):
@@ -146,7 +132,7 @@ class ButtonBinds(QWidget):
         def light_up_func():
             self.connected_controller.flash_button(button_id)
 
-        thread = LightUpQThread(light_up_func)
+        thread = SimpleQThread(light_up_func)
 
         self.thread_list.append(thread)
         thread.start()
@@ -327,7 +313,7 @@ class KnobBinds(QWidget):
         def light_up_func():
             self.connected_controller.flash_knob(knob_id)
 
-        thread = LightUpQThread(light_up_func)
+        thread = SimpleQThread(light_up_func)
 
         self.thread_list.append(thread)
         thread.start()
