@@ -1,0 +1,7 @@
+pytkdocs[numpy-style]
+black
+mkdocs-material
+mkdocstrings[python]
+mkdocstrings
+mkdocs
+mkdocs-macros-plugin
