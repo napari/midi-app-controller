@@ -165,8 +165,8 @@ class ButtonBinds(QWidget):
 
         # Layout.
         elems_and_sizes = [
-            (QLabel(button_name), 4),
-            (light_up_button, 1),
+            (QLabel(button_name), 3),
+            (light_up_button, 2),
             (QWidget(), 1),
             (action_combo, 14),
         ]
@@ -348,8 +348,8 @@ class KnobBinds(QWidget):
 
         # Layout.
         elems_and_sizes = [
-            (QLabel(knob_name), 4),
-            (light_up_knob, 1),
+            (QLabel(knob_name), 3),
+            (light_up_knob, 2),
             (QWidget(), 1),
             (increase_action_combo, 7),
             (decrease_action_combo, 7),
@@ -535,7 +535,7 @@ class BindsEditor(QDialog):
         layout.addLayout(buttons_layout)
         self.setLayout(layout)
         self.setStyleSheet(get_current_stylesheet())
-        self.setMinimumSize(830, 650)
+        self.setMinimumSize(900, 850)
 
     def _toggle_names_mode(self):
         """Toggles actions names mode: titles or ids."""
