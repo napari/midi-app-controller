@@ -1,3 +1,44 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=69.4.2", "wheel>=0.43.0"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "midi-app-controller"
+version = "0.0.1"
+description = "Control napari with a MIDI controller."
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Framework :: napari",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python",
+]
+dependencies = [
+    "napari[all]>=0.4.19",
+    "python-rtmidi>=1.5.8",
+    "pyyaml>=6.0.1",
+    "pydantic>=2.7.1",
+    "appdirs>=1.4.4",
+    "qtpy>=2.4.1",
+    "superqt>=0.6.5",
+]
+
+[project.urls]
+"Source Code" = "https://github.com/midi-app-controller/midi-app-controller"
+Documentation = "https://midi-app-controller.readthedocs.io"
+
+[project.entry-points."napari.manifest"]
+midi-app-controller = "midi_app_controller:napari.yaml"
+
+[project.optional-dependencies]
+testing = [
+    "pytest>=8.2.0",
+    "pytest-cov>=5.0.0",
+]
+dev = [
+    "midi-app-controller[testing]",
+    "pre-commit>=3.7.0",
+]
+
+[tool.setuptools.packages.find]
+namespaces = false

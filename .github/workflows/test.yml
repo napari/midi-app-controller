@@ -21,10 +21,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
-          cache-dependency-path: requirements-test.txt
+          cache-dependency-path: pyproject.toml
 
       - name: Install dependencies
-        run: pip install -r requirements-test.txt
+        run: pip install -e .[testing]
 
       - name: Run tests and collect coverage
         run: pytest --cov midi_app_controller
