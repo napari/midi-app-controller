@@ -1,5 +1,6 @@
-from app_model.types import CommandRule
 from typing import Optional
+
+from app_model.types import CommandRule
 from pydantic import BaseModel, Field
 
 from midi_app_controller.models.binds import Binds
@@ -23,14 +24,14 @@ class KnobActions(BaseModel):
 
     Attributes
     ----------
-    action_increase : CommandRule
+    action_increase : Optional[CommandRule]
         Action to be executed when the knob's value increases.
-    action_decrease : CommandRule
+    action_decrease : Optional[CommandRule]
         Action to be executed when the knob's value decreases.
     """
 
-    action_increase: CommandRule
-    action_decrease: CommandRule
+    action_increase: Optional[CommandRule]
+    action_decrease: Optional[CommandRule]
 
 
 class BoundController(BaseModel):
@@ -108,11 +109,11 @@ class BoundController(BaseModel):
         for bind in binds.knob_binds:
             action_increase = actions_dict.get(bind.action_id_increase)
             action_decrease = actions_dict.get(bind.action_id_decrease)
-            if action_increase is None:
+            if bind.action_id_increase is not None and action_increase is None:
                 raise ValueError(
                     f"bound action '{bind.action_id_increase}' cannot be found"
                 )
-            if action_decrease is None:
+            if bind.action_id_decrease is not None and action_decrease is None:
                 raise ValueError(
                     f"bound action '{bind.action_id_decrease}' cannot be found"
                 )
@@ -142,6 +143,7 @@ class BoundController(BaseModel):
 
     def get_button_press_action(self, button_id: int) -> Optional[CommandRule]:
         """Finds the action to be executed when a button is pressed.
+
         Returns None if there is no such action.
         """
         button = self.buttons.get(button_id)
@@ -150,6 +152,7 @@ class BoundController(BaseModel):
 
     def get_knob_increase_action(self, knob_id: int) -> Optional[CommandRule]:
         """Finds action to be executed when knob's value is increased.
+
         Returns None if there is no such action.
         """
         knob = self.knobs.get(knob_id)
@@ -158,6 +161,7 @@ class BoundController(BaseModel):
 
     def get_knob_decrease_action(self, knob_id: int) -> Optional[CommandRule]:
         """Finds action to be executed when knob's value is decreased.
+
         Returns None if there is no such action.
         """
         knob = self.knobs.get(knob_id)

@@ -1,37 +1,28 @@
-import datetime
-import re
 import sys
 from typing import Optional
 
-# TODO: This will be made public in some future napari version
-from napari._app_model import get_app
 from qtpy.QtWidgets import (
     QApplication,
-    QWidget,
-    QVBoxLayout,
-    QPushButton,
-    QLabel,
     QHBoxLayout,
+    QLabel,
     QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
 
-from midi_app_controller.models.binds import Binds
-from midi_app_controller.models.controller import Controller
+from midi_app_controller.config import Config
 from midi_app_controller.gui.binds_editor import BindsEditor
 from midi_app_controller.gui.utils import (
     DynamicQComboBox,
     is_subpath,
     reveal_in_explorer,
+    vertical_layout,
 )
-from midi_app_controller.state.state_manager import SelectedItem, StateManager
-from midi_app_controller.config import Config
-from midi_app_controller.actions.napari_actions import register_custom_napari_actions
-
-
-register_custom_napari_actions(get_app())
-
-state = StateManager(get_app())
-state.load_state()
+from midi_app_controller.models.binds import Binds
+from midi_app_controller.models.controller import Controller
+from midi_app_controller.state.state_manager import SelectedItem, get_state_manager
+from midi_app_controller.utils import get_copy_name
 
 
 class MidiStatus(QWidget):
@@ -64,20 +55,12 @@ class MidiStatus(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Controller selection.
-        def select_controller(controller: Optional[SelectedItem]) -> None:
-            controller_path = None if controller is None else controller.path
-            state.select_controller(controller_path)
-            state.select_binds(
-                state.recent_binds_for_controller.get(controller_path, None)
-            )
-            self.refresh()
+        state = get_state_manager()
 
-        selected_controller = state.selected_controller
         self.current_controller = DynamicQComboBox(
-            selected_controller,
+            state.selected_controller,
             state.get_available_controllers,
-            select_controller,
+            self._select_controller,
             get_item_label=lambda x: x.name,
         )
 
@@ -86,16 +69,12 @@ class MidiStatus(QWidget):
             lambda: reveal_in_explorer(state.selected_controller.path)
         )
 
-        def select_binds(binds: Optional[SelectedItem]) -> None:
-            state.select_binds(None if binds is None else binds.path)
-            self.refresh()
-
         # Binds selection.
         selected_binds = state.selected_binds
         self.current_binds = DynamicQComboBox(
             selected_binds,
             get_items=state.get_available_binds,
-            select_item=select_binds,
+            select_item=self._select_binds,
             get_item_label=lambda x: x.name,
         )
 
@@ -130,7 +109,7 @@ class MidiStatus(QWidget):
         # Status.
         self.status = QLabel(None)
         status_layout = QHBoxLayout()
-        status_layout.addWidget(QLabel("Status"))
+        status_layout.addWidget(QLabel("Status:"))
         status_layout.addWidget(self.status)
 
         # Edit, start and stop buttons.
@@ -149,17 +128,15 @@ class MidiStatus(QWidget):
 
         # Layout.
         layout = QVBoxLayout()
-        layout.addLayout(
-            self._horizontal_layout("Controller:", self.current_controller)
-        )
+        layout.addLayout(vertical_layout("Controller:", self.current_controller))
         layout.addWidget(self.show_controllers_file_button)
-        layout.addLayout(self._horizontal_layout("Binds:", self.current_binds))
+        layout.addLayout(vertical_layout("Binds:", self.current_binds))
         layout.addWidget(self.show_binds_file_button)
         layout.addWidget(self.copy_binds_button)
         layout.addWidget(self.delete_binds_button)
         layout.addWidget(self.edit_binds_button)
-        layout.addLayout(self._horizontal_layout("MIDI input:", self.current_midi_in))
-        layout.addLayout(self._horizontal_layout("MIDI output:", self.current_midi_out))
+        layout.addLayout(vertical_layout("MIDI input:", self.current_midi_in))
+        layout.addLayout(vertical_layout("MIDI output:", self.current_midi_out))
         layout.addLayout(status_layout)
         layout.addWidget(self.start_handling_button)
         layout.addWidget(self.stop_handling_button)
@@ -170,7 +147,9 @@ class MidiStatus(QWidget):
         self.refresh()
 
     def refresh(self):
-        """Updates all widgets to ensure they match the data stored inside the StateManager."""
+        """Updates all widgets to ensure they match the data stored inside
+        the `StateManager`."""
+        state = get_state_manager()
 
         self.current_controller.refresh_items()
         self.current_controller.set_current(state.selected_controller)
@@ -191,64 +170,50 @@ class MidiStatus(QWidget):
         )
         self.stop_handling_button.setEnabled(state.is_running())
 
-    def _horizontal_layout(self, label: str, widget: QWidget) -> QHBoxLayout:
-        """Creates horizontal layout consisting of the `label` on the left half\
-        and the `widget` on the right half."""
-        layout = QVBoxLayout()
-        layout.addWidget(QLabel(label))
-        layout.addWidget(widget)
-        return layout
+    def _select_binds(self, binds: Optional[SelectedItem]) -> None:
+        """Selects the `binds` and refreshes the widget."""
+        state = get_state_manager()
+        state.select_binds(binds)
+        self.refresh()
 
-    @staticmethod
-    def _get_copy_name(current_name: str) -> str:
-        """Finds a good name for a copy of a file.
-
-        Currently adds "({timestamp} copy)" to the end of the name, or replaces
-        the timestamp with current time if already present.
-        """
-        if m := re.fullmatch(r"(.*) \([0-9. -]* copy\)", current_name):
-            current_name = m.group(1)
-        timestamp = (
-            datetime.datetime.now().isoformat().replace(":", "-").replace("T", " ")
-        )
-        return f"{current_name} ({timestamp} copy)"
+    def _select_controller(self, controller: Optional[SelectedItem]) -> None:
+        """Selects the `controller`, tries to select recent binds,
+        and refreshes the widget."""
+        state = get_state_manager()
+        state.select_controller(controller)
+        state.select_recent_binds()
+        self.refresh()
 
     def _copy_binds(self) -> None:
-        """Copies the currently selected binds to a new file, and selects that file."""
-        assert state.selected_binds is not None, "No binds selected"
-
-        binds = Binds.load_from(state.selected_binds.path)
-        binds.name = self._get_copy_name(binds.name)
-        new_file = binds.save_copy_to(
-            state.selected_binds.path.with_stem(binds.name), Config.BINDS_USER_DIR
-        )
-        state.select_binds(new_file)
+        """Copies the currently selected binds to a new file, selects that file,
+        and refreshes the widget."""
+        state = get_state_manager()
+        binds_path = state.copy_binds()
+        state.select_binds_path(binds_path)
         self.refresh()
 
     def _delete_binds(self) -> None:
-        """Deletes the file with currently selected binds setup."""
-        assert state.selected_binds is not None, "No binds selected"
-        if not is_subpath(Config.BINDS_USER_DIR, state.selected_binds.path):
-            raise PermissionError("This config file is read-only")
-
+        """Deletes the file with currently selected binds setup, and refreshes
+        the widget."""
+        state = get_state_manager()
         if (
             QMessageBox.question(
                 self,
                 "Confirm deletion",
-                f"Are you sure you want to delete this config file?\n{state.selected_binds.path}",
+                "Are you sure you want to delete this config "
+                f"file?\n{state.selected_binds.path}",
                 buttons=QMessageBox.Yes | QMessageBox.No,
                 defaultButton=QMessageBox.No,
             )
-            != QMessageBox.Yes
+            == QMessageBox.Yes
         ):
-            return
-
-        state.selected_binds.path.unlink()
-        state.select_binds(None)
-        self.refresh()
+            state.delete_binds()
+            self.refresh()
 
     def _edit_binds(self):
         """Opens dialog that will allow to edit currently selected binds."""
+        state = get_state_manager()
+
         # Get selected controller and binds.
         selected_controller = state.selected_controller
         selected_binds = state.selected_binds
@@ -263,16 +228,17 @@ class MidiStatus(QWidget):
         binds = Binds.load_from(selected_binds.path)
 
         def save(new_binds) -> None:
-            """Saves updated binds in the original location or in a new file if the location was read-only."""
+            """Saves updated binds in the original location or in a new file
+            if the location was read-only."""
 
             if is_subpath(Config.BINDS_READONLY_DIR, selected_binds.path):
                 if new_binds.name == binds.name:
-                    new_binds.name = self._get_copy_name(new_binds.name)
+                    new_binds.name = get_copy_name(new_binds.name)
                 new_file = new_binds.save_copy_to(
                     selected_binds.path.with_stem(new_binds.name),
                     Config.BINDS_USER_DIR,
                 )
-                state.select_binds(new_file)
+                state.select_binds_path(new_file)
                 self.refresh()
             else:
                 new_binds.save_to(selected_binds.path)

@@ -1,9 +1,10 @@
 import pytest
 from app_model.types import Action
 
-from ..bound_controller import BoundController, ButtonActions, KnobActions
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
+
+from ..bound_controller import BoundController, ButtonActions, KnobActions
 
 
 @pytest.fixture
@@ -13,13 +14,20 @@ def binds() -> Binds:
         "description": "Test description",
         "app_name": "TestApp",
         "controller_name": "TestController",
-        "button_binds": [{"button_id": 1, "action_id": "Action1"}],
+        "button_binds": [
+            {"button_id": 1, "action_id": "Action1"},
+        ],
         "knob_binds": [
             {
                 "knob_id": 2,
                 "action_id_increase": "incr",
                 "action_id_decrease": "decr",
-            }
+            },
+            {
+                "knob_id": 3,
+                "action_id_increase": "incr",
+                "action_id_decrease": None,
+            },
         ],
     }
     return Binds(**binds_data)
@@ -33,8 +41,24 @@ def controller() -> Controller:
         "button_value_on": 100,
         "knob_value_min": 33,
         "knob_value_max": 55,
-        "buttons": [{"id": 0, "name": "Button1"}, {"id": 1, "name": "Button2"}],
-        "knobs": [{"id": 2, "name": "Knob1"}, {"id": 3, "name": "Knob2"}],
+        "buttons": [
+            {"id": 0, "name": "Button1"},
+            {"id": 1, "name": "Button2"},
+        ],
+        "knobs": [
+            {
+                "id": 2,
+                "name": "Knob1",
+            },
+            {
+                "id": 3,
+                "name": "Knob2",
+            },
+            {
+                "id": 5,
+                "name": "Knob3",
+            },
+        ],
     }
     return Controller(**controller_data)
 
@@ -107,8 +131,12 @@ def test_bound_controller(binds, controller, actions):
         assert bound_button.action_press.id == bind.action_id
     for bind in binds.knob_binds:
         bound_knob = bound_controller.knobs[bind.knob_id]
-        assert bound_knob.action_increase.id == bind.action_id_increase
-        assert bound_knob.action_decrease.id == bind.action_id_decrease
+        assert (
+            bound_knob.action_increase is None and bind.action_id_increase is None
+        ) or bound_knob.action_increase.id == bind.action_id_increase
+        assert (
+            bound_knob.action_decrease is None and bind.action_id_decrease is None
+        ) or bound_knob.action_decrease.id == bind.action_id_decrease
 
 
 @pytest.mark.parametrize("action_index_to_delete", [0, 1, 2])
@@ -153,7 +181,7 @@ def test_get_knob_increase_action(actions, bound_controller):
     assert bound_controller.get_knob_increase_action(2) == actions[1]
 
 
-@pytest.mark.parametrize("knob_id", [3, 10, 1000])
+@pytest.mark.parametrize("knob_id", [5, 10, 1000])
 def test_get_knob_increase_action_when_not_found(bound_controller, knob_id):
     assert bound_controller.get_knob_increase_action(knob_id) is None
 

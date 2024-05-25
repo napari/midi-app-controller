@@ -61,6 +61,16 @@ All configurations are simple YAML files which you can copy, share, or edit manu
 
 After you save changes, if you have already started handling, you need to click "Restart handling" to start a new server with the changes applied.
 
+## Usage without GUI
+
+The library can be also controlled using the singleton of [`StateManager`](api_reference.md) class:
+```python
+from midi_app_controller.state.state_manager import get_state_manager
+
+state = get_state_manager()
+# Now the library can be controlled using `state`.
+```
+
 ## Development
 
 ### Installing
@@ -70,6 +80,7 @@ python3 -m pip install -e .
 
 ### Testing
 ```sh
+python3 -m pip install -e .[testing]
 python3 -m pytest --cov .
 ```
 
@@ -80,6 +91,6 @@ mkdocs serve -a localhost:8080
 
 ### Using pre-commit
 ```sh
-python3 -m pip install pre-commit
+python3 -m pip install -e .[dev]
 pre-commit install
 ```
