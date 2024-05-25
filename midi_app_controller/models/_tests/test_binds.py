@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from ..binds import ButtonBind, KnobBind, Binds
+from ..binds import Binds, ButtonBind, KnobBind
 
 
 @pytest.fixture

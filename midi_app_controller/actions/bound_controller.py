@@ -1,5 +1,6 @@
-from app_model.types import CommandRule
 from typing import Optional
+
+from app_model.types import CommandRule
 from pydantic import BaseModel, Field
 
 from midi_app_controller.models.binds import Binds

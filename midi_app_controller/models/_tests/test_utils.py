@@ -1,11 +1,11 @@
-from typing import Optional
 from pathlib import Path
+from typing import Optional
 
-from pydantic import ValidationError
 import pytest
 import yaml
+from pydantic import ValidationError
 
-from ..utils import find_duplicate, YamlBaseModel
+from ..utils import YamlBaseModel, find_duplicate
 
 
 class TempYamlModel(YamlBaseModel):

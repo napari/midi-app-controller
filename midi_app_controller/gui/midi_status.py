@@ -3,17 +3,15 @@ from typing import Optional
 
 from qtpy.QtWidgets import (
     QApplication,
-    QWidget,
-    QVBoxLayout,
-    QPushButton,
-    QLabel,
     QHBoxLayout,
+    QLabel,
     QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
 
-from midi_app_controller.utils import get_copy_name
-from midi_app_controller.models.binds import Binds
-from midi_app_controller.models.controller import Controller
+from midi_app_controller.config import Config
 from midi_app_controller.gui.binds_editor import BindsEditor
 from midi_app_controller.gui.utils import (
     DynamicQComboBox,
@@ -21,8 +19,10 @@ from midi_app_controller.gui.utils import (
     reveal_in_explorer,
     vertical_layout,
 )
+from midi_app_controller.models.binds import Binds
+from midi_app_controller.models.controller import Controller
 from midi_app_controller.state.state_manager import SelectedItem, get_state_manager
-from midi_app_controller.config import Config
+from midi_app_controller.utils import get_copy_name
 
 
 class MidiStatus(QWidget):
@@ -200,7 +200,8 @@ class MidiStatus(QWidget):
             QMessageBox.question(
                 self,
                 "Confirm deletion",
-                f"Are you sure you want to delete this config file?\n{state.selected_binds.path}",
+                "Are you sure you want to delete this config "
+                f"file?\n{state.selected_binds.path}",
                 buttons=QMessageBox.Yes | QMessageBox.No,
                 defaultButton=QMessageBox.No,
             )
@@ -227,7 +228,8 @@ class MidiStatus(QWidget):
         binds = Binds.load_from(selected_binds.path)
 
         def save(new_binds) -> None:
-            """Saves updated binds in the original location or in a new file if the location was read-only."""
+            """Saves updated binds in the original location or in a new file
+            if the location was read-only."""
 
             if is_subpath(Config.BINDS_READONLY_DIR, selected_binds.path):
                 if new_binds.name == binds.name:

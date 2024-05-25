@@ -1,5 +1,5 @@
 import os
-from typing import Iterable
+from collections.abc import Iterable
 from pathlib import Path
 
 import appdirs

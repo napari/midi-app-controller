@@ -1,9 +1,10 @@
 import pytest
 from app_model.types import Action
 
-from ..bound_controller import BoundController, ButtonActions, KnobActions
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
+
+from ..bound_controller import BoundController, ButtonActions, KnobActions
 
 
 @pytest.fixture

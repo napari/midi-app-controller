@@ -1,34 +1,34 @@
 from typing import Callable, Optional
 
-from napari.qt import get_current_stylesheet
 from app_model.types import CommandRule
-from superqt.utils import ensure_main_thread
+from napari.qt import get_current_stylesheet
 from qtpy.QtCore import QTimer
 from qtpy.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QPushButton,
-    QLabel,
-    QHBoxLayout,
-    QDialog,
-    QScrollArea,
-    QGridLayout,
-    QLineEdit,
-    QTabWidget,
     QCheckBox,
-    QSpacerItem,
+    QDialog,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QScrollArea,
     QSizePolicy,
+    QSpacerItem,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
+from superqt.utils import ensure_main_thread
 
-from midi_app_controller.utils import SimpleQThread
-from midi_app_controller.gui.utils import (
-    ActionsQComboBox,
-    HIGHLIGHT_STYLE_SHEET,
-    HIGHLIGHT_DURATION_MS,
-)
-from midi_app_controller.models.binds import ButtonBind, KnobBind, Binds
-from midi_app_controller.models.controller import Controller, ControllerElement
 from midi_app_controller.controller.connected_controller import ConnectedController
+from midi_app_controller.gui.utils import (
+    HIGHLIGHT_DURATION_MS,
+    HIGHLIGHT_STYLE_SHEET,
+    ActionsQComboBox,
+)
+from midi_app_controller.models.binds import Binds, ButtonBind, KnobBind
+from midi_app_controller.models.controller import Controller, ControllerElement
+from midi_app_controller.utils import SimpleQThread
 
 
 class ButtonBinds(QWidget):
