@@ -4,7 +4,7 @@ from unittest.mock import Mock, call, patch
 patch("superqt.utils.ensure_main_thread", lambda await_return: lambda f: f).start()
 
 import pytest
-from app_model.types import Action
+from app_model.types import Action, ToggleRule
 
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
@@ -45,6 +45,7 @@ def bound_controller() -> BoundController:
             id="Action1",
             title="sdfgsdfg",
             callback=lambda: None,
+            toggled=ToggleRule(get_current=lambda: True),
         ),
         Action(
             id="incr",
@@ -68,6 +69,20 @@ def bound_controller() -> BoundController:
         binds=Binds(**binds_data),
         actions=actions,
     )
+
+
+def test_is_button_toggled_when_button_not_bound(bound_controller):
+    actions_handler = ActionsHandler(bound_controller=bound_controller, app=Mock())
+
+    assert actions_handler.is_button_toggled(0) is None
+
+
+def test_is_button_toggled(bound_controller):
+    app = Mock()
+    app.injection_store.inject = lambda x: x
+    actions_handler = ActionsHandler(bound_controller=bound_controller, app=app)
+
+    assert actions_handler.is_button_toggled(1)
 
 
 def test_get_knob_value(bound_controller):

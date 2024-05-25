@@ -1,0 +1,98 @@
+site_name: MIDI App Controller
+repo_url: https://github.com/midi-app-controller/midi-app-controller/
+repo_name: midi-app-controller
+site_author: MIDI App Controller Team
+site_description: Control a Qt application using a USB MIDI controller.
+
+
+# Copied from https://github.com/mkdocstrings/mkdocstrings/blob/main/mkdocs.yml
+theme:
+  name: material
+  # logo: logo.svg
+  features:
+  - announce.dismiss
+  - content.action.edit
+  - content.action.view
+  - content.code.annotate
+  - content.code.copy
+  - content.tooltips
+  - navigation.footer
+  - navigation.indexes
+  - navigation.sections
+  # - navigation.tabs
+  # - navigation.tabs.sticky
+  - navigation.top
+  - search.highlight
+  - search.suggest
+  - toc.follow
+
+nav:
+  - index.md
+  - Manual:
+    - config_files.md
+    - controllers.md
+    - binds.md
+  - api_reference.md
+
+plugins:
+  - search
+  - macros:
+      include_dir: .
+      module_name: docs/macros
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          import:
+            - https://docs.python.org/3/objects.inv
+            - https://spotlightkid.github.io/python-rtmidi/objects.inv
+            - https://app-model.readthedocs.io/en/latest/objects.inv
+          options:
+            show_submodules: true
+            # docstring_options:
+            #   ignore_init_summary: true
+            filters: ["!^_"]
+            merge_init_into_class: true
+            # heading_level: 1
+            inherited_members: true
+            parameter_headings: true
+            separate_signature: true
+            # show_root_heading: true
+            # show_root_full_path: false
+            show_signature_annotations: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            signature_crossrefs: true
+            # summary: true
+            # selection:
+            docstring_style: numpy
+            show_source: false
+
+markdown_extensions:
+- attr_list
+# - admonition
+# - callouts
+# - footnotes
+# - pymdownx.details
+# - pymdownx.emoji:
+#     emoji_index: !!python/name:material.extensions.emoji.twemoji
+#     emoji_generator: !!python/name:material.extensions.emoji.to_svg
+- pymdownx.highlight:
+    pygments_lang_class: true
+- pymdownx.inlinehilite:
+    style_plain_text: python
+- pymdownx.magiclink
+# - pymdownx.snippets:
+#     base_path: [!relative $config_dir]
+#     check_paths: true
+# - pymdownx.superfences
+# - pymdownx.tabbed:
+#     alternate_style: true
+#     slugify: !!python/object/apply:pymdownx.slugs.slugify
+#       kwds:
+#         case: lower
+# - pymdownx.tasklist:
+#     custom_checkbox: true
+# - pymdownx.tilde
+- toc:
+    permalink: "#"

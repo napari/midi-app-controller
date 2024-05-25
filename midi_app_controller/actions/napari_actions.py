@@ -12,23 +12,23 @@ from napari.viewer import Viewer
 
 
 def decrease_opacity(ll: LayerList):
-    for layer in ll.selection:
+    if (layer := ll.selection.active) is not None:
         layer.opacity = max(0, layer.opacity - 0.01)
 
 
 def increase_opacity(ll: LayerList):
-    for layer in ll.selection:
+    if (layer := ll.selection.active) is not None:
         layer.opacity = min(1, layer.opacity + 0.01)
 
 
 def decrease_brush_size(ll: LayerList) -> None:
-    for layer in ll.selection:
+    if (layer := ll.selection.active) is not None:
         if isinstance(layer, Labels):
             layer.brush_size = max(1, layer.brush_size - 1)
 
 
 def increase_brush_size(ll: LayerList) -> None:
-    for layer in ll.selection:
+    if (layer := ll.selection.active) is not None:
         if isinstance(layer, Labels):
             layer.brush_size = min(40, layer.brush_size + 1)
 
@@ -36,7 +36,7 @@ def increase_brush_size(ll: LayerList) -> None:
 def activate_labels_mode(mode: Mode) -> Callable[[LayerList], None]:
     def activate(ll: LayerList) -> None:
         """Activates the `mode` of `Labels` layer."""
-        for layer in ll.selection:
+        if (layer := ll.selection.active) is not None:
             if isinstance(layer, Labels):
                 layer.mode = mode
 
@@ -46,7 +46,7 @@ def activate_labels_mode(mode: Mode) -> Callable[[LayerList], None]:
 def toggled_labels_mode(mode: Mode) -> Callable[[LayerList], Optional[bool]]:
     def toggled(ll: LayerList) -> Optional[bool]:
         """Checks is the `mode` of `Labels` layer is currently activated."""
-        for layer in ll.selection:
+        if (layer := ll.selection.active) is not None:
             if isinstance(layer, Labels):
                 return layer.mode == mode
 
@@ -54,13 +54,13 @@ def toggled_labels_mode(mode: Mode) -> Callable[[LayerList], Optional[bool]]:
 
 
 def next_label(ll: LayerList) -> None:
-    for layer in ll.selection:
+    if (layer := ll.selection.active) is not None:
         if isinstance(layer, Labels):
             layer.selected_label += 1
 
 
 def prev_label(ll: LayerList) -> None:
-    for layer in ll.selection:
+    if (layer := ll.selection.active) is not None:
         if isinstance(layer, Labels):
             layer.selected_label -= 1
 
@@ -73,34 +73,34 @@ def zoom_in(viewer: Viewer) -> None:
     viewer.camera.zoom /= 0.95
 
 
-def dimension_left(viewer: Viewer) -> None:
+def increase_dimensions_left(viewer: Viewer) -> None:
     viewer.dims._increment_dims_left()
 
 
-def dimension_right(viewer: Viewer) -> None:
+def increase_dimensions_right(viewer: Viewer) -> None:
     viewer.dims._increment_dims_right()
 
 
 def decrease_contour(ll: LayerList) -> None:
-    for layer in ll.selection:
+    if (layer := ll.selection.active) is not None:
         if isinstance(layer, Labels):
             layer.contour = max(0, layer.contour - 1)
 
 
 def increase_contour(ll: LayerList) -> None:
-    for layer in ll.selection:
+    if (layer := ll.selection.active) is not None:
         if isinstance(layer, Labels):
             layer.contour += 1
 
 
 def decrease_gamma(ll: LayerList) -> None:
-    for layer in ll.selection:
+    if (layer := ll.selection.active) is not None:
         if isinstance(layer, Image):
             layer.gamma = max(0.2, layer.gamma - 0.02)
 
 
 def increase_gamma(ll: LayerList) -> None:
-    for layer in ll.selection:
+    if (layer := ll.selection.active) is not None:
         if isinstance(layer, Image):
             layer.gamma = min(2, layer.gamma + 0.02)
 
@@ -183,14 +183,14 @@ CUSTOM_ACTIONS = [
         callback=zoom_in,
     ),
     Action(
-        id="napari:viewer:dimension_left",
-        title="Dimension left",
-        callback=dimension_left,
+        id="napari:viewer:increase_dimensions_left",
+        title="Increase dimensions to the left",
+        callback=increase_dimensions_left,
     ),
     Action(
-        id="napari:viewer:dimension_right",
-        title="Dimension right",
-        callback=dimension_right,
+        id="napari:viewer:increase_dimensions_right",
+        title="Increase dimensions to the right",
+        callback=increase_dimensions_right,
     ),
     Action(
         id="napari:layer:decrease_contour",

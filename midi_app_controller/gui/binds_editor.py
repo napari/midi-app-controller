@@ -1,9 +1,9 @@
-# TODO Move style somewhere else to make this class independent from napari.
 from typing import Callable, Optional
 
-from app_model.types import CommandRule
 from napari.qt import get_current_stylesheet
-from qtpy.QtCore import Qt, QThread, QTimer
+from app_model.types import CommandRule
+from superqt.utils import ensure_main_thread
+from qtpy.QtCore import QTimer
 from qtpy.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -18,10 +18,15 @@ from qtpy.QtWidgets import (
     QTabWidget,
     QVBoxLayout,
     QWidget,
+    QTabWidget,
+    QCheckBox,
+    QSpacerItem,
+    QSizePolicy,
 )
 from superqt.utils import ensure_main_thread
 
 from midi_app_controller.controller.connected_controller import ConnectedController
+from midi_app_controller.utils import SimpleQThread
 from midi_app_controller.gui.utils import (
     HIGHLIGHT_DURATION_MS,
     HIGHLIGHT_STYLE_SHEET,
@@ -29,24 +34,6 @@ from midi_app_controller.gui.utils import (
 )
 from midi_app_controller.models.binds import Binds, ButtonBind, KnobBind
 from midi_app_controller.models.controller import Controller, ControllerElement
-
-
-class LightUpQThread(QThread):
-    """Worker thread responsible for lighting up a controller element.
-
-    Attributes
-    ----------
-    func : Callable[[], None]
-        Function for lighting up the element.
-    """
-
-    def __init__(self, func: Callable[[], None]):
-        super().__init__()
-        self.func = func
-
-    def run(self):
-        """Runs the lighting up function."""
-        self.func()
 
 
 class ButtonBinds(QWidget):
@@ -102,8 +89,8 @@ class ButtonBinds(QWidget):
 
         # Description row.
         description_layout = QHBoxLayout()
-        description_layout.addWidget(QLabel("Button:"), 8)
-        description_layout.addWidget(QLabel("Action when clicked:"), 10)
+        description_layout.addWidget(QLabel("Button:"), 6)
+        description_layout.addWidget(QLabel("Action when clicked:"), 14)
 
         # All buttons available to bind.
         button_list = QWidget()
@@ -149,7 +136,7 @@ class ButtonBinds(QWidget):
         def light_up_func():
             self.connected_controller.flash_button(button_id)
 
-        thread = LightUpQThread(light_up_func)
+        thread = SimpleQThread(light_up_func)
 
         self.thread_list.append(thread)
         thread.start()
@@ -170,25 +157,24 @@ class ButtonBinds(QWidget):
         action_combo = ActionsQComboBox(self.actions_, action, self)
         self.button_combos[button_id] = action_combo
 
-        # Button label
-        button_label = QLabel(button_name)
-
-        # Button for lighting up the controller element
-        controller_disconnected = self.connected_controller is None
+        # Button for lighting up the controller element.
+        is_controller_connected = self.connected_controller is not None
         light_up_button = QPushButton("Light up")
-        light_up_button.setToolTip(f"Lights up the '{button_name}'")
-        light_up_button.setCursor(Qt.PointingHandCursor)
+        light_up_button.setToolTip(
+            None
+            if is_controller_connected
+            else "Start handling a controller to enable this feature."
+        )
+        light_up_button.setEnabled(is_controller_connected)
         light_up_button.clicked.connect(lambda: self._light_up_button(button_id))
 
+        # Layout.
         elems_and_sizes = [
-            (button_label, 2),
+            (QLabel(button_name), 3),
             (light_up_button, 2),
-            (QWidget(), 6),
-            (action_combo, 10),
+            (QWidget(), 1),
+            (action_combo, 14),
         ]
-
-        if controller_disconnected:
-            del elems_and_sizes[1]
 
         layout = QHBoxLayout()
         for elem, size in elems_and_sizes:
@@ -282,9 +268,9 @@ class KnobBinds(QWidget):
 
         # Description row.
         description_layout = QHBoxLayout()
-        description_layout.addWidget(QLabel("Knob:"), 2)
-        description_layout.addWidget(QLabel("Action when increased:"), 5)
-        description_layout.addWidget(QLabel("Action when decreased:"), 5)
+        description_layout.addWidget(QLabel("Knob:"), 6)
+        description_layout.addWidget(QLabel("Action when increased:"), 7)
+        description_layout.addWidget(QLabel("Action when decreased:"), 7)
 
         # All knobs available to bind.
         knob_list = QWidget()
@@ -330,7 +316,7 @@ class KnobBinds(QWidget):
         def light_up_func():
             self.connected_controller.flash_knob(knob_id)
 
-        thread = LightUpQThread(light_up_func)
+        thread = SimpleQThread(light_up_func)
 
         self.thread_list.append(thread)
         thread.start()
@@ -354,23 +340,25 @@ class KnobBinds(QWidget):
         decrease_action_combo = ActionsQComboBox(self.actions_, action_decrease, self)
         self.knob_combos[knob_id] = (increase_action_combo, decrease_action_combo)
 
-        # Button for lighting up the controller element
-        controller_disconnected = self.connected_controller is None
+        # Button for lighting up the controller element.
+        is_controller_connected = self.connected_controller is not None
         light_up_knob = QPushButton("Light up")
-        light_up_knob.setToolTip(f"Lights up the '{knob_name}'")
-        light_up_knob.setCursor(Qt.PointingHandCursor)
+        light_up_knob.setToolTip(
+            None
+            if is_controller_connected
+            else "Start handling a controller to enable this feature."
+        )
+        light_up_knob.setEnabled(is_controller_connected)
         light_up_knob.clicked.connect(lambda: self._light_up_knob(knob_id))
 
+        # Layout.
         elems_and_sizes = [
-            (QLabel(knob_name), 1),
-            (light_up_knob, 1),
-            (QWidget(), 3),
-            (increase_action_combo, 5),
-            (decrease_action_combo, 5),
+            (QLabel(knob_name), 3),
+            (light_up_knob, 2),
+            (QWidget(), 1),
+            (increase_action_combo, 7),
+            (decrease_action_combo, 7),
         ]
-
-        if controller_disconnected:
-            del elems_and_sizes[1]
 
         layout = QHBoxLayout()
         for elem, size in elems_and_sizes:
@@ -552,7 +540,7 @@ class BindsEditor(QDialog):
         layout.addLayout(buttons_layout)
         self.setLayout(layout)
         self.setStyleSheet(get_current_stylesheet())
-        self.setMinimumSize(830, 650)
+        self.setMinimumSize(900, 850)
 
     def _toggle_names_mode(self):
         """Toggles actions names mode: titles or ids."""
