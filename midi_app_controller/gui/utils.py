@@ -5,7 +5,7 @@ from pathlib import Path
 
 from app_model.types import CommandRule
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QComboBox, QWidget
+from qtpy.QtWidgets import QComboBox, QWidget, QVBoxLayout, QLabel
 
 HIGHLIGHT_STYLE_SHEET = "background-color: SeaGreen"
 HIGHLIGHT_DURATION_MS = 1000
@@ -151,8 +151,8 @@ def is_subpath(path: Path, subpath: Path) -> bool:
 def reveal_in_explorer(file: Path):
     """Show where the file is in the system's file explorer.
 
-    Currently only Windows, Linux (majority of distributions), and macOS are supported.
-    On Linux, only the folder is opened.
+    Currently only Windows, Linux (majority of distributions), and macOS are
+    supported. On Linux, only the folder is opened.
     """
     assert file.is_file(), "Not a valid file"
     if platform.system() == "Windows":
@@ -163,3 +163,11 @@ def reveal_in_explorer(file: Path):
         subprocess.Popen(["open", "-R", str(file)])
     else:
         raise NotImplementedError("Only Linux, Windows, and macOS are supported")
+
+
+def vertical_layout(label: str, widget: QWidget) -> QVBoxLayout:
+    """Creates vertical layout consisting of the `label` and `widget`."""
+    layout = QVBoxLayout()
+    layout.addWidget(QLabel(label))
+    layout.addWidget(widget)
+    return layout
