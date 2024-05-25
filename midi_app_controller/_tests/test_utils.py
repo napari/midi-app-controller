@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from ..utils import get_copy_name, SimpleQThread
+from ..utils import SimpleQThread, get_copy_name
 
 
 @pytest.mark.parametrize(

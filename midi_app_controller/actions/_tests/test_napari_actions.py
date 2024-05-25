@@ -1,28 +1,28 @@
+import numpy as np
+import pytest
 from napari.components import LayerList
-from napari.viewer import Viewer
 from napari.layers import Image
 from napari.layers.labels import Labels
 from napari.layers.labels._labels_constants import Mode
-import numpy as np
-import pytest
+from napari.viewer import Viewer
 
 from ..napari_actions import (
-    decrease_opacity,
-    increase_opacity,
-    decrease_brush_size,
-    increase_brush_size,
     activate_labels_mode,
-    toggled_labels_mode,
-    next_label,
-    prev_label,
-    decrease_gamma,
-    increase_gamma,
+    decrease_brush_size,
     decrease_contour,
+    decrease_gamma,
+    decrease_opacity,
+    increase_brush_size,
     increase_contour,
-    zoom_out,
-    zoom_in,
     increase_dimensions_left,
     increase_dimensions_right,
+    increase_gamma,
+    increase_opacity,
+    next_label,
+    prev_label,
+    toggled_labels_mode,
+    zoom_in,
+    zoom_out,
 )
 
 
@@ -35,7 +35,7 @@ def test_opacity():
     assert layer.opacity == 0.49
     assert other_layer.opacity == 0.5
 
-    for i in range(200):
+    for _ in range(200):
         decrease_opacity(ll)
     assert layer.opacity == 0
     assert other_layer.opacity == 0.5
@@ -44,7 +44,7 @@ def test_opacity():
     assert layer.opacity == 0.01
     assert other_layer.opacity == 0.5
 
-    for i in range(200):
+    for _ in range(200):
         increase_opacity(ll)
     assert layer.opacity == 1
     assert other_layer.opacity == 0.5
@@ -61,7 +61,7 @@ def test_brush_size():
     assert layer.brush_size == 19
     assert other_layer.brush_size == 20
 
-    for i in range(50):
+    for _ in range(50):
         decrease_brush_size(ll)
     assert layer.brush_size == 1
     assert other_layer.brush_size == 20
@@ -70,7 +70,7 @@ def test_brush_size():
     assert layer.brush_size == 2
     assert other_layer.brush_size == 20
 
-    for i in range(50):
+    for _ in range(50):
         increase_brush_size(ll)
     assert layer.brush_size == 40
     assert other_layer.brush_size == 20
@@ -106,7 +106,7 @@ def test_selected_label():
     assert layer.selected_label == 6
     assert other_layer.selected_label == 5
 
-    for i in range(50):
+    for _ in range(50):
         next_label(ll)
     assert layer.selected_label == 56
     assert other_layer.selected_label == 5
@@ -115,7 +115,7 @@ def test_selected_label():
     assert layer.selected_label == 55
     assert other_layer.selected_label == 5
 
-    for i in range(50):
+    for _ in range(50):
         prev_label(ll)
     assert layer.selected_label == 5
     assert other_layer.selected_label == 5
@@ -153,7 +153,7 @@ def test_contour():
     assert layer.contour == 4
     assert other_layer.contour == 5
 
-    for i in range(50):
+    for _ in range(50):
         decrease_contour(ll)
     assert layer.contour == 0
     assert other_layer.contour == 5
@@ -162,7 +162,7 @@ def test_contour():
     assert layer.contour == 1
     assert other_layer.contour == 5
 
-    for i in range(50):
+    for _ in range(50):
         increase_contour(ll)
     assert layer.contour == 51
     assert other_layer.contour == 5
@@ -177,7 +177,7 @@ def test_gamma():
     assert layer.gamma == 0.48
     assert other_layer.gamma == 0.5
 
-    for i in range(100):
+    for _ in range(100):
         decrease_gamma(ll)
     assert layer.gamma == 0.2
     assert other_layer.gamma == 0.5
@@ -186,7 +186,7 @@ def test_gamma():
     assert layer.gamma == 0.22
     assert other_layer.gamma == 0.5
 
-    for i in range(200):
+    for _ in range(200):
         increase_gamma(ll)
     assert layer.gamma == 2
     assert other_layer.gamma == 0.5

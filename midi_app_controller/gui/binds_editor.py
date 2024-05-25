@@ -1,8 +1,7 @@
 from typing import Callable, Optional
 
-from napari.qt import get_current_stylesheet
 from app_model.types import CommandRule
-from superqt.utils import ensure_main_thread
+from napari.qt import get_current_stylesheet
 from qtpy.QtCore import QTimer
 from qtpy.QtWidgets import (
     QCheckBox,
@@ -18,15 +17,10 @@ from qtpy.QtWidgets import (
     QTabWidget,
     QVBoxLayout,
     QWidget,
-    QTabWidget,
-    QCheckBox,
-    QSpacerItem,
-    QSizePolicy,
 )
 from superqt.utils import ensure_main_thread
 
 from midi_app_controller.controller.connected_controller import ConnectedController
-from midi_app_controller.utils import SimpleQThread
 from midi_app_controller.gui.utils import (
     HIGHLIGHT_DURATION_MS,
     HIGHLIGHT_STYLE_SHEET,
@@ -34,6 +28,7 @@ from midi_app_controller.gui.utils import (
 )
 from midi_app_controller.models.binds import Binds, ButtonBind, KnobBind
 from midi_app_controller.models.controller import Controller, ControllerElement
+from midi_app_controller.utils import SimpleQThread
 
 
 class ButtonBinds(QWidget):

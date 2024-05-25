@@ -5,7 +5,7 @@ from typing import Callable, Optional, TypeVar
 
 from app_model.types import CommandRule
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QComboBox, QWidget, QVBoxLayout, QLabel
+from qtpy.QtWidgets import QComboBox, QLabel, QVBoxLayout, QWidget
 
 HIGHLIGHT_STYLE_SHEET = "background-color: SeaGreen"
 HIGHLIGHT_DURATION_MS = 1000

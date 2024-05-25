@@ -11,9 +11,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from midi_app_controller.utils import get_copy_name
-from midi_app_controller.models.binds import Binds
-from midi_app_controller.models.controller import Controller
+from midi_app_controller.config import Config
 from midi_app_controller.gui.binds_editor import BindsEditor
 from midi_app_controller.gui.utils import (
     DynamicQComboBox,
@@ -21,8 +19,10 @@ from midi_app_controller.gui.utils import (
     reveal_in_explorer,
     vertical_layout,
 )
+from midi_app_controller.models.binds import Binds
+from midi_app_controller.models.controller import Controller
 from midi_app_controller.state.state_manager import SelectedItem, get_state_manager
-from midi_app_controller.config import Config
+from midi_app_controller.utils import get_copy_name
 
 
 class MidiStatus(QWidget):

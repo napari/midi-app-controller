@@ -1,23 +1,24 @@
 from pathlib import Path
 from typing import NamedTuple, Optional
 
-# TODO: This will be made public in some future napari version
-from napari._app_model import get_app
 import rtmidi
 from app_model import Application
 from app_model.registries import MenusRegistry
 from app_model.types import CommandRule, MenuItem
 
-from midi_app_controller.utils import get_copy_name
+# TODO: This will be made public in some future napari version
+from napari._app_model import get_app
+
+from midi_app_controller.actions.actions_handler import ActionsHandler
+from midi_app_controller.actions.bound_controller import BoundController
+from midi_app_controller.actions.napari_actions import register_custom_napari_actions
+from midi_app_controller.config import Config
+from midi_app_controller.controller.connected_controller import ConnectedController
 from midi_app_controller.gui.utils import is_subpath
 from midi_app_controller.models.app_state import AppState
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
-from midi_app_controller.actions.bound_controller import BoundController
-from midi_app_controller.actions.actions_handler import ActionsHandler
-from midi_app_controller.controller.connected_controller import ConnectedController
-from midi_app_controller.config import Config
-from midi_app_controller.actions.napari_actions import register_custom_napari_actions
+from midi_app_controller.utils import get_copy_name
 
 
 class SelectedItem(NamedTuple):

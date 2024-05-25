@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 from ..config import get_yaml_files_in_dirs
 
 
