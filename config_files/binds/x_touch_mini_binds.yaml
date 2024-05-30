@@ -11,8 +11,6 @@ button_binds:
   action_id: napari:layer:fill_mode
 - button_id: 11
   action_id: napari:layer:pan_zoom_mode
-- button_id: 12
-  action_id: napari.write_directory
 knob_binds:
 - knob_id: 1
   action_id_increase: napari:viewer:increase_dimensions_right
