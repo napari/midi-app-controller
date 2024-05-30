@@ -1,12 +1,14 @@
 import platform
 import subprocess
-from typing import Callable, Optional, TypeVar
 from pathlib import Path
+from typing import Callable, Optional, TypeVar
 
 from app_model.types import CommandRule
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QComboBox, QWidget
+from qtpy.QtWidgets import QComboBox, QLabel, QVBoxLayout, QWidget
 
+HIGHLIGHT_STYLE_SHEET = "background-color: SeaGreen"
+HIGHLIGHT_DURATION_MS = 1000
 T = TypeVar("T")
 
 
@@ -28,11 +30,13 @@ class DynamicQComboBox(QComboBox):
         current_item : Optional[T]
             Optional default item.
         get_items : Callable[[], list[T]]
-            Function that fetches the list of current items. An option corresponding to "None" will be added anyway.
+            Function that fetches the list of current items. An option
+            corresponding to "None" will be added anyway.
         select_item : Callable[[T], None]
             Function that should be called when the user chooses an option.
         get_item_label : Callable[[T], str]
-            Function that returns a label corresponding to an item. Doesn't have to accept the "None" option.
+            Function that returns a label corresponding to an item. Doesn't
+            have to accept the "None" option.
         parent : QWidget
             Parent widget.
         """
@@ -59,8 +63,8 @@ class DynamicQComboBox(QComboBox):
     def refresh_items(self):
         """Refresh the list of items. Optionally set currently selected item."""
 
-        # Note that the objects in here may be equal to the objects that were returned last time
-        # but not be exactly the same objects.
+        # Note that the objects in here may be equal to the objects that were
+        # returned last time but not be exactly the same objects.
         new_items = self.get_items()
 
         current_item = self.currentData()
@@ -141,23 +145,31 @@ class ActionsQComboBox(QComboBox):
 
 def is_subpath(path: Path, subpath: Path) -> bool:
     """Checks if one path represents a file/directory inside the other directory."""
-    path_str = str(subpath.resolve().absolute())
-    subpath_str = str(path.resolve().absolute())
-    return path_str.startswith(subpath_str)
+    path_str = str(path.resolve().absolute())
+    subpath_str = str(subpath.resolve().absolute())
+    return subpath_str.startswith(path_str)
 
 
 def reveal_in_explorer(file: Path):
     """Show where the file is in the system's file explorer.
 
-    Currently only Windows, Linux (majority of distributions), and macOS are supported.
-    On Linux, only the folder is opened.
+    Currently only Windows, Linux (majority of distributions), and macOS are
+    supported. On Linux, only the folder is opened.
     """
     assert file.is_file(), "Not a valid file"
     if platform.system() == "Windows":
-        subprocess.Popen(["explorer", f'/select,"{file}"'])
+        subprocess.Popen(f'explorer /select,"{file}"')
     elif platform.system() == "Linux":
         subprocess.Popen(["xdg-open", str(file.parent)])
     elif platform.system() == "Darwin":
         subprocess.Popen(["open", "-R", str(file)])
     else:
         raise NotImplementedError("Only Linux, Windows, and macOS are supported")
+
+
+def vertical_layout(label: str, widget: QWidget) -> QVBoxLayout:
+    """Creates vertical layout consisting of the `label` and `widget`."""
+    layout = QVBoxLayout()
+    layout.addWidget(QLabel(label))
+    layout.addWidget(widget)
+    return layout

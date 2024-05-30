@@ -2,25 +2,26 @@
 
 ## Schemas
 
-Support for any model of a MIDI controller can be added by creating its schema, which is represented as a simple `YAML` file.
+Support for any model of a MIDI controller can be added by creating its schema, which is represented as a simple [YAML](https://yaml.org) file.
 
-### All available fields
+The YAML file should contain all fields from the Controller class. See [example](#example-of-a-valid-schema).
 
-- `name`: The name of the controller. Cannot be empty. Must be unique among all schemas.
-- `button_value_off`: The number sent by the controller when a button is in `off` state. Should be in the range `[0, 127]`.
-- `button_value_on`: The number sent by the controller when a button is in `on` state. Should be in the range `[0, 127]`.
-- `knob_value_min`: The minimum value sent by the controller when a knob is rotated. Should be in the range `[0, 127]`.
-- `knob_value_max`: The maximum value sent by the controller when a knob is rotated. Should be in the range `[0, 127]`.
-- `default_channel`: The channel on which all the messages to the controller will be sent. Keep in mind, that the actual number sent in
-  the MIDI message is decreased by `1`, so it fits in a single hex digit. Should be in the range `[1, 16]`.
-- `buttons`: List of available buttons on the controller. Each of them consists of:
-  - `id`: The ID of the button that the controller sends with every event. Should be in the range `[0, 127]`.
-  - `name`: A user-defined name for the button that helps to differentiate elements. Cannot be empty. No two elements can have the same name.
-- `knobs`: List of available knobs on the controller.  Each of them consists of:
-  - `id`: The ID of the knob that the controller sends with every event. Should be in the range `[0, 127]`.
-  - `name`: A user-defined name for the knob that helps to differentiate elements. Cannot be empty. No two elements can have the same name.
+Built-in schemas are available in [config_files/controllers](https://github.com/midi-app-controller/midi-app-controller/tree/main/config_files/controllers) on GitHub.
 
-### Example of a valid schema
+::: midi_app_controller.models.controller.Controller
+    options:
+      show_root_heading: true
+      show_bases: false
+      members: [""]
+
+::: midi_app_controller.models.controller.ControllerElement
+    options:
+      show_root_heading: true
+      show_bases: false
+      members: [""]
+
+## Example of a valid schema
+
 ```yaml
 name: "MyController"
 button_value_off: 0
@@ -36,4 +37,50 @@ buttons:
 knobs:
   - id: 1
     name: "Knob 1"
+```
+
+## Finding ids of knobs and buttons
+
+Install `python-rtmidi` using:
+
+```sh
+python -m pip install python-rtmidi
+```
+
+and then run the following script:
+
+```python
+import rtmidi
+
+def get_type(command):
+    if command in (0x80, 0x90):
+        return "Button"
+    elif command == 0xB0:
+        return "Knob"
+    else:
+        return "Unknown"
+
+def midi_input_callback(event, data):
+    message, _ = event
+    command = message[0] & 0xF0
+    print(get_type(command), "id:", message[1])
+
+def select_midi_port(available_ports):
+    print("Available MIDI input ports:")
+    for i, port_name in enumerate(available_ports):
+        print(f"{i}. {port_name}")
+    return int(input("Select number of MIDI input port: "))
+
+def main():
+    midi_in = rtmidi.MidiIn()
+    port_index = select_midi_port(midi_in.get_ports())
+    midi_in.open_port(port_index)
+    print("Listening...")
+    print("Interact with elements of the MIDI controller to show their ids here.")
+    midi_in.set_callback(midi_input_callback)
+    input("Press Enter to quit.\n")
+    midi_in.close_port()
+
+if __name__ == "__main__":
+    main()
 ```

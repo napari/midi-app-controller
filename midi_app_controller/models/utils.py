@@ -1,16 +1,17 @@
 import os
-from pathlib import Path
-from typing import Any, Optional, Tuple
 import uuid
+from pathlib import Path
+from typing import Any, Optional
 
-from pydantic import BaseModel
 import yaml
+from pydantic import BaseModel
 
 from midi_app_controller.config import Config
 from midi_app_controller.gui.utils import is_subpath
 
 
-# Enable writing Path objects as strings. When reading, pydantic converts strings into Paths automatically.
+# Enable writing Path objects as strings. When reading, pydantic converts
+# strings into Paths automatically.
 def _path_representer(dumper, data):
     return dumper.represent_scalar("tag:yaml.org,2002:str", str(data))
 
@@ -41,8 +42,9 @@ class YamlBaseModel(BaseModel):
     @classmethod
     def load_all_from(
         cls, directories: list[Path]
-    ) -> list[Tuple["YamlBaseModel", Path]]:
-        """Creates models initialized with data from all YAML files in multiple directories.
+    ) -> list[tuple["YamlBaseModel", Path]]:
+        """Creates models initialized with data from all YAML files in
+        multiple directories.
 
         Parameters
         ----------
@@ -84,10 +86,12 @@ class YamlBaseModel(BaseModel):
 
         with path.open("w") as f:
             yaml.safe_dump(
-                self.dict(),
+                self.model_dump(),
                 f,
-                default_flow_style=False,  # collections always serialized in the block style
-                sort_keys=False,  # keys in the order of declaration
+                # collections always serialized in the block style
+                default_flow_style=False,
+                # keys in the order of declaration
+                sort_keys=False,
             )
 
     def save_copy_to(self, path: Path, new_dir: Path) -> Path:

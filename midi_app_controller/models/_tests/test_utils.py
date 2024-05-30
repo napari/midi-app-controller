@@ -1,10 +1,11 @@
+from pathlib import Path
 from typing import Optional
 
-from pydantic import ValidationError
 import pytest
 import yaml
+from pydantic import ValidationError
 
-from ..utils import find_duplicate, YamlBaseModel
+from ..utils import YamlBaseModel, find_duplicate
 
 
 class TempYamlModel(YamlBaseModel):
@@ -19,19 +20,19 @@ class OtherTempYamlModel(YamlBaseModel):
 
 
 @pytest.fixture
-def yaml_data():
+def yaml_data() -> dict:
     return {"key2": "value2", "key1": "value1", "key3": ["a", "b"], "key4": None}
 
 
 @pytest.fixture
-def yaml_str(yaml_data):
+def yaml_str(yaml_data) -> str:
     dumped = yaml.safe_dump(yaml_data, default_flow_style=False, sort_keys=False)
     assert dumped == "key2: value2\nkey1: value1\nkey3:\n- a\n- b\nkey4: null\n"
     return dumped
 
 
 @pytest.fixture
-def yaml_file(tmp_path, yaml_str):
+def yaml_file(tmp_path, yaml_str) -> Path:
     yaml_file = tmp_path / "sample.yaml"
     with open(yaml_file, "w") as f:
         f.write(yaml_str)
@@ -42,7 +43,7 @@ def test_load_from(yaml_file, yaml_data):
     model = TempYamlModel.load_from(yaml_file)
 
     assert isinstance(model, TempYamlModel)
-    assert model.dict() == yaml_data
+    assert model.model_dump() == yaml_data
 
 
 def test_load_from_when_invalid_data(yaml_file, yaml_data):
@@ -58,6 +59,7 @@ def test_save_to(yaml_data, yaml_str, tmp_path):
 
     with open(yaml_file) as f:
         assert f.read() == yaml_str
+    assert TempYamlModel.load_from(yaml_file) == model
 
 
 @pytest.mark.parametrize(

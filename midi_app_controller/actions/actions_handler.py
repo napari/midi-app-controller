@@ -7,14 +7,15 @@ from .bound_controller import BoundController
 
 
 class ActionsHandler:
-    """Allows to execute actions and get their state using ids of controller elements."""
+    """Allows to execute actions and get their state using ids of controller
+    elements."""
 
     def __init__(
         self,
         *,
         bound_controller: BoundController,
         app: Application,
-    ) -> None:
+    ):
         """Initializes the handler.
 
         Parameters
@@ -29,13 +30,17 @@ class ActionsHandler:
 
     def is_button_toggled(self, button_id: int) -> Optional[bool]:
         """Checks if the action associated with the button is toggled."""
-        raise NotImplementedError  # TODO
+        action = self.bound_controller.get_button_press_action(button_id)
+        if action is not None and action.toggled is not None:
+            store = self.app.injection_store
+            return store.inject(action.toggled.get_current)()
 
     def get_knob_value(self, knob_id: int) -> Optional[int]:
         """Returns knob's value from the action associated with the knob."""
-        raise NotImplementedError  # TODO
+        raise NotImplementedError  # TODO It's not available in app-model.
 
-    # Without `await_return` closing MIDI ports freezes after handling at least two actions.
+    # Without `await_return` closing MIDI ports freezes after handling
+    # at least two actions.
     @ensure_main_thread(await_return=True)
     def handle_button_action(self, button_id: int) -> None:
         """Executes an action associated with the button if it exists."""
