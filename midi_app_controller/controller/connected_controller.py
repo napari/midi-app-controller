@@ -393,8 +393,7 @@ class ConnectedController:
         new_value : int
             Value to set the knob to.
         """
-        # For now we, only use single channel
-        channel = 11
+        channel = self.controller.default_channel
 
         data = self.build_message(
             ControllerConstants.CONTROL_CHANGE_COMMAND,
@@ -413,8 +412,7 @@ class ConnectedController:
         id : int
             Button id.
         """
-        # For now we, only use single channel
-        channel = 11
+        channel = self.controller.default_channel
 
         data = self.build_message(
             ControllerConstants.BUTTON_ENGAGED_COMMAND,
@@ -433,8 +431,7 @@ class ConnectedController:
         id : int
             Button id.
         """
-        # For now we, only use single channel
-        channel = 11
+        channel = self.controller.default_channel
 
         data = self.build_message(
             ControllerConstants.BUTTON_DISENGAGED_COMMAND,

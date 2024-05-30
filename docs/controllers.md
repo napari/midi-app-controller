@@ -28,6 +28,7 @@ button_value_off: 0
 button_value_on: 127
 knob_value_min: 0
 knob_value_max: 127
+default_channel: 1
 buttons:
   - id: 1
     name: "Button 1"

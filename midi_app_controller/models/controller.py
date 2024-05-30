@@ -39,6 +39,9 @@ class Controller(YamlBaseModel):
     knob_value_max : int
         The maximum value sent by the controller when a knob is rotated.
         Should be in the range [0, 127].
+    default_channel : int
+        The default channel which MIDI messages will be sent on. Should
+        be in the range [1, 16].
     buttons : list[ControllerElement]
         List of available buttons on the controller.
     knobs : list[ControllerElement]
@@ -50,6 +53,7 @@ class Controller(YamlBaseModel):
     button_value_on: int = Field(ge=0, le=127)
     knob_value_min: int = Field(ge=0, le=127)
     knob_value_max: int = Field(ge=0, le=127)
+    default_channel: int = Field(ge=1, le=16)
     buttons: list[ControllerElement]
     knobs: list[ControllerElement]
 
