@@ -264,8 +264,8 @@ class KnobBinds(QWidget):
         # Description row.
         description_layout = QHBoxLayout()
         description_layout.addWidget(QLabel("Knob:"), 6)
-        description_layout.addWidget(QLabel("Action when increased:"), 7)
         description_layout.addWidget(QLabel("Action when decreased:"), 7)
+        description_layout.addWidget(QLabel("Action when increased:"), 7)
 
         # All knobs available to bind.
         knob_list = QWidget()
@@ -351,8 +351,8 @@ class KnobBinds(QWidget):
             (QLabel(knob_name), 3),
             (light_up_knob, 2),
             (QWidget(), 1),
-            (increase_action_combo, 7),
             (decrease_action_combo, 7),
+            (increase_action_combo, 7),
         ]
 
         layout = QHBoxLayout()
