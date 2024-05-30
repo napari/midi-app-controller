@@ -1,4 +1,4 @@
-name: X_TOUCH_MINI
+name: X-TOUCH MINI
 button_value_off: 0
 button_value_on: 127
 knob_value_min: 0
@@ -6,135 +6,135 @@ knob_value_max: 127
 default_channel: 11
 buttons:
 - id: 0
-  name: KnobButton1A
+  name: Knob Button 1A
 - id: 1
-  name: KnobButton2A
+  name: Knob Button 2A
 - id: 2
-  name: KnobButton3A
+  name: Knob Button 3A
 - id: 3
-  name: KnobButton4A
+  name: Knob Button 4A
 - id: 4
-  name: KnobButton5A
+  name: Knob Button 5A
 - id: 5
-  name: KnobButton6A
+  name: Knob Button 6A
 - id: 6
-  name: KnobButton7A
+  name: Knob Button 7A
 - id: 7
-  name: KnobButton8A
+  name: Knob Button 8A
 - id: 8
-  name: Button1A
+  name: Button 1A
 - id: 9
-  name: Button2A
+  name: Button 2A
 - id: 10
-  name: Button3A
+  name: Button 3A
 - id: 11
-  name: Button4A
+  name: Button 4A
 - id: 12
-  name: Button5A
+  name: Button 5A
 - id: 13
-  name: Button6A
+  name: Button 6A
 - id: 14
-  name: Button7A
+  name: Button 7A
 - id: 15
-  name: Button8A
+  name: Button 8A
 - id: 16
-  name: Button9A
+  name: Button 9A
 - id: 17
-  name: Button10A
+  name: Button 10A
 - id: 18
-  name: Button11A
+  name: Button 11A
 - id: 19
-  name: Button12A
+  name: Button 12A
 - id: 20
-  name: Button13A
+  name: Button 13A
 - id: 21
-  name: Button14A
+  name: Button 14A
 - id: 22
-  name: Button15A
+  name: Button 15A
 - id: 23
-  name: Button16A
+  name: Button 16A
 - id: 24
-  name: KnobButton1B
+  name: KnobButton 1B
 - id: 25
-  name: KnobButton2B
+  name: KnobButton 2B
 - id: 26
-  name: KnobButton3B
+  name: KnobButton 3B
 - id: 27
-  name: KnobButton4B
+  name: KnobButton 4B
 - id: 28
-  name: KnobButton5B
+  name: KnobButton 5B
 - id: 29
-  name: KnobButton6B
+  name: KnobButton 6B
 - id: 30
-  name: KnobButton7B
+  name: KnobButton 7B
 - id: 31
-  name: KnobButton8B
+  name: KnobButton 8B
 - id: 32
-  name: Button1B
+  name: Button 1B
 - id: 33
-  name: Button2B
+  name: Button 2B
 - id: 34
-  name: Button3B
+  name: Button 3B
 - id: 35
-  name: Button4B
+  name: Button 4B
 - id: 36
-  name: Button5B
+  name: Button 5B
 - id: 37
-  name: Button6B
+  name: Button 6B
 - id: 38
-  name: Button7B
+  name: Button 7B
 - id: 39
-  name: Button8B
+  name: Button 8B
 - id: 40
-  name: Button9B
+  name: Button 9B
 - id: 41
-  name: Button10B
+  name: Button 10B
 - id: 42
-  name: Button11B
+  name: Button 11B
 - id: 43
-  name: Button12B
+  name: Button 12B
 - id: 44
-  name: Button13B
+  name: Button 13B
 - id: 45
-  name: Button14B
+  name: Button 14B
 - id: 46
-  name: Button15B
+  name: Button 15B
 - id: 47
-  name: Button16B
+  name: Button 16B
 knobs:
 - id: 1
-  name: Knob1A
+  name: Knob 1A
 - id: 2
-  name: Knob2A
+  name: Knob 2A
 - id: 3
-  name: Knob3A
+  name: Knob 3A
 - id: 4
-  name: Knob4A
+  name: Knob 4A
 - id: 5
-  name: Knob5A
+  name: Knob 5A
 - id: 6
-  name: Knob6A
+  name: Knob 6A
 - id: 7
-  name: Knob7A
+  name: Knob 7A
 - id: 8
-  name: Knob8A
+  name: Knob 8A
 - id: 9
-  name: SliderA
+  name: Slider A
 - id: 10
-  name: SliderB
+  name: Slider B
 - id: 11
-  name: Knob1B
+  name: Knob 1B
 - id: 12
-  name: Knob2B
+  name: Knob 2B
 - id: 13
-  name: Knob3B
+  name: Knob 3B
 - id: 14
-  name: Knob4B
+  name: Knob 4B
 - id: 15
-  name: Knob5B
+  name: Knob 5B
 - id: 16
-  name: Knob6B
+  name: Knob 6B
 - id: 17
-  name: Knob7B
+  name: Knob 7B
 - id: 18
-  name: Knob8B
+  name: Knob 8B
