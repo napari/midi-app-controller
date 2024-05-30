@@ -4,12 +4,13 @@ from unittest.mock import Mock, call, patch
 patch("superqt.utils.ensure_main_thread", lambda await_return: lambda f: f).start()
 
 import pytest
-from app_model.types import Action
+from app_model.types import Action, ToggleRule
 
-from ..bound_controller import BoundController
-from ..actions_handler import ActionsHandler
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
+
+from ..actions_handler import ActionsHandler
+from ..bound_controller import BoundController
 
 
 @pytest.fixture
@@ -35,6 +36,7 @@ def bound_controller() -> BoundController:
         "button_value_on": 127,
         "knob_value_min": 0,
         "knob_value_max": 127,
+        "default_channel": 3,
         "buttons": [{"id": 0, "name": "Button1"}, {"id": 1, "name": "Button2"}],
         "knobs": [{"id": 2, "name": "Knob1"}, {"id": 3, "name": "Knob2"}],
     }
@@ -44,6 +46,7 @@ def bound_controller() -> BoundController:
             id="Action1",
             title="sdfgsdfg",
             callback=lambda: None,
+            toggled=ToggleRule(get_current=lambda: True),
         ),
         Action(
             id="incr",
@@ -67,6 +70,20 @@ def bound_controller() -> BoundController:
         binds=Binds(**binds_data),
         actions=actions,
     )
+
+
+def test_is_button_toggled_when_button_not_bound(bound_controller):
+    actions_handler = ActionsHandler(bound_controller=bound_controller, app=Mock())
+
+    assert actions_handler.is_button_toggled(0) is None
+
+
+def test_is_button_toggled(bound_controller):
+    app = Mock()
+    app.injection_store.inject = lambda x: x
+    actions_handler = ActionsHandler(bound_controller=bound_controller, app=app)
+
+    assert actions_handler.is_button_toggled(1)
 
 
 def test_get_knob_value(bound_controller):

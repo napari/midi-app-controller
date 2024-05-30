@@ -5,9 +5,10 @@ from typing import Callable, Optional
 import rtmidi
 from qtpy.QtCore import QMutex, QMutexLocker
 
-from midi_app_controller.utils import SimpleQThread
-from midi_app_controller.models.controller import Controller
 from midi_app_controller.actions.actions_handler import ActionsHandler
+from midi_app_controller.models.controller import Controller
+from midi_app_controller.utils import SimpleQThread
+
 from .controller_constants import ControllerConstants
 
 
@@ -392,8 +393,7 @@ class ConnectedController:
         new_value : int
             Value to set the knob to.
         """
-        # For now we, only use single channel
-        channel = 11
+        channel = self.controller.default_channel
 
         data = self.build_message(
             ControllerConstants.CONTROL_CHANGE_COMMAND,
@@ -412,8 +412,7 @@ class ConnectedController:
         id : int
             Button id.
         """
-        # For now we, only use single channel
-        channel = 11
+        channel = self.controller.default_channel
 
         data = self.build_message(
             ControllerConstants.BUTTON_ENGAGED_COMMAND,
@@ -432,8 +431,7 @@ class ConnectedController:
         id : int
             Button id.
         """
-        # For now we, only use single channel
-        channel = 11
+        channel = self.controller.default_channel
 
         data = self.build_message(
             ControllerConstants.BUTTON_DISENGAGED_COMMAND,

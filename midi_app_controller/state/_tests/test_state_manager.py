@@ -1,13 +1,16 @@
-from unittest.mock import Mock, patch
 import uuid
+from pathlib import Path
+from unittest.mock import ANY, Mock, patch
 
+import pytest
 from app_model import Application
 from app_model.types import Action
-import pytest
 
+from midi_app_controller.config import Config
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
-from ..state_manager import StateManager, SelectedItem
+
+from ..state_manager import SelectedItem, StateManager, get_state_manager
 
 
 @pytest.fixture
@@ -63,6 +66,7 @@ def controller() -> Controller:
         "button_value_on": 100,
         "knob_value_min": 33,
         "knob_value_max": 55,
+        "default_channel": 5,
         "buttons": [{"id": 0, "name": "Button1"}, {"id": 1, "name": "Button2"}],
         "knobs": [{"id": 2, "name": "Knob1"}, {"id": 3, "name": "Knob2"}],
     }
@@ -110,6 +114,7 @@ def test_selected_item():
 def test_get_available_midi_in(mock_midi_in_out, state_manager, ports):
     mock_midi_in, _ = mock_midi_in_out
     mock_midi_in.get_ports.return_value = ports
+
     assert state_manager.get_available_midi_in() == ports
 
 
@@ -117,7 +122,165 @@ def test_get_available_midi_in(mock_midi_in_out, state_manager, ports):
 def test_get_available_midi_out(mock_midi_in_out, state_manager, ports):
     _, mock_midi_out = mock_midi_in_out
     mock_midi_out.get_ports.return_value = ports
+
     assert state_manager.get_available_midi_out() == ports
+
+
+def test_get_available_controllers(mock_midi_in_out, state_manager):
+    controllers = state_manager.get_available_controllers()
+
+    assert len(controllers) > 0
+
+
+def test_get_available_binds_when_no_controller(mock_midi_in_out, state_manager):
+    binds = state_manager.get_available_binds()
+
+    assert len(binds) == 0
+
+
+def test_get_available_binds(mock_midi_in_out, state_manager):
+    state_manager.select_controller(SelectedItem("X_TOUCH_MINI", None))
+    binds = state_manager.get_available_binds()
+
+    assert len(binds) > 0
+
+
+def test_get_available_binds_unknown_controller(mock_midi_in_out, state_manager):
+    state_manager.select_controller(SelectedItem("asdfsdfasdf", None))
+    binds = state_manager.get_available_binds()
+
+    assert len(binds) == 0
+
+
+def test_select_binds_path(mock_midi_in_out, state_manager, binds, tmp_path):
+    binds_path = tmp_path / "binds.yaml"
+    binds.save_to(binds_path)
+
+    state_manager.select_binds_path(binds_path)
+
+    assert state_manager.selected_binds == SelectedItem(binds.name, binds_path)
+
+
+def test_select_binds_path_none(mock_midi_in_out, state_manager):
+    state_manager.select_binds_path(None)
+
+    assert state_manager.selected_binds is None
+
+
+def test_select_binds(mock_midi_in_out, state_manager):
+    binds = SelectedItem("abc", Path(__file__))
+    state_manager.select_binds(binds)
+
+    assert state_manager.selected_binds == binds
+
+
+def test_select_binds_when_controller_selected(mock_midi_in_out, state_manager):
+    controller = SelectedItem("123", Path(__file__) / "a")
+    binds = SelectedItem("abc", Path(__file__) / "b")
+    state_manager.select_controller(controller)
+    state_manager.select_binds(binds)
+
+    assert state_manager.selected_binds == binds
+    assert state_manager.selected_controller == controller
+    assert state_manager.recent_binds_for_controller == {controller.path: binds.path}
+
+
+def test_select_binds_none(mock_midi_in_out, state_manager):
+    state_manager.select_binds(None)
+
+    assert state_manager.selected_binds is None
+
+
+def test_select_recent_binds(mock_midi_in_out, state_manager, mock_binds_load):
+    controller1 = SelectedItem("123", Path(__file__) / "a")
+    controller2 = SelectedItem("456", Path(__file__) / "a" / "c")
+    binds1 = SelectedItem("abc", Path(__file__) / "b")
+    binds2 = SelectedItem("def", Path(__file__) / "b" / "x")
+
+    state_manager.select_controller(controller1)
+    state_manager.select_binds(binds1)
+    state_manager.select_controller(controller2)
+    state_manager.select_binds(binds2)
+
+    state_manager.select_controller(controller1)
+    state_manager.select_recent_binds()
+    assert state_manager.selected_binds.path == binds1.path
+
+    state_manager.select_controller(controller2)
+    state_manager.select_recent_binds()
+    assert state_manager.selected_binds.path == binds2.path
+
+
+def test_delete_binds_not_selected(mock_midi_in_out, state_manager):
+    with pytest.raises(Exception) as excinfo:
+        state_manager.delete_binds()
+    assert "No binds" in str(excinfo.value)
+
+
+def test_delete_binds_not_user_dir(mock_midi_in_out, state_manager):
+    with pytest.raises(PermissionError):
+        state_manager.select_binds(SelectedItem("123", Path(__file__).resolve()))
+        state_manager.delete_binds()
+
+
+def test_delete_binds(mock_midi_in_out, state_manager, binds, tmp_path):
+    binds_path = tmp_path / "binds.yaml"
+    binds.save_to(binds_path)
+    state_manager.select_binds_path(binds_path)
+
+    assert binds_path.exists()
+    with patch.object(Config, "BINDS_USER_DIR", tmp_path):
+        state_manager.delete_binds()
+    assert not binds_path.exists()
+
+
+def test_copy_binds(mock_midi_in_out, state_manager, mock_binds_load):
+    with patch("midi_app_controller.models.binds.Binds.save_copy_to") as mock_save:
+        state_manager.select_binds(SelectedItem("123", Path(__file__).resolve()))
+        state_manager.copy_binds()
+
+        mock_save.assert_called_once_with(ANY, Config.BINDS_USER_DIR)
+
+
+def test_copy_binds_when_none_selected(mock_midi_in_out, state_manager):
+    with pytest.raises(Exception) as excinfo:
+        state_manager.copy_binds()
+    assert "No binds" in str(excinfo.value)
+
+
+def test_select_controller_path(mock_midi_in_out, state_manager, controller, tmp_path):
+    controller_path = tmp_path / "controller.yaml"
+    controller.save_to(controller_path)
+
+    state_manager.select_controller_path(controller_path)
+
+    assert state_manager.selected_controller == SelectedItem(
+        controller.name, controller_path
+    )
+
+
+def test_select_controller_path_none(mock_midi_in_out, state_manager):
+    state_manager.select_controller_path(None)
+
+    assert state_manager.selected_controller is None
+
+
+def test_select_controller(mock_midi_in_out, state_manager):
+    controller = SelectedItem("123", Path(__file__) / "a")
+    state_manager.select_controller(controller)
+
+    assert state_manager.selected_controller == controller
+
+
+def test_get_actions(mock_midi_in_out, state_manager, actions):
+    assert len(state_manager.get_actions()) == len(actions)
+
+
+def test_get_state_manager(mock_midi_in_out):
+    state = get_state_manager()
+
+    assert state is not None
+    assert len(state.get_actions()) > 10
 
 
 @pytest.mark.parametrize("name", ["abc", "", "x" * 100, None])
@@ -132,6 +295,47 @@ def test_select_midi_out(mock_midi_in_out, state_manager, name):
     state_manager.select_midi_out(name)
 
     assert state_manager.selected_midi_out == name
+
+
+def test_save_state(mock_midi_in_out, state_manager):
+    with patch("midi_app_controller.models.app_state.AppState.save_to") as mock_save:
+        state_manager.save_state()
+
+        mock_save.assert_called_once_with(Config.APP_STATE_FILE)
+
+
+def test_save_load_state(mock_midi_in_out, state_manager, tmp_path, binds, controller):
+    with (
+        patch.object(Config, "APP_STATE_FILE", tmp_path / "state.yaml"),
+        patch.object(Config, "BINDS_DIRS", (tmp_path,)),
+        patch.object(Config, "CONTROLLER_DIRS", (tmp_path,)),
+    ):
+        binds_path = tmp_path / "binds.yaml"
+        controller_path = tmp_path / "controller.yaml"
+        binds.save_to(binds_path)
+        controller.save_to(controller_path)
+
+        state_manager.select_controller_path(controller_path)
+        state_manager.select_binds_path(binds_path)
+        state_manager.select_midi_in("in")
+        state_manager.select_midi_out("out")
+
+        state_manager.save_state()
+
+        state_manager.select_controller_path(None)
+        state_manager.select_binds_path(None)
+        state_manager.select_midi_in(None)
+        state_manager.select_midi_in(None)
+
+        state_manager.load_state()
+
+        assert state_manager.selected_controller.path == controller_path
+        assert state_manager.selected_binds.path == binds_path
+        assert state_manager.selected_midi_in == "in"
+        assert state_manager.selected_midi_out == "out"
+        assert state_manager.recent_binds_for_controller == {
+            controller_path: binds_path
+        }
 
 
 def test_stop_handling(mock_midi_in_out, state_manager):
@@ -168,3 +372,33 @@ def test_start_handling(
     assert state_manager.is_running()
 
     state_manager.stop_handling()
+
+
+def test_start_handling_without_fields_set(mock_midi_in_out, state_manager):
+    with pytest.raises(Exception) as excinfo:
+        state_manager.start_handling()
+    assert "No controller" in str(excinfo.value)
+
+    state_manager.select_controller(SelectedItem("name", None))
+
+    with pytest.raises(Exception) as excinfo:
+        state_manager.start_handling()
+    assert "No binds" in str(excinfo.value)
+
+    state_manager.select_binds(SelectedItem("name", None))
+
+    with pytest.raises(Exception) as excinfo:
+        state_manager.start_handling()
+    assert "No MIDI input" in str(excinfo.value)
+
+    state_manager.select_midi_in("in")
+
+    with pytest.raises(Exception) as excinfo:
+        state_manager.start_handling()
+    assert "No MIDI output" in str(excinfo.value)
+
+    state_manager.select_midi_out("out")
+
+    with pytest.raises(Exception) as excinfo:
+        state_manager.start_handling()
+    assert "No MIDI output" not in str(excinfo.value)

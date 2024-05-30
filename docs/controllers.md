@@ -28,6 +28,7 @@ button_value_off: 0
 button_value_on: 127
 knob_value_min: 0
 knob_value_max: 127
+default_channel: 1
 buttons:
   - id: 1
     name: "Button 1"
@@ -36,4 +37,50 @@ buttons:
 knobs:
   - id: 1
     name: "Knob 1"
+```
+
+## Finding ids of knobs and buttons
+
+Install `python-rtmidi` using:
+
+```sh
+python -m pip install python-rtmidi
+```
+
+and then run the following script:
+
+```python
+import rtmidi
+
+def get_type(command):
+    if command in (0x80, 0x90):
+        return "Button"
+    elif command == 0xB0:
+        return "Knob"
+    else:
+        return "Unknown"
+
+def midi_input_callback(event, data):
+    message, _ = event
+    command = message[0] & 0xF0
+    print(get_type(command), "id:", message[1])
+
+def select_midi_port(available_ports):
+    print("Available MIDI input ports:")
+    for i, port_name in enumerate(available_ports):
+        print(f"{i}. {port_name}")
+    return int(input("Select number of MIDI input port: "))
+
+def main():
+    midi_in = rtmidi.MidiIn()
+    port_index = select_midi_port(midi_in.get_ports())
+    midi_in.open_port(port_index)
+    print("Listening...")
+    print("Interact with elements of the MIDI controller to show their ids here.")
+    midi_in.set_callback(midi_input_callback)
+    input("Press Enter to quit.\n")
+    midi_in.close_port()
+
+if __name__ == "__main__":
+    main()
 ```

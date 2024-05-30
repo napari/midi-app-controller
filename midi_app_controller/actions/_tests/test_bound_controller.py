@@ -1,9 +1,10 @@
 import pytest
 from app_model.types import Action
 
-from ..bound_controller import BoundController, ButtonActions, KnobActions
 from midi_app_controller.models.binds import Binds
 from midi_app_controller.models.controller import Controller
+
+from ..bound_controller import BoundController, ButtonActions, KnobActions
 
 
 @pytest.fixture
@@ -40,6 +41,7 @@ def controller() -> Controller:
         "button_value_on": 100,
         "knob_value_min": 33,
         "knob_value_max": 55,
+        "default_channel": 4,
         "buttons": [
             {"id": 0, "name": "Button1"},
             {"id": 1, "name": "Button2"},
