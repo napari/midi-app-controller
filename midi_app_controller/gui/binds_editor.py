@@ -473,22 +473,22 @@ class BindsEditor(QDialog):
         )
 
         # Save/exit buttons.
-        save_and_exit_button = QPushButton("Save")
-        save_and_exit_button.clicked.connect(self._save_and_exit)
-        exit_button = QPushButton("Cancel")
-        exit_button.clicked.connect(self._exit)
-        save_and_exit_button_width = save_and_exit_button.sizeHint().width()
-        exit_button_width = exit_button.sizeHint().width()
+        self.save_and_exit_button = QPushButton("Save")
+        self.save_and_exit_button.clicked.connect(self._save_and_exit)
+        self.exit_button = QPushButton("Cancel")
+        self.exit_button.clicked.connect(self._exit)
+        save_and_exit_button_width = self.save_and_exit_button.sizeHint().width()
+        exit_button_width = self.exit_button.sizeHint().width()
         button_width = max(save_and_exit_button_width, exit_button_width)
 
-        save_and_exit_button.setFixedWidth(button_width)
-        exit_button.setFixedWidth(button_width)
+        self.save_and_exit_button.setFixedWidth(button_width)
+        self.exit_button.setFixedWidth(button_width)
 
         buttons_layout = QHBoxLayout()
         spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         buttons_layout.addItem(spacer)
-        buttons_layout.addWidget(exit_button)
-        buttons_layout.addWidget(save_and_exit_button)
+        buttons_layout.addWidget(self.exit_button)
+        buttons_layout.addWidget(self.save_and_exit_button)
 
         self.tab_widget = QTabWidget()
 
