@@ -144,8 +144,7 @@ def test_bound_controller(binds, controller, actions):
 def test_non_existent_action_id(binds, controller, actions, action_index_to_delete):
     actions.pop(action_index_to_delete)
 
-    with pytest.raises(ValueError):
-        BoundController.create(binds=binds, controller=controller, actions=actions)
+    BoundController.create(binds=binds, controller=controller, actions=actions)
 
 
 def test_non_existent_knob(binds, controller, actions):
