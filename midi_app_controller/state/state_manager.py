@@ -49,6 +49,10 @@ class StateManager:
     recent_binds_for_controller: dict[Path, Path] = {}
         Mapping of controller schemas to the binds set most recently used
         with the schema.
+    recent_midi_ports_for_controller: dict[Path, dict[str, str]]
+        Mapping of controller schemas to the MIDI ports most
+        recently used (precisely dict with keys "in" and "out")
+        with the schema.
     selected_midi_in : Optional[str]
         Name of currently selected MIDI input.
     selected_midi_out : Optional[str]
@@ -68,7 +72,8 @@ class StateManager:
     def __init__(self, app: Application):
         self.selected_controller = None
         self.selected_binds = None
-        self.recent_binds_for_controller: dict[Path, Path] = {}
+        self.recent_binds_for_controller = {}
+        self.recent_midi_ports_for_controller = {}
         self.selected_midi_in = None
         self.selected_midi_out = None
         self.app = app
@@ -204,6 +209,11 @@ class StateManager:
         Does not have any immediate effect except updating the value.
         """
         self.selected_midi_in = port_name
+        if self.selected_controller:
+            self.recent_midi_ports_for_controller[self.selected_controller.path] = {
+                "in": self.selected_midi_in,
+                "out": self.selected_midi_out,
+            }
 
     def select_midi_out(self, port_name: Optional[str]) -> None:
         """Updates currently selected MIDI output port name.
@@ -211,6 +221,11 @@ class StateManager:
         Does not have any immediate effect except updating the value.
         """
         self.selected_midi_out = port_name
+        if self.selected_controller:
+            self.recent_midi_ports_for_controller[self.selected_controller.path] = {
+                "in": self.selected_midi_in,
+                "out": self.selected_midi_out,
+            }
 
     def stop_handling(self) -> None:
         """Stops handling any MIDI signals."""
@@ -269,6 +284,18 @@ class StateManager:
             midi_out=self._midi_out,
         )
 
+    def select_recent_midi_ports(self):
+        """Select MIDI ports that were recently used with the current controller."""
+        if (
+            self.selected_controller
+            and self.selected_controller.path in self.recent_midi_ports_for_controller
+        ):
+            ports = self.recent_midi_ports_for_controller[self.selected_controller.path]
+            if ports["in"] in self.get_available_midi_in():
+                self.selected_midi_in = ports["in"]
+            if ports["out"] in self.get_available_midi_out():
+                self.selected_midi_out = ports["out"]
+
     def save_state(self):
         """Saves the current settings to the disk."""
         AppState(
@@ -281,6 +308,7 @@ class StateManager:
             selected_midi_in=self.selected_midi_in,
             selected_midi_out=self.selected_midi_out,
             recent_binds_for_controller=self.recent_binds_for_controller,
+            recent_midi_ports_for_controller=self.recent_midi_ports_for_controller,
         ).save_to(Config.APP_STATE_FILE)
 
     def load_state(self):
@@ -316,6 +344,7 @@ class StateManager:
         self.select_midi_in(state.selected_midi_in)
         self.select_midi_out(state.selected_midi_out)
         self.recent_binds_for_controller = state.recent_binds_for_controller
+        self.recent_midi_ports_for_controller = state.recent_midi_ports_for_controller
 
 
 _STATE_MANAGER = None

@@ -402,3 +402,40 @@ def test_start_handling_without_fields_set(mock_midi_in_out, state_manager):
     with pytest.raises(Exception) as excinfo:
         state_manager.start_handling()
     assert "No MIDI output" not in str(excinfo.value)
+
+
+@pytest.mark.parametrize(
+    (
+        "available_midi_in, available_midi_out, recent_ports, "
+        "expected_midi_in, expected_midi_out"
+    ),
+    [
+        (["in1", "in2"], ["out1", "out2"], {"in": "in1", "out": "out2"}, "in1", "out2"),
+        (["in1", "in2"], ["out1", "out2"], {}, None, None),
+        (["in1", "in2"], ["out1", "out2"], {"in": "in3", "out": "out3"}, None, None),
+    ],
+)
+def test_select_recent_midi_ports(
+    mock_midi_in_out,
+    state_manager,
+    available_midi_in,
+    available_midi_out,
+    recent_ports,
+    expected_midi_in,
+    expected_midi_out,
+):
+    mock_midi_in, mock_midi_out = mock_midi_in_out
+    mock_midi_in.get_ports.return_value = available_midi_in
+    mock_midi_out.get_ports.return_value = available_midi_out
+
+    controller_path = Path("test_controller_path")
+    state_manager.selected_controller = SelectedItem("TestController", controller_path)
+
+    state_manager.recent_midi_ports_for_controller = (
+        {controller_path: recent_ports} if recent_ports else {}
+    )
+
+    state_manager.select_recent_midi_ports()
+
+    assert state_manager.selected_midi_in == expected_midi_in
+    assert state_manager.selected_midi_out == expected_midi_out
