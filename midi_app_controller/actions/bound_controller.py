@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from app_model.types import CommandRule
@@ -101,8 +102,9 @@ class BoundController(BaseModel):
         for bind in binds.button_binds:
             action = actions_dict.get(bind.action_id)
             if action is None:
-                raise ValueError(f"bound action '{bind.action_id}' cannot be found")
-            bound_buttons[bind.button_id] = ButtonActions(action_press=action)
+                logging.warning(f"bound action '{bind.action_id}' cannot be found")
+            else:
+                bound_buttons[bind.button_id] = ButtonActions(action_press=action)
 
         # Find actions for all bound knobs.
         bound_knobs = {}
@@ -110,11 +112,11 @@ class BoundController(BaseModel):
             action_increase = actions_dict.get(bind.action_id_increase)
             action_decrease = actions_dict.get(bind.action_id_decrease)
             if bind.action_id_increase is not None and action_increase is None:
-                raise ValueError(
+                logging.warning(
                     f"bound action '{bind.action_id_increase}' cannot be found"
                 )
             if bind.action_id_decrease is not None and action_decrease is None:
-                raise ValueError(
+                logging.warning(
                     f"bound action '{bind.action_id_decrease}' cannot be found"
                 )
             bound_knobs[bind.knob_id] = KnobActions(
