@@ -1,0 +1,29 @@
+name: Data annotation binds
+app_name: napari
+controller_name: X-TOUCH MINI
+description: Sample data annotation binds for X-TOUCH MINI
+button_binds:
+- button_id: 8
+  action_id: napari:layer:erase_mode
+- button_id: 9
+  action_id: napari:layer:paint_mode
+- button_id: 10
+  action_id: napari:layer:fill_mode
+- button_id: 11
+  action_id: napari:layer:pan_zoom_mode
+knob_binds:
+- knob_id: 1
+  action_id_increase: napari:viewer:increase_dimensions_right
+  action_id_decrease: napari:viewer:increase_dimensions_left
+- knob_id: 2
+  action_id_increase: napari:layer:increase_brush_size
+  action_id_decrease: napari:layer:decrease_brush_size
+- knob_id: 3
+  action_id_increase: napari:viewer:zoom_in
+  action_id_decrease: napari:viewer:zoom_out
+- knob_id: 4
+  action_id_increase: napari:layer:increase_opacity
+  action_id_decrease: napari:layer:decrease_opacity
+- knob_id: 5
+  action_id_increase: napari:layer:increase_gamma
+  action_id_decrease: napari:layer:decrease_gamma

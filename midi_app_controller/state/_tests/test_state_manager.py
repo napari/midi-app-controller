@@ -139,7 +139,7 @@ def test_get_available_binds_when_no_controller(mock_midi_in_out, state_manager)
 
 
 def test_get_available_binds(mock_midi_in_out, state_manager):
-    state_manager.select_controller(SelectedItem("X_TOUCH_MINI", None))
+    state_manager.select_controller(SelectedItem("X-TOUCH MINI", None))
     binds = state_manager.get_available_binds()
 
     assert len(binds) > 0
