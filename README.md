@@ -18,11 +18,9 @@ MIDI App Controller is a package designed to integrate MIDI controllers with Pyt
 
 To install MIDI App Controller in your environment (where Python and napari are already installed), use this command:
 
-(TODO: This doesn't work as the package is not yet published)
-
-<!-- ```
+```
 pip install midi-app-controller
-``` -->
+```
 
 napari will automatically detect the package and install the plugin next time it starts.
 
