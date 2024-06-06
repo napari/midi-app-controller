@@ -27,7 +27,7 @@ class Config:
     """
 
     _APP_NAME = "MIDI App Controller"
-    _CONFIG_DIR = (Path(__file__) / "../../config_files").resolve().absolute()
+    _CONFIG_DIR = (Path(__file__) / "../config_files").resolve().absolute()
     _USER_CONFIG_DIR = (Path(appdirs.user_config_dir(appname=_APP_NAME))).absolute()
     _USER_STATE_DIR = (Path(appdirs.user_state_dir(appname=_APP_NAME))).absolute()
 
