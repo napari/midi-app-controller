@@ -104,7 +104,6 @@ class ButtonBinds(QWidget):
         layout.addWidget(show_action_names_checkbox)
         layout.addLayout(description_layout)
         layout.addWidget(scroll)
-        layout.addStretch()
 
         self.setLayout(layout)
 
@@ -284,7 +283,6 @@ class KnobBinds(QWidget):
         layout.addWidget(show_action_names_checkbox)
         layout.addLayout(description_layout)
         layout.addWidget(scroll)
-        layout.addStretch()
 
         self.setLayout(layout)
 
