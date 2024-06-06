@@ -142,6 +142,10 @@ class ActionsQComboBox(QComboBox):
         if (action := self.currentData()) is not None:
             return action.id
 
+    def wheelEvent(self, event):
+        # Ignore the wheel event to prevent changing items on scroll.
+        event.ignore()
+
 
 def is_subpath(path: Path, subpath: Path) -> bool:
     """Checks if one path represents a file/directory inside the other directory."""
