@@ -6,15 +6,15 @@ from ..config import get_yaml_files_in_dirs
 def test_get_yaml_files_in_dirs():
     files = get_yaml_files_in_dirs(
         [
-            (Path(__file__) / "../../../config_files/controllers").resolve(),
-            (Path(__file__) / "../../../config_files/binds").resolve(),
+            (Path(__file__) / "../../config_files/controllers").resolve(),
+            (Path(__file__) / "../../config_files/binds").resolve(),
         ]
     )
     controllers = get_yaml_files_in_dirs(
-        [(Path(__file__) / "../../../config_files/controllers").resolve()]
+        [(Path(__file__) / "../../config_files/controllers").resolve()]
     )
     binds = get_yaml_files_in_dirs(
-        [(Path(__file__) / "../../../config_files/binds").resolve()]
+        [(Path(__file__) / "../../config_files/binds").resolve()]
     )
 
     assert len(files) >= 2

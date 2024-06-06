@@ -2,6 +2,7 @@
 
 [![codecov](https://codecov.io/gh/midi-app-controller/midi-app-controller/graph/badge.svg?token=YALMD0PQ80)](https://codecov.io/gh/midi-app-controller/midi-app-controller)
 [![Documentation Status](https://readthedocs.org/projects/midi-app-controller/badge/?version=latest)](https://midi-app-controller.readthedocs.io/en/latest/?badge=latest)
+[![PyPI version](https://badge.fury.io/py/midi-app-controller.svg)](https://badge.fury.io/py/midi-app-controller)
 
 midi-app-controller is an app, that allows user to control all applications using 'pyapp-kit/app-model' with a USB MIDI controller.
 
@@ -17,11 +18,9 @@ MIDI App Controller is a package designed to integrate MIDI controllers with Pyt
 
 To install MIDI App Controller in your environment (where Python and napari are already installed), use this command:
 
-(TODO: This doesn't work as the package is not yet published)
-
-<!-- ```
+```
 pip install midi-app-controller
-``` -->
+```
 
 napari will automatically detect the package and install the plugin next time it starts.
 
