@@ -186,6 +186,7 @@ class MidiStatus(QWidget):
         state = get_state_manager()
         state.select_controller(controller)
         state.select_recent_binds()
+        state.select_default_midi_ports()
         state.select_recent_midi_ports()
         self.refresh()
 

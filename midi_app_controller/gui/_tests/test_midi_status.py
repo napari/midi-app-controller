@@ -64,6 +64,8 @@ def create_controller(path):
     index = match.group(1)
     mock = MagicMock(spec=Controller)
     mock.name = f"Controller {index}"
+    mock.preferred_midi_in = "TestMidiIn"
+    mock.preferred_midi_out = "TestMidiOut"
     mock.buttons = []
     mock.knobs = []
     mock.knob_value_min = 0
