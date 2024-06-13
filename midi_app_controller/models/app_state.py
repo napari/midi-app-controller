@@ -19,6 +19,8 @@ class AppState(YamlBaseModel):
         Selected MIDI output port.
     recent_binds_for_controller: dict[Path, Optional[Path]]
         Mapping between each controller and which binds setup was last used.
+    recent_midi_ports_for_controller: dict[Path, dict[str, Optional[str]]]
+        Mapping between controllers and the last used MIDI ports (in/out)
     """
 
     selected_controller_path: Optional[Path]
@@ -27,3 +29,4 @@ class AppState(YamlBaseModel):
     selected_midi_out: Optional[str]
 
     recent_binds_for_controller: dict[Path, Optional[Path]]
+    recent_midi_ports_for_controller: dict[Path, dict[str, Optional[str]]]

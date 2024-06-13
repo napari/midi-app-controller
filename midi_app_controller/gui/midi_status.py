@@ -40,7 +40,7 @@ class MidiStatus(QWidget):
     current_midi_in : DynamicQComboBox
         Button that allows to select MIDI input port using its menu. Its
         text is set to currently selected port.
-    current_midi_in : DynamicQComboBox
+    current_midi_out : DynamicQComboBox
         Button that allows to select MIDI output port using its menu. Its
         text is set to currently selected port.
     status : QLabel
@@ -159,6 +159,10 @@ class MidiStatus(QWidget):
 
         self.current_binds.refresh_items()
         self.current_binds.set_current(state.selected_binds)
+        self.current_midi_in.refresh_items()
+        self.current_midi_in.set_current(state.selected_midi_in)
+        self.current_midi_out.refresh_items()
+        self.current_midi_out.set_current(state.selected_midi_out)
         self.show_binds_file_button.setEnabled(state.selected_binds is not None)
         self.edit_binds_button.setEnabled(state.selected_binds is not None)
         self.delete_binds_button.setEnabled(state.selected_binds is not None)
@@ -182,6 +186,7 @@ class MidiStatus(QWidget):
         state = get_state_manager()
         state.select_controller(controller)
         state.select_recent_binds()
+        state.select_recent_midi_ports()
         self.refresh()
 
     def _copy_binds(self) -> None:
