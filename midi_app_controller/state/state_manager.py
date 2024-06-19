@@ -284,6 +284,16 @@ class StateManager:
             midi_out=self._midi_out,
         )
 
+    def select_default_midi_ports(self):
+        """Selects default port for the controller."""
+        if self.selected_controller:
+            controller = Controller.load_from(self.selected_controller.path)
+            if controller.preferred_midi_in in self.get_available_midi_in():
+                self.selected_midi_in = controller.preferred_midi_in
+
+            if controller.preferred_midi_out in self.get_available_midi_out():
+                self.selected_midi_out = controller.preferred_midi_out
+
     def select_recent_midi_ports(self):
         """Select MIDI ports that were recently used with the current controller."""
         if (

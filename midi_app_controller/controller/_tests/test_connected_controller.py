@@ -23,6 +23,8 @@ def controller():
         knob_value_min=0,
         knob_value_max=127,
         default_channel=1,
+        preferred_midi_in="TestMidiIn",
+        preferred_midi_out="TestMidiOut",
         buttons=buttons,
         knobs=knobs,
     )

@@ -29,6 +29,8 @@ button_value_on: 127
 knob_value_min: 0
 knob_value_max: 127
 default_channel: 1
+preferred_midi_in: "Some midi input port"
+preferred_midi_out: "Some midi output port"
 buttons:
   - id: 1
     name: "Button 1"

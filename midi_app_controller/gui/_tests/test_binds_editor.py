@@ -35,6 +35,8 @@ def controller_sample() -> Controller:
         button_value_on=127,
         knob_value_min=0,
         knob_value_max=127,
+        preferred_midi_in="TestMidiIn",
+        preferred_midi_out="TestMidiOut",
         buttons=buttons,
         knobs=knobs,
         default_channel=1,

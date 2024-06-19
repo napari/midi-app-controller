@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from .utils import YamlBaseModel, find_duplicate
@@ -42,6 +44,10 @@ class Controller(YamlBaseModel):
     default_channel : int
         The default channel which MIDI messages will be sent on. Should
         be in the range [1, 16].
+    preferred_midi_in : Optional[str]
+        MIDI input name that is preferred for this controller.
+    preferred_midi_out : Optional[str]
+        MIDI output name that is preferred for this controller.
     buttons : list[ControllerElement]
         List of available buttons on the controller.
     knobs : list[ControllerElement]
@@ -54,6 +60,8 @@ class Controller(YamlBaseModel):
     knob_value_min: int = Field(ge=0, le=127)
     knob_value_max: int = Field(ge=0, le=127)
     default_channel: int = Field(ge=1, le=16)
+    preferred_midi_in: Optional[str] = None
+    preferred_midi_out: Optional[str] = None
     buttons: list[ControllerElement]
     knobs: list[ControllerElement]
 

@@ -13,6 +13,8 @@ def controller_data() -> dict:
         "knob_value_min": 33,
         "knob_value_max": 55,
         "default_channel": 2,
+        "preferred_midi_in": "TestMidiIn",
+        "preferred_midi_out": "TestMidiOut",
         "buttons": [{"id": 1, "name": "Button1"}, {"id": 2, "name": "Button2"}],
         "knobs": [{"id": 3, "name": "Knob1"}, {"id": 4, "name": "Knob2"}],
     }
