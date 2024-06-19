@@ -58,7 +58,7 @@ class Binds(YamlBaseModel):
     name: str = Field(min_length=1)
     app_name: str = Field(min_length=1)
     controller_name: str = Field(min_length=1)
-    description: Optional[str]
+    description: Optional[str] = None
     button_binds: list[ButtonBind]
     knob_binds: list[KnobBind]
 
