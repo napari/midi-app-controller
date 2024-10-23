@@ -15,7 +15,7 @@ classifiers = [
     "Programming Language :: Python",
 ]
 dependencies = [
-    "napari[all]>=0.5.4",
+    "napari[all]>=0.4.19",
     "python-rtmidi>=1.5.8",
     "pyyaml>=6.0.1",
     "pydantic>=2.7.1",

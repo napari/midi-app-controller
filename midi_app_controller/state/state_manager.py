@@ -7,7 +7,10 @@ from app_model.registries import MenusRegistry
 from app_model.types import CommandRule, MenuItem
 
 # TODO: This will be made public in some future napari version
-from napari._app_model import get_app_model
+try:
+    from napari._app_model import get_app_model
+except ImportError:
+    from napari._app_model import get_app as get_app_model
 
 from midi_app_controller.actions.actions_handler import ActionsHandler
 from midi_app_controller.actions.bound_controller import BoundController
