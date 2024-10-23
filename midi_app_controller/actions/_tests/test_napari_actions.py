@@ -137,6 +137,8 @@ def test_zoom_and_dimensions():
     increase_dimensions_left(viewer)
     increase_dimensions_right(viewer)
 
+    viewer.close()
+
 
 def test_contour():
     layer = Labels(np.ones((4, 4), dtype=np.int32))
