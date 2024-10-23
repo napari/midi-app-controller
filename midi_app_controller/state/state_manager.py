@@ -1,3 +1,4 @@
+from importlib.metadata import version
 from pathlib import Path
 from typing import NamedTuple, Optional
 
@@ -5,11 +6,12 @@ import rtmidi
 from app_model import Application
 from app_model.registries import MenusRegistry
 from app_model.types import CommandRule, MenuItem
+from packaging.version import parse as parse_version
 
 # TODO: This will be made public in some future napari version
-try:
+if parse_version(version("napari")) >= parse_version("0.5.4"):
     from napari._app_model import get_app_model
-except ImportError:
+else:
     from napari._app_model import get_app as get_app_model
 
 from midi_app_controller.actions.actions_handler import ActionsHandler
