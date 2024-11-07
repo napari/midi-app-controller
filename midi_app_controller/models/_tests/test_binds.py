@@ -59,6 +59,19 @@ def test_valid_binds(binds_data):
                 },
             ],
         ),
+    ],
+)
+def test_binds_duplicate_id(binds_data, button_binds, knob_binds):
+    binds_data["button_binds"] = button_binds
+    binds_data["knob_binds"] = knob_binds
+
+    with pytest.raises(ValidationError):
+        Binds(**binds_data)
+
+
+@pytest.mark.parametrize(
+    "button_binds, knob_binds",
+    [
         (
             [{"button_id": 1, "action_id": "Action1"}],
             [
@@ -71,12 +84,10 @@ def test_valid_binds(binds_data):
         ),
     ],
 )
-def test_binds_duplicate_id(binds_data, button_binds, knob_binds):
+def test_allow_knob_button_collision(binds_data, button_binds, knob_binds):
     binds_data["button_binds"] = button_binds
     binds_data["knob_binds"] = knob_binds
-
-    with pytest.raises(ValidationError):
-        Binds(**binds_data)
+    Binds(**binds_data)
 
 
 @pytest.mark.parametrize("id", [-1, 128])
