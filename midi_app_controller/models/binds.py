@@ -69,8 +69,14 @@ class Binds(YamlBaseModel):
         button_ids = [bind.button_id for bind in values.button_binds]
         knob_ids = [bind.knob_id for bind in values.knob_binds]
 
-        duplicate = find_duplicate(button_ids + knob_ids)
-        if duplicate is not None:
-            raise ValueError(f"id={duplicate} was bound to multiple actions")
+        duplicate_buttons = find_duplicate(button_ids)
+        if duplicate_buttons is not None:
+            raise ValueError(
+                f"button id={duplicate_buttons} was bound to multiple actions"
+            )
+
+        duplicate_knobs = find_duplicate(knob_ids)
+        if duplicate_knobs is not None:
+            raise ValueError(f"knob id={duplicate_knobs} was bound to multiple actions")
 
         return values
