@@ -4,7 +4,6 @@ from napari.components import LayerList
 from napari.layers import Image
 from napari.layers.labels import Labels
 from napari.layers.labels._labels_constants import Mode
-from napari.viewer import Viewer
 
 from ..napari_actions import (
     activate_labels_mode,
@@ -121,8 +120,8 @@ def test_selected_label():
     assert other_layer.selected_label == 5
 
 
-def test_zoom_and_dimensions():
-    viewer = Viewer()
+def test_zoom_and_dimensions(make_napari_viewer):
+    viewer = make_napari_viewer()
     zoom = viewer.camera.zoom
 
     zoom_out(viewer)

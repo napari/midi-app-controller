@@ -1,3 +1,4 @@
+from importlib.metadata import version
 from pathlib import Path
 from typing import NamedTuple, Optional
 
@@ -5,9 +6,13 @@ import rtmidi
 from app_model import Application
 from app_model.registries import MenusRegistry
 from app_model.types import CommandRule, MenuItem
+from packaging.version import parse as parse_version
 
 # TODO: This will be made public in some future napari version
-from napari._app_model import get_app
+if parse_version(version("napari")) >= parse_version("0.5.4"):
+    from napari._app_model import get_app_model
+else:
+    from napari._app_model import get_app as get_app_model
 
 from midi_app_controller.actions.actions_handler import ActionsHandler
 from midi_app_controller.actions.bound_controller import BoundController
@@ -364,7 +369,7 @@ def get_state_manager() -> StateManager:
     """Returns the `StateManager` singleton."""
     global _STATE_MANAGER
     if _STATE_MANAGER is None:
-        register_custom_napari_actions(get_app())
-        _STATE_MANAGER = StateManager(get_app())
+        register_custom_napari_actions(get_app_model())
+        _STATE_MANAGER = StateManager(get_app_model())
         _STATE_MANAGER.load_state()
     return _STATE_MANAGER
