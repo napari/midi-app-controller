@@ -36,7 +36,7 @@ testing = [
     "pytest>=8.2.0",
     "pytest-cov>=5.0.0",
     "pytest-qt>=4.0.2",
-    "PyQt5>=5.13.2,!=5.15.0",  # matches napari 0.5.4
+    "napari[all]",  # ensures Qt backend available for testing
     "flexparser!=0.4.0"  # see https://napari.zulipchat.com/#narrow/channel/212875-general/topic/broken.20pint.2Fflexparser/near/481110284
 ]
 dev = [
