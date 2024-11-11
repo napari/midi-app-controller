@@ -1,10 +1,12 @@
+import itertools
 import os
 import uuid
 from pathlib import Path
 from typing import Any, Optional
+from warnings import warn
 
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from midi_app_controller.config import Config
 from midi_app_controller.gui.utils import is_subpath
@@ -17,6 +19,11 @@ def _path_representer(dumper, data):
 
 
 yaml.SafeDumper.add_multi_representer(Path, _path_representer)
+
+
+def _abs_listdir(d: Path) -> list[Path]:
+    """List the contents of directory as absolute paths."""
+    return [d / p for p in os.listdir(d)]
 
 
 class YamlBaseModel(BaseModel):
@@ -43,8 +50,9 @@ class YamlBaseModel(BaseModel):
     def load_all_from(
         cls, directories: list[Path]
     ) -> list[tuple["YamlBaseModel", Path]]:
-        """Creates models initialized with data from all YAML files in
-        multiple directories.
+        """Return models with data from all YAML files in multiple directories.
+
+        If a yaml file fails to load, it is skipped and a warning is emitted.
 
         Parameters
         ----------
@@ -56,16 +64,21 @@ class YamlBaseModel(BaseModel):
         list[tuple[cls, Path]]
             List of created models with paths to corresponding YAML files.
         """
-        return [
-            (
-                cls.load_from(directory / filename),
-                directory / filename,
-            )
-            for directory in directories
-            if directory.exists()
-            for filename in os.listdir(directory)
-            if filename.lower().endswith((".yaml", ".yml"))
-        ]
+        all_models = []
+        real_directories = filter(os.path.exists, directories)
+        fns = itertools.chain(*map(_abs_listdir, real_directories))
+        yamls = (fn for fn in fns if fn.suffix in {".yaml", ".yml"})
+        for fn in yamls:
+            try:
+                model = cls.load_from(fn)
+                all_models.append((model, fn))
+            except (ValidationError, Exception) as e:
+                warn(
+                    f"Unable to load model from file {fn}; got error:\n"
+                    f"{e.__class__}: {e}",
+                    stacklevel=2,
+                )
+        return all_models
 
     def save_to(self, path: Path) -> None:
         """Saves the model's data to a YAML file.
