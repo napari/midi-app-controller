@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -25,6 +26,11 @@ def yaml_data() -> dict:
 
 
 @pytest.fixture
+def other_yaml_data() -> dict:
+    return {"other_key": "hello"}
+
+
+@pytest.fixture
 def yaml_str(yaml_data) -> str:
     dumped = yaml.safe_dump(yaml_data, default_flow_style=False, sort_keys=False)
     assert dumped == "key2: value2\nkey1: value1\nkey3:\n- a\n- b\nkey4: null\n"
@@ -49,6 +55,27 @@ def test_load_from(yaml_file, yaml_data):
 def test_load_from_when_invalid_data(yaml_file, yaml_data):
     with pytest.raises(ValidationError):
         OtherTempYamlModel.load_from(yaml_file)
+
+
+def test_load_all_from_robustness(tmp_path, yaml_data, other_yaml_data):
+    d1 = tmp_path / "1"
+    os.mkdir(d1)
+    d2 = tmp_path / "2"
+    os.mkdir(d2)
+    non_existent_dir = tmp_path / "none"
+    with open(d1 / "m1.yaml", "w") as f:
+        yaml.safe_dump(yaml_data, f)
+    with open(d1 / "m2.yaml", "w") as f:
+        yaml.safe_dump(other_yaml_data, f)
+    with open(d2 / "m1.yml", "w") as f:
+        yaml.safe_dump(yaml_data, f)
+    with open(d2 / "distractor.txt", "w") as f:
+        f.write("not relevant\n")
+    with pytest.warns(UserWarning, match="Unable to load model"):
+        models = TempYamlModel.load_all_from([d1, d2, non_existent_dir])
+    assert len(models) == 2
+    assert models[0][1] == d1 / "m1.yaml"
+    assert models[1][1] == d2 / "m1.yml"
 
 
 def test_save_to(yaml_data, yaml_str, tmp_path):
