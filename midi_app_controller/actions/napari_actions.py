@@ -197,12 +197,12 @@ CUSTOM_ACTIONS = [
     Action(
         id="napari:viewer:increase_dimensions_left",
         title="Increase dimensions to the left",
-        callback=partial(increment_axis(slider_num=None, inc=-1)),
+        callback=partial(increment_axis, slider_num=None, inc=-1),
     ),
     Action(
         id="napari:viewer:increase_dimensions_right",
         title="Increase dimensions to the right",
-        callback=partial(increment_axis(slider_num=None, inc=1)),
+        callback=partial(increment_axis, slider_num=None, inc=1),
     ),
     Action(
         id="napari:layer:decrease_contour",
