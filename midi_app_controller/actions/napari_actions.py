@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Callable, Optional
 
 from app_model import Application
@@ -65,6 +66,27 @@ def zoom_out(viewer: Viewer) -> None:
 
 def zoom_in(viewer: Viewer) -> None:
     viewer.camera.zoom /= 0.95
+
+
+def _replace_value_at(seq, pos, new_val):
+    tmp_seq = list(seq)
+    tmp_seq[pos] = new_val
+    return tuple(tmp_seq)
+
+
+def increment_axis(viewer: Viewer, slider_num=None, inc=1) -> None:
+    not_disp = viewer.dims.not_displayed
+    if slider_num is None:
+        axis = viewer.dims.last_used
+    elif slider_num < len(not_disp):
+        axis = not_disp[slider_num]
+    else:
+        return
+    cur = viewer.dims.current_step
+    next_value = viewer.dims.current_step[axis] + inc
+    # note: current_step automatically clamps to the correct range, so we
+    # don't need to do bounds checks below.
+    viewer.dims.current_step = _replace_value_at(cur, axis, next_value)
 
 
 def increase_dimensions_left(viewer: Viewer) -> None:
@@ -175,12 +197,12 @@ CUSTOM_ACTIONS = [
     Action(
         id="napari:viewer:increase_dimensions_left",
         title="Increase dimensions to the left",
-        callback=increase_dimensions_left,
+        callback=partial(increment_axis, slider_num=None, inc=-1),
     ),
     Action(
         id="napari:viewer:increase_dimensions_right",
         title="Increase dimensions to the right",
-        callback=increase_dimensions_right,
+        callback=partial(increment_axis, slider_num=None, inc=1),
     ),
     Action(
         id="napari:layer:decrease_contour",
