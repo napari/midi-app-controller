@@ -14,7 +14,7 @@ repos:
       - id: check-added-large-files
       - id: check-merge-conflict
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.9
+    rev: v0.5.7
     hooks:
       - id: ruff
         args: [ --fix ]
