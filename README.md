@@ -88,7 +88,7 @@ python3 -m pip install -e .
 
 ### Testing
 ```sh
-python3 -m pip install -e .[testing]
+python3 -m pip install -e ".[testing]"
 python3 -m pytest --cov .
 ```
 
@@ -99,6 +99,6 @@ mkdocs serve -a localhost:8080
 
 ### Using pre-commit
 ```sh
-python3 -m pip install -e .[dev]
+python3 -m pip install -e ".[dev]"
 pre-commit install
 ```
