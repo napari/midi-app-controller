@@ -46,7 +46,7 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["midi_app_controler"]
+packages = ["midi_app_controller"]
 
 [tool.setuptools_scm]
 write_to = "midi_app_controller/_version.py"
