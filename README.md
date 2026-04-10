@@ -72,6 +72,15 @@ state = get_state_manager()
 
 ## Development
 
+### System dependencies
+
+This package depends on [`python-rtmidi`](https://github.com/SpotlightKid/python-rtmidi). On many platforms pip installs a pre-built wheel; on **Linux** you often build from source, which needs **ALSA** development headers (pkg-config name `alsa`):
+
+- **Ubuntu / Debian:** `sudo apt install libasound2-dev`
+- **Fedora / RHEL-like:** `sudo dnf install alsa-lib-devel`
+
+Without these, `pip install` can fail during metadata/build with `Dependency "alsa" not found`. On macOS and Windows, wheels are more common; if compilation is triggered, follow python-rtmidi’s build notes for your OS.
+
 ### Installing
 ```sh
 python3 -m pip install -e .
