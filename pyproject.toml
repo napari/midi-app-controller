@@ -45,8 +45,8 @@ dev = [
     "pre-commit>=3.7.0",
 ]
 
-[tool.setuptools.packages.find]
-namespaces = true
+[tool.setuptools]
+packages = ["midi_app_controler"]
 
 [tool.setuptools_scm]
 write_to = "midi_app_controller/_version.py"
