@@ -8,10 +8,11 @@ name = "midi-app-controller"
 description = "Control napari with a MIDI controller."
 dynamic = ["version"]
 readme = "README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 requires-python = ">=3.9"
 classifiers = [
     "Framework :: napari",
-    "License :: OSI Approved :: BSD License",
     "Programming Language :: Python",
 ]
 dependencies = [
