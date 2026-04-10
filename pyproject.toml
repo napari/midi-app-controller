@@ -16,6 +16,8 @@ classifiers = [
     "Programming Language :: Python",
 ]
 dependencies = [
+    # pint<0.24.4 breaks on Python 3.13 (frozen dataclass inheritance); napari pulls pint transitively
+    "pint>=0.24.4",
     "napari>=0.4.19",
     "python-rtmidi>=1.5.8",
     "pyyaml>=6.0.1",
@@ -38,7 +40,6 @@ testing = [
     "pytest-cov>=5.0.0",
     "pytest-qt>=4.0.2",
     "napari[all]",  # ensures Qt backend available for testing
-    "flexparser!=0.4.0"  # see https://napari.zulipchat.com/#narrow/channel/212875-general/topic/broken.20pint.2Fflexparser/near/481110284
 ]
 dev = [
     "midi-app-controller[testing]",
