@@ -16,6 +16,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Install system deps for python-rtmidi (ALSA)
         run: |
           sudo apt update
