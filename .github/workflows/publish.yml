@@ -16,6 +16,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Install system deps for python-rtmidi (ALSA)
+        run: |
+          sudo apt update
+          sudo apt install -y libasound2-dev
       - uses: hynek/build-and-inspect-python-package@fe0a0fb1925ca263d076ca4f2c13e93a6e92a33e  # v2.17.0
 
 
